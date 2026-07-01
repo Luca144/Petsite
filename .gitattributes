@@ -24,6 +24,11 @@ public/assets/art/**        filter=lfs diff=lfs merge=lfs -text
 *.webp  filter=lfs diff=lfs merge=lfs -text
 *.psd   filter=lfs diff=lfs merge=lfs -text
 
+# The tiny ".gitkeep" placeholder files only exist to keep otherwise-empty
+# folders in Git. They are not art, so keep them as ordinary text, not LFS.
+# (This line comes after the rules above so it wins for these files.)
+**/.gitkeep  -filter -diff -merge text
+
 # Keep line endings sane across Windows and the Linux production host:
 # text files are normalised to LF in the repository.
 * text=auto eol=lf
