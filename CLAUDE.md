@@ -1,0 +1,250 @@
+# Felkyo v2 — Coding Rules for Claude Code
+
+This file is read by Claude Code at the start of every session. **Everything in this file is a rule, not a suggestion.** If a task would require breaking a rule, stop and ask first — do not break the rule silently.
+
+The team is small and mostly composed of coding newcomers (the Product Owner is an artist; the Lead Developer is learning as she goes). The #1 priority is **code that humans can read and understand**. Performance, cleverness, and brevity all come second to clarity. This is not negotiable.
+
+---
+
+## 1. The golden rule
+
+**Write code as if the person reading it has never seen PHP before, and you are responsible for their understanding.**
+
+If you catch yourself writing something clever, rewrite it as something obvious. If you catch yourself writing something dense, add comments that explain what and why. If you catch yourself skipping a comment because "it's obvious," add the comment anyway — "obvious" is relative to experience.
+
+**Language: everything is in English.** All user-facing text on the site (page content, button labels, messages, error text, the shopkeeper's lines, empty states) is in English. All documentation, code comments, commit messages, and the developer/setup/schema/deployment guides are in English too. Keep user-facing copy as data/config (not hardcoded in logic) so it can be translated later if ever needed — but for now, English throughout.
+
+**Naming — use these terms consistently.** The product is called **Felkyo Creatures** (the world can be referred to as "Felkyo"). The animals players collect are called **creatures**, never "pets" — in all user-facing text *and* in the domain/database naming. The main table is `creatures`, the entity is a creature, the page showing one is the **creature page**. The one exception is the interaction verb: petting a creature keeps the verb "pet"/"petted" (e.g. a "Pet [name]" button, a "times petted" count) — that's the action, while "creature" is the thing. So: you *pet* a *creature*.
+
+---
+
+## 2. Comments — educational, not decorative
+
+Every non-trivial block of code has a comment explaining **what it does and why it does it**. "What" alone is not enough. "Why" is what newcomers need to understand the system.
+
+**Good comment:**
+```php
+// We hash the user's ID together with the pet's name to deterministically
+// pick a personality trait. Hashing means every pet with the same owner and
+// name will always get the same personality — so personality feels "baked in"
+// rather than random. We use SHA-256 because it's built into PHP and fast.
+$hash = hash('sha256', $userId . $petName);
+```
+
+**Bad comment:**
+```php
+// Hash the string
+$hash = hash('sha256', $userId . $petName);
+```
+
+**Comments apply equally to PHP, JavaScript, CSS, and SQL.** A tricky CSS selector or a multi-join SQL query deserves the same explanation a PHP function would.
+
+**File-level docblocks** at the top of every file explain what the file is for, who uses it, and anything important to know when modifying it. Include `@package`, purpose, and a brief "how this fits into the bigger picture" paragraph.
+
+**Do not write comments that are just restating the code.** `// Loop through users` above `foreach ($users as $user)` is noise. Explain why the loop exists and what it accomplishes.
+
+---
+
+## 3. File size and structure
+
+Long files are hard to navigate and hard to understand. Rules:
+
+- **PHP class files: max 300 lines.** If you're approaching this, the class is doing too much. Split it.
+- **Template files: max 200 lines.** If a template is longer, extract partials.
+- **JavaScript files: max 250 lines.** Same rule.
+- **CSS files: max 400 lines.** CSS can get long naturally, but beyond 400 lines, split by concern (layout, components, themes).
+
+When splitting:
+- **One class per file.** Always. No exceptions.
+- **Files are named after their single class** (PSR-4 autoloading).
+- **Related files live in subdirectories.** `src/Pets/PetRepository.php`, `src/Pets/Pet.php`, `src/Pets/PetService.php` — not everything dumped in `src/`.
+
+If you find yourself wanting to create a file called `Utils.php` or `Helpers.php` or `Common.php`, **stop and think harder**. Those names are red flags — they signal that you haven't figured out what the code actually is yet. Give things specific names that describe what they do.
+
+**Build for extension, but do not over-engineer.** This codebase is a small core a beginner will later extend. So: content (pet species, areas, items) lives as data or clearly-commented config, never hardcoded; tunable values (cooldowns, XP thresholds, limits) live in one named, commented config location, never as magic numbers buried in code; each mechanic is built once cleanly as a copyable pattern with a documented "how to add another" recipe; and layer boundaries (controller / service / repository) are kept deliberately so pieces can change independently. But do NOT build plugin systems, event buses, generic frameworks, or speculative abstraction layers — that is over-engineering and it makes the code unreadable for the successor. The target: adding a new species or area, or changing how fast pets level, should be a data/config change following documentation — not a rewrite, and not navigating clever machinery. Extensible enough to build on; simple enough to read.
+
+---
+
+## 4. Functions and methods
+
+- **Max 30 lines per function.** If longer, the function is doing too much. Extract.
+- **Max 4 parameters per function.** If more are needed, pass an object or array with named keys.
+- **One level of abstraction per function.** A function that does both "validate the pet name" and "update the database" is mixing levels. Split.
+- **Function names describe what they do, not how.** `savePet()` not `insertIntoPetsTable()`. The latter leaks implementation detail.
+- **Boolean parameters are a smell.** `createPet($data, true, false, true)` is unreadable. Use separate methods or a config object.
+
+---
+
+## 5. Database access
+
+- **PDO only. Never `mysqli`. Never raw `mysql_*` functions.**
+- **Prepared statements for every query with variable data. No exceptions.** String concatenation into SQL is a SQL injection waiting to happen.
+- **Database access goes through a repository class.** Controllers never touch PDO directly. If a controller needs data, it asks a repository, which owns the SQL.
+- **Every query has a comment explaining what it fetches and why.** Newcomers reading repository code should understand the intent without having to read the SQL.
+- **Schema changes go through Phinx migrations.** Never edit the schema by hand on any environment.
+- **Never `SELECT *`.** Always list the columns you actually need. This keeps contracts explicit and prevents accidental data leaks.
+
+---
+
+## 6. Security defaults
+
+These are baked into the project conventions. Breaking any of them is a bug, not a tradeoff.
+
+- **Every form has a CSRF token.** The form-rendering helper adds this automatically; don't write forms that bypass it.
+- **Every user-provided value is escaped on output.** Plates auto-escapes by default; do not use the "raw" variant without a comment explaining why it's safe.
+- **Every user-provided value is validated on input.** Length limits, type checks, allowed-value lists. Validation lives in a dedicated validator class, not scattered in controllers.
+- **Passwords are hashed with `password_hash()` using the default algorithm.** Never MD5, SHA1, or your own scheme.
+- **Session cookies are `HttpOnly`, `Secure`, and `SameSite=Lax`.**
+- **Rate limits apply to every state-changing public endpoint.** Login, registration, password reset, commenting, petting, renaming. Use the rate limiter service.
+- **Secrets come from `.env`. Never hardcoded. Never committed.** If you need to reference a new secret, add it to `.env.example` with a placeholder value and document what it's for.
+
+---
+
+## 7. Testing — part of the definition of done
+
+A feature is not done until it has tests. "Works on my machine" is not done.
+
+- **Every public method on a service or repository has at least one unit test.**
+- **Every controller action has at least one integration test that hits a real test database.**
+- **Edge cases get tested:** empty input, too-long input, missing required fields, permission-denied scenarios.
+- **Tests are readable.** Test method names read like sentences: `testCommentIsRejectedWhenContainsBlockedWord`.
+- **Tests use fixtures or factories, not hardcoded IDs from seed data.** Tests must be independent and runnable in any order.
+- **If a bug is found, a test is written that would have caught it *before* the bug is fixed.** This prevents regressions.
+
+If you're writing code and can't figure out how to test it, that is a signal the code is badly structured. Stop and restructure, don't skip the test.
+
+---
+
+## 8. UI rules — locked by project philosophy
+
+These come from the Product Owner and are non-negotiable:
+
+- **No dropdown menus. Anywhere. Ever.** Use tiles, toggle buttons, button groups, or radio-style card selections instead. If you think you need a dropdown, you need to rethink the interaction.
+- **No JavaScript framework.** Vanilla JS only, with HTMX for partial updates where it genuinely helps. React, Vue, Svelte, etc. are not on this project.
+- **Animations are CSS-first.** Only reach for JavaScript animation when the effect genuinely can't be done in CSS.
+- **Mobile-first CSS.** Write the mobile layout first, then add desktop refinements with min-width media queries.
+- **No custom color values in components.** Colors come from CSS custom properties defined in a central theme file. If you need a new color, add it to the theme, don't inline a hex value.
+- **Animated creature images must display correctly.** Creatures are delivered as animated GIFs (and possibly animated PNG/WebP). They must loop automatically and render crisply. For pixel-art that is scaled up for display, apply `image-rendering: pixelated` so it stays sharp instead of blurring. Never bake a static frame where an animated source was provided.
+- **Mobile is not optional and not an afterthought.** Every page, every component, every interaction must work and look good on a phone screen (~360px wide) from the moment it is built. Test layouts at mobile width first. Touch targets must be large enough to tap (min ~44px). If something only works on desktop, it is not done.
+- **Aim for a sense of craft and a little magic.** This is a whimsical pet world, not a corporate dashboard. Within the constraints above, favour gentle, tasteful touches that make the site feel alive and cared-for: soft transitions between states, subtle hover/tap feedback, gentle ambient motion where it fits the art. Restraint matters — magic comes from a few well-placed details, not from animating everything. Performance and accessibility (respect `prefers-reduced-motion`) always win over spectacle.
+
+### The confirmed look & feel
+
+The aesthetic is **cosy autumn hygge — like coming home to a warm, lamplit room on a grey evening.** Warm, soft, a little magical, with small details that reward looking, but never loud or cluttered. The reference point is an enchanted keepsake / old-web personal page (think a gentle, grown-up take on an early-2000s profile page), executed with modern craft. A mockup expressing this exists; match its spirit, not a corporate template.
+
+**Colour palette (the central theme file uses exactly these — no other hex values in components):**
+- `--parchment: #F1E4C3` — warm cream, the main content surface
+- `--panel: #E7D4A8` — slightly deeper parchment for cards/boxes
+- `--purple: #6A4C93` — primary accent (buttons, links, mid elements)
+- `--plum: #3D2B4F` — deep purple: body text on parchment, and the immersive page background
+- `--gold: #C9A227` — accent for borders, glows, highlights (the "sparkle")
+- `--border: #B89A6A` — muted dividers and outlines
+- Derived shades are allowed in the theme file if clearly named (e.g. a deeper plum for the background gradient, a lighter gold for glows). Everything still lives in the theme file.
+
+**Typography (load from Google Fonts; define as theme tokens):**
+- **Fraunces** — display/headings (the characterful, slightly whimsical serif). Use its optical-size and soft settings for warmth.
+- **Nunito** — body text (rounded, friendly, highly readable).
+- **Space Mono** — small data, labels, and captions (the old-web "computery" texture). Never below ~0.7rem and never the only carrier of essential information.
+
+**Background treatment:** the page field is the deep plum (a warm lamplit-evening gradient with a soft gold glow), with parchment panels floating on it. This is the agreed direction — warm, enveloping, cosy-at-night, not a flat light page.
+
+### Accessibility — required, not optional
+
+The site must be usable by people with disabilities. These are hard requirements, part of the definition of done for any UI work:
+- **Colour contrast meets WCAG AA.** Body text needs at least 4.5:1, large text at least 3:1. Concretely: deep plum text on parchment is fine; **gold text on parchment is NOT (too low contrast) — only use gold for text on the dark plum panels, or as non-text decoration (borders, glows, dots).** Check contrast whenever you place text on a colour.
+- **Visible keyboard focus.** Every interactive element (links, buttons, inputs) has a clear `:focus-visible` style (e.g. a purple outline with offset). Never remove focus outlines without replacing them with something equally visible.
+- **Touch targets ≥ 44px**, with enough spacing that they're not easily mis-tapped.
+- **Semantic HTML.** Use real headings (`h1`, `h2`, …) in order, real `<button>`/`<a>`, `<nav>`, landmarks. Screen-reader users navigate by these.
+- **Every creature image and meaningful image has descriptive `alt` text.** Purely decorative elements are hidden from screen readers (`aria-hidden`).
+- **Never rely on colour alone** to convey meaning (pair it with text, shape, or an icon).
+- **No essential information or action is hover-only** — it must be reachable by keyboard and visible without a mouse.
+- **`prefers-reduced-motion` is fully respected** — ambient motion, glows, and transitions are disabled for users who ask for reduced motion; the site stays fully usable and pleasant without them.
+
+---
+
+## 9. When to ask, when to proceed
+
+**Proceed without asking when:**
+- The task is unambiguous and matches an existing pattern in the codebase
+- You're fixing an obvious bug with an obvious fix
+- You're adding tests for existing code
+- You're writing documentation for existing code
+
+**Stop and ask when:**
+- A rule in this file would need to be broken to complete the task
+- The task requires adding a new dependency to `composer.json` or the frontend
+- The task requires a schema change that breaks backwards compatibility
+- Two reasonable approaches exist and the choice matters long-term
+- The sprint brief is ambiguous about a user-facing behaviour
+- Something feels wrong but the instructions say to do it anyway
+
+"Do not silently invent requirements that weren't in the brief." If the brief says "add a rename feature" but doesn't specify a rate limit, ask what the rate limit should be. Don't guess.
+
+---
+
+## 10. Naming conventions
+
+- **Classes:** `PascalCase`. `PetRepository`, not `pet_repository`.
+- **Methods and properties:** `camelCase`. `findById()`, not `find_by_id()`.
+- **Database tables:** `snake_case`, plural. `pets`, `user_sessions`.
+- **Database columns:** `snake_case`. `created_at`, `owner_user_id`.
+- **Variables in PHP:** `camelCase`. `$ownerUserId`, not `$owner_user_id`.
+- **Constants:** `SCREAMING_SNAKE_CASE`. `MAX_STICKERS_PER_PET`.
+- **CSS classes:** `kebab-case`, BEM-style for components. `petpage__sticker-layer`.
+- **Files:** match what they contain. A file with `class PetRepository` is named `PetRepository.php`.
+
+No `$x`, `$tmp`, `$data`, `$result` unless the scope is genuinely two lines. Give variables names that describe what they hold.
+
+---
+
+## 11. Dependencies — add sparingly
+
+Every Composer package or frontend library added to the project is a commitment. Ask before adding one.
+
+Before adding a dependency, check:
+1. Can this be done with vanilla PHP / vanilla JS in a reasonable amount of code?
+2. Is the package actively maintained? (commits in the last 12 months, issues responded to)
+3. Does the package have significantly more code than we need?
+4. Does the package introduce its own conventions that conflict with ours?
+
+When in doubt, write the small amount of code ourselves rather than pulling a package. Every removed dependency is one less thing that can break.
+
+---
+
+## 12. Git and commits
+
+- **Small, focused commits.** One logical change per commit.
+- **Commit messages follow the pattern: `<type>: <short summary>`** where type is one of `feat`, `fix`, `test`, `refactor`, `docs`, `chore`.
+- **Never commit `.env`, secrets, or log files.** These are gitignored, but double-check before pushing.
+- **Never commit broken code to `main`.** Work in feature branches, merge via PR after CI passes.
+- **Never force-push to `main`.** Ever.
+
+---
+
+## 13. When you're about to finish a task, check
+
+Before considering a task done, run through this checklist:
+
+- [ ] All new functions and methods have educational comments
+- [ ] No file exceeds its line limit (300 PHP class / 200 template / 250 JS / 400 CSS)
+- [ ] Tests are written for new code and they pass locally
+- [ ] CSRF tokens are present on new forms
+- [ ] User input is validated and output is escaped
+- [ ] No secrets hardcoded; `.env.example` updated if new config was added
+- [ ] No dropdown menus were added
+- [ ] Documentation has been updated to reflect the change
+- [ ] Commit message is clear and follows the pattern
+
+If any are missing, the task is not done. Go back and finish it before moving on.
+
+---
+
+## 14. When rules conflict with what you're being asked
+
+If a human in the loop asks you to do something that contradicts this file — for example, "just quickly add it as a dropdown for now, we'll fix it later" — **stop and flag the conflict**. Do not silently comply. The rules in this file were put here on purpose, and "we'll fix it later" is how codebases decay.
+
+Explain the conflict, offer a conforming alternative, and let the human make an informed choice. If they still want to break the rule, they need to amend this file first — that creates an audit trail and forces a real decision rather than an accidental drift.
+
+---
+
+*This file is the coding contract for Felkyo v2. If a rule here is wrong or needs updating, amend this file deliberately — do not work around it.*

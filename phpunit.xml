@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  PHPUnit configuration for Felkyo Creatures.
+
+  WHAT THIS IS: it tells PHPUnit (our automated-testing tool) how to run the
+  tests: which start-up file to use, and where the tests live.
+
+  The start-up file (tests/bootstrap.php) forces the tests to use a SEPARATE
+  database (felkyo_test) so running the tests can never touch your real data.
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true"
+         cacheDirectory=".phpunit.cache">
+    <testsuites>
+        <testsuite name="Felkyo test suite">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

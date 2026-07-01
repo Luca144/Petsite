@@ -1,0 +1,29 @@
+# Felkyo Creatures — Git LFS (Large File Storage) configuration.
+#
+# WHAT THIS IS FOR: our creatures are delivered as animated GIFs, and the site
+# uses larger pieces of art (backgrounds, decorative frames). These are binary
+# files that change as whole blobs. Storing them directly in Git would bloat the
+# repository history and make every clone slow. Git LFS keeps a tiny text pointer
+# in Git and stores the real bytes separately, so the repo stays small.
+#
+# HOW IT WORKS: any path matched below is stored via LFS instead of normal Git.
+# You need Git LFS installed once per machine ("git lfs install"); the setup
+# guide in docs/ explains this.
+#
+# HOW TO ADD MORE: if a new kind of art folder appears, add a matching line here
+# following the same pattern.
+
+# All art living under these two folders goes to LFS, whatever its extension.
+public/assets/creatures/**  filter=lfs diff=lfs merge=lfs -text
+public/assets/art/**        filter=lfs diff=lfs merge=lfs -text
+
+# Belt-and-braces: these image/source formats go to LFS wherever they appear,
+# so a stray large asset outside the folders above is still stored efficiently.
+*.gif   filter=lfs diff=lfs merge=lfs -text
+*.apng  filter=lfs diff=lfs merge=lfs -text
+*.webp  filter=lfs diff=lfs merge=lfs -text
+*.psd   filter=lfs diff=lfs merge=lfs -text
+
+# Keep line endings sane across Windows and the Linux production host:
+# text files are normalised to LF in the repository.
+* text=auto eol=lf

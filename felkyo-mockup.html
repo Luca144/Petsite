@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Felkyo Creatures — Biscuit's Page</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,500;1,9..144,600&family=Nunito:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --parchment:#F1E4C3;
+    --panel:#E7D4A8;
+    --purple:#6A4C93;
+    --plum:#3D2B4F;
+    --plum-deep:#2A1C3A;
+    --gold:#C9A227;
+    --gold-lit:#E8C95A;
+    --border:#B89A6A;
+    --ink:#3D2B4F;
+    --ink-soft:#5A4568;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:'Nunito',sans-serif;color:var(--ink);font-size:17px;line-height:1.65;
+    min-height:100vh;padding:30px 16px 64px;
+    /* warm lamplit evening room: deep plum field, gold lamp-glow from the top,
+       a soft purple pool of light — cosy autumn night, not cold */
+    background:
+      radial-gradient(820px 480px at 50% -6%, rgba(232,201,90,0.34), transparent 60%),
+      radial-gradient(680px 600px at 85% 12%, rgba(106,76,147,0.50), transparent 55%),
+      linear-gradient(160deg, var(--plum) 0%, var(--plum-deep) 100%);
+    background-attachment:fixed;
+  }
+  .motes{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+  .mote{position:absolute;color:var(--gold);opacity:0;font-size:.9rem;animation:drift 16s linear infinite;}
+  .mote:nth-child(1){left:12%;animation-delay:0s;}
+  .mote:nth-child(2){left:38%;animation-delay:5s;font-size:.7rem;}
+  .mote:nth-child(3){left:67%;animation-delay:9s;}
+  .mote:nth-child(4){left:85%;animation-delay:13s;font-size:.7rem;}
+  @keyframes drift{0%{transform:translateY(-30px) rotate(0);opacity:0;}12%{opacity:.5;}88%{opacity:.5;}100%{transform:translateY(102vh) rotate(220deg);opacity:0;}}
+  .note{position:relative;z-index:2;max-width:840px;margin:0 auto 18px;text-align:center;
+    font-family:'Space Mono',monospace;font-size:0.74rem;letter-spacing:.03em;color:var(--gold-lit);}
+  .frame{position:relative;z-index:1;max-width:840px;margin:0 auto;
+    background:linear-gradient(var(--parchment),var(--parchment)) padding-box,
+      linear-gradient(150deg,var(--gold-lit),var(--gold) 45%,var(--border) 100%) border-box;
+    border:2.5px solid transparent;border-radius:28px;padding:7px;
+    box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 40px 80px -34px rgba(61,43,79,0.45),0 0 0 1px rgba(201,162,39,0.18);}
+  .frame-inner{border-radius:22px;padding:30px 30px 34px;
+    background:radial-gradient(circle at 20% 18%, rgba(255,255,255,0.35), transparent 38%),var(--parchment);
+    box-shadow:0 1px 2px rgba(184,154,106,0.3) inset;}
+  .masthead{text-align:center;position:relative;padding:6px 0 16px;}
+  .moon{display:inline-block;font-size:1rem;color:var(--gold);filter:drop-shadow(0 0 8px rgba(232,201,90,.7));
+    margin-bottom:2px;animation:glowpulse 5s ease-in-out infinite;}
+  @keyframes glowpulse{0%,100%{opacity:.7;}50%{opacity:1;}}
+  h1.wordmark{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(2.7rem,7vw,4rem);
+    font-variation-settings:'SOFT' 70,'WONK' 1,'opsz' 100;color:var(--plum);line-height:.95;letter-spacing:.01em;}
+  h1.wordmark b{color:var(--gold);font-weight:900;text-shadow:0 1px 0 var(--border),0 0 26px rgba(232,201,90,0.55);}
+  .wordmark-sub{font-family:'Space Mono',monospace;font-weight:700;font-size:.92rem;letter-spacing:.42em;text-transform:uppercase;color:var(--purple);margin-top:6px;padding-left:.42em;}
+  .tagline{font-family:'Fraunces',serif;font-style:italic;font-weight:500;color:var(--purple);font-size:1.05rem;margin-top:4px;}
+  .nav{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;margin:16px 0 2px;}
+  .nav a{font-family:'Space Mono',monospace;font-size:.82rem;font-weight:700;letter-spacing:.02em;
+    text-decoration:none;color:var(--plum);background:var(--panel);border:1.5px solid var(--border);
+    padding:11px 17px;border-radius:999px;min-height:44px;display:inline-flex;align-items:center;
+    transition:transform .16s,background .16s,color .16s,box-shadow .16s;}
+  .nav a:hover{background:var(--gold-lit);color:var(--plum);transform:translateY(-2px);box-shadow:0 8px 18px -8px rgba(201,162,39,.7);}
+  .nav a:focus-visible{outline:3px solid var(--purple);outline-offset:3px;}
+  .rule{height:0;border:none;border-top:1.5px solid var(--border);opacity:.55;margin:26px 6px;position:relative;}
+  .rule::after{content:"✦";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    background:var(--parchment);color:var(--gold);padding:0 14px;font-size:.85rem;}
+  .profile{display:flex;gap:30px;flex-wrap:wrap;align-items:flex-start;margin-top:8px;}
+  .portrait-wrap{flex:0 0 240px;margin:0 auto;}
+  .portrait{position:relative;aspect-ratio:1;border-radius:18px;
+    background:radial-gradient(circle at 50% 42%, rgba(232,201,90,0.22), transparent 60%),
+      repeating-conic-gradient(from 45deg,#efe1bb 0 25%,#e4d3a4 0 50%) 0 0/30px 30px;
+    border:3px solid var(--gold);
+    box-shadow:0 0 0 7px var(--parchment),0 0 0 8.5px var(--border),0 0 44px -6px rgba(232,201,90,0.5),0 22px 46px -18px rgba(61,43,79,0.5);
+    display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .portrait .blob{font-size:5.8rem;animation:bob 3s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-9px) rotate(2deg);}}
+  .portrait .ph{position:absolute;bottom:9px;font-family:'Space Mono',monospace;font-size:.62rem;
+    color:var(--plum);background:rgba(241,228,195,.92);padding:3px 9px;border-radius:7px;border:1px solid var(--border);}
+  .tape{position:absolute;width:84px;height:24px;background:rgba(106,76,147,.26);
+    border-left:1px dashed rgba(255,255,255,.45);border-right:1px dashed rgba(255,255,255,.45);backdrop-filter:blur(1px);}
+  .tape.tl{top:-10px;left:-8px;transform:rotate(-22deg);}
+  .mood{margin-top:16px;text-align:center;font-family:'Fraunces',serif;font-style:italic;color:var(--ink-soft);font-size:.98rem;}
+  .mood b{color:var(--plum);font-style:normal;font-weight:600;}
+  .pinfo{flex:1;min-width:250px;}
+  h2.petname{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(2.1rem,5vw,2.8rem);
+    font-variation-settings:'SOFT' 50,'opsz' 100;color:var(--plum);line-height:1;}
+  .species{font-family:'Space Mono',monospace;font-size:.82rem;color:var(--ink-soft);letter-spacing:.02em;margin:8px 0 18px;}
+  .species b{color:var(--purple);}
+  .statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;
+    background:linear-gradient(160deg,var(--plum),var(--plum-deep));
+    border:1.5px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:20px;
+    box-shadow:0 14px 30px -18px rgba(61,43,79,.7);}
+  .stat{padding:15px 6px;text-align:center;border-right:1px solid rgba(184,154,106,.3);}
+  .stat:last-child{border-right:none;}
+  .stat .n{font-family:'Fraunces',serif;font-weight:900;font-size:1.9rem;color:var(--gold-lit);display:block;line-height:1;text-shadow:0 0 18px rgba(232,201,90,.5);}
+  .stat .l{font-family:'Space Mono',monospace;font-size:.64rem;text-transform:uppercase;letter-spacing:.08em;color:var(--panel);}
+  .pet-btn{display:inline-flex;align-items:center;gap:9px;cursor:pointer;min-height:48px;
+    font-family:'Nunito',sans-serif;font-weight:800;font-size:1.05rem;color:var(--parchment);
+    background:linear-gradient(160deg,var(--purple),var(--plum));border:2px solid var(--gold);border-radius:16px;padding:13px 28px;
+    box-shadow:0 12px 26px -12px rgba(106,76,147,.9),inset 0 1px 0 rgba(255,255,255,.22);
+    transition:transform .16s,box-shadow .16s,background .16s;animation:emberglow 4s ease-in-out infinite;}
+  @keyframes emberglow{0%,100%{box-shadow:0 12px 26px -12px rgba(106,76,147,.9),inset 0 1px 0 rgba(255,255,255,.22),0 0 22px -6px rgba(232,201,90,.25);}50%{box-shadow:0 12px 26px -12px rgba(106,76,147,.9),inset 0 1px 0 rgba(255,255,255,.22),0 0 30px -4px rgba(232,201,90,.55);}}
+  .pet-btn:hover{transform:translateY(-3px) scale(1.02);background:linear-gradient(160deg,var(--gold),var(--gold-lit));color:var(--plum);}
+  .pet-btn:focus-visible{outline:3px solid var(--purple);outline-offset:3px;}
+  .pet-btn .heart{font-size:1.15rem;}
+  h2.panel-label{font-family:'Fraunces',serif;font-weight:600;font-size:1.3rem;color:var(--plum);display:flex;align-items:center;gap:9px;margin-bottom:12px;}
+  .panel-label .tag{font-family:'Space Mono',monospace;font-size:.64rem;color:var(--ink-soft);border:1px solid var(--border);border-radius:7px;padding:3px 8px;text-transform:uppercase;letter-spacing:.06em;}
+  .about{background:var(--panel);border:1.5px solid var(--border);border-radius:16px;padding:20px 22px;position:relative;box-shadow:inset 0 2px 0 rgba(255,255,255,.3);}
+  .about p{font-size:1.02rem;}
+  .about .corner{position:absolute;width:16px;height:16px;border:2px solid var(--gold);opacity:.6;}
+  .about .c1{top:8px;left:8px;border-right:none;border-bottom:none;}
+  .about .c2{top:8px;right:8px;border-left:none;border-bottom:none;}
+  .about .c3{bottom:8px;left:8px;border-right:none;border-top:none;}
+  .about .c4{bottom:8px;right:8px;border-left:none;border-top:none;}
+  .friends{display:grid;grid-template-columns:repeat(6,1fr);gap:13px;}
+  .friend{text-align:center;}
+  .friend a{text-decoration:none;display:block;border-radius:12px;}
+  .friend a:focus-visible{outline:3px solid var(--purple);outline-offset:3px;}
+  .friend .ph-pet{aspect-ratio:1;border-radius:12px;border:2px solid var(--border);
+    background:repeating-conic-gradient(from 45deg,#efe1bb 0 25%,#e4d3a4 0 50%) 0 0/16px 16px;
+    display:flex;align-items:center;justify-content:center;font-size:1.6rem;transition:transform .16s,border-color .16s,box-shadow .16s;}
+  .friend a:hover .ph-pet{transform:translateY(-4px) rotate(-3deg);border-color:var(--gold);box-shadow:0 10px 20px -8px rgba(201,162,39,.6);}
+  .friend .fname{font-family:'Space Mono',monospace;font-size:.66rem;color:var(--ink-soft);margin-top:6px;}
+  .stamps{display:flex;flex-wrap:wrap;gap:10px;}
+  .blinky{font-family:'Space Mono',monospace;font-size:.68rem;font-weight:700;letter-spacing:.02em;color:var(--plum);
+    background:var(--parchment);border:1.5px solid var(--gold);padding:7px 12px;border-radius:8px;display:inline-flex;align-items:center;gap:7px;min-height:34px;box-shadow:2px 2px 0 var(--border);}
+  .blinky .d{width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 7px var(--gold-lit);animation:twinkle 2.4s ease-in-out infinite;}
+  @keyframes twinkle{0%,100%{opacity:.45;}50%{opacity:1;}}
+  .gb-entry{background:linear-gradient(160deg,var(--plum),var(--plum-deep));border:1.5px solid var(--border);border-radius:14px;
+    padding:15px 18px;margin-bottom:11px;position:relative;box-shadow:0 12px 26px -18px rgba(61,43,79,.7);}
+  .gb-entry .who{font-family:'Fraunces',serif;font-weight:600;color:var(--gold-lit);font-size:1rem;}
+  .gb-entry .when{font-family:'Space Mono',monospace;font-size:.64rem;color:var(--panel);float:right;opacity:.8;}
+  .gb-entry .msg{font-size:.97rem;margin-top:3px;color:var(--parchment);}
+  footer{text-align:center;margin-top:30px;font-family:'Space Mono',monospace;font-size:.7rem;color:var(--ink-soft);letter-spacing:.04em;}
+  footer .heart{color:var(--gold);}
+  @media(max-width:560px){body{font-size:16px;}.frame-inner{padding:20px 15px 24px;}.friends{grid-template-columns:repeat(3,1fr);}.portrait-wrap{flex-basis:100%;max-width:240px;}}
+  @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto;}*,*::before,*::after{animation:none!important;transition:none!important;}.motes{display:none;}}
+</style>
+</head>
+<body>
+  <div class="motes" aria-hidden="true"><span class="mote">❦</span><span class="mote">✦</span><span class="mote">❧</span><span class="mote">✦</span></div>
+  <p class="note">▸ mockup — colours, fonts &amp; mood preview · checker squares = where the animated creature art goes · not final layout</p>
+  <div class="frame">
+   <div class="frame-inner">
+    <header class="masthead">
+      <span class="moon" aria-hidden="true">☾</span>
+      <h1 class="wordmark">Fel<b>kyo</b></h1>
+      <div class="wordmark-sub">Creatures</div>
+      <p class="tagline">come in — the kettle's on</p>
+    </header>
+    <nav class="nav" aria-label="Main">
+      <a href="#">home</a><a href="#">my creatures</a><a href="#">the shop</a><a href="#">wander</a><a href="#">community</a>
+    </nav>
+    <hr class="rule">
+    <section class="profile" aria-label="Biscuit">
+      <div class="portrait-wrap">
+        <div class="portrait">
+          <span class="tape tl" aria-hidden="true"></span>
+          <span class="blob" role="img" aria-label="Biscuit, a Foxlen (placeholder art)">🦊</span>
+          <span class="ph">animated creature here</span>
+        </div>
+        <p class="mood">currently feeling <b>cosy</b> &amp; a little sleepy ☾</p>
+      </div>
+      <div class="pinfo">
+        <h2 class="petname">Biscuit</h2>
+        <p class="species">a <b>Foxlen</b> · juvenile · hatched 31 days ago</p>
+        <div class="statgrid">
+          <div class="stat"><span class="n">7</span><span class="l">level</span></div>
+          <div class="stat"><span class="n">142</span><span class="l">times petted</span></div>
+          <div class="stat"><span class="n">3</span><span class="l">friends</span></div>
+        </div>
+        <button class="pet-btn"><span class="heart" aria-hidden="true">♡</span> Pet Biscuit</button>
+      </div>
+    </section>
+    <hr class="rule">
+    <h2 class="panel-label">About Biscuit <span class="tag">bio</span></h2>
+    <div class="about">
+      <span class="corner c1" aria-hidden="true"></span><span class="corner c2" aria-hidden="true"></span><span class="corner c3" aria-hidden="true"></span><span class="corner c4" aria-hidden="true"></span>
+      <p>A curious little Foxlen who turned up one rainy autumn morning and never quite left. Collects shiny pebbles, naps in the warmest corner of the room, and is utterly convinced the moon is a friend. Happiest when it's grey outside and warm in.</p>
+    </div>
+    <hr class="rule">
+    <h2 class="panel-label">Biscuit's Favourite Companions <span class="tag">top 6</span></h2>
+    <div class="friends">
+      <div class="friend"><a href="#"><span class="ph-pet" role="img" aria-label="Clover">🐇</span><span class="fname">Clover</span></a></div>
+      <div class="friend"><a href="#"><span class="ph-pet" role="img" aria-label="Marlow">🦉</span><span class="fname">Marlow</span></a></div>
+      <div class="friend"><a href="#"><span class="ph-pet" role="img" aria-label="Pip">🐈</span><span class="fname">Pip</span></a></div>
+      <div class="friend"><a href="#"><span class="ph-pet" role="img" aria-label="Dot">🦋</span><span class="fname">Dot</span></a></div>
+      <div class="friend"><a href="#"><span class="ph-pet" role="img" aria-label="Sage">🐢</span><span class="fname">Sage</span></a></div>
+      <div class="friend"><a href="#"><span class="ph-pet" role="img" aria-label="Bramble">🦔</span><span class="fname">Bramble</span></a></div>
+    </div>
+    <hr class="rule">
+    <h2 class="panel-label">Stamps &amp; Trinkets <span class="tag">earned</span></h2>
+    <div class="stamps">
+      <span class="blinky"><span class="d" aria-hidden="true"></span> early adopter</span>
+      <span class="blinky"><span class="d" aria-hidden="true"></span> well loved</span>
+      <span class="blinky"><span class="d" aria-hidden="true"></span> night owl</span>
+      <span class="blinky"><span class="d" aria-hidden="true"></span> pebble hoarder</span>
+      <span class="blinky"><span class="d" aria-hidden="true"></span> moon friend</span>
+    </div>
+    <hr class="rule">
+    <h2 class="panel-label">Guestbook <span class="tag">5 notes</span></h2>
+    <div class="gb-entry"><span class="when">2 days ago</span><p class="who">Marlow's keeper</p><p class="msg">biscuit is SO cute, left them a pet 💛 come say hi to marlow sometime!</p></div>
+    <div class="gb-entry"><span class="when">5 days ago</span><p class="who">Clover's keeper</p><p class="msg">the pebble collection is unmatched honestly. iconic foxlen behaviour.</p></div>
+    <footer>Felkyo Creatures · made with <span class="heart" aria-hidden="true">♥</span> · a warm little corner of the web</footer>
+   </div>
+  </div>
+</body>
+</html>

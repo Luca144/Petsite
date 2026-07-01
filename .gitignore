@@ -1,0 +1,30 @@
+# Felkyo Creatures — files that must never be committed.
+# Each entry has a short note so a newcomer knows WHY it is ignored.
+
+# Secrets and local configuration. The real .env holds database passwords and
+# app secrets. It is created from .env.example on each machine and never shared.
+.env
+
+# Installed dependencies. These are restored by "composer install" from
+# composer.json + composer.lock, so committing them would just bloat the repo.
+/vendor/
+
+# Application log files. These are generated at runtime and differ per machine.
+# We keep the folder (via logs/.gitkeep) but ignore the logs themselves.
+/logs/*.log
+
+# The one-off Composer installer, if it is ever left behind by accident.
+composer-setup.php
+
+# PHPUnit's local cache (test results, etc.) — generated, per-machine.
+.phpunit.cache/
+
+# Editor / OS noise that has nothing to do with the project.
+.idea/
+.vscode/
+*.swp
+Thumbs.db
+.DS_Store
+
+# Backup of php.ini we made while setting up (local machine only).
+*.felkyo-bak
