@@ -1,0 +1,241 @@
+/*
+ * layout.css — the shared page structure for Felkyo Creatures.
+ *
+ * WHAT THIS FILE IS: the styles for the pieces every page shares — the gold-edged
+ * parchment "frame" that holds the content, the masthead (wordmark + tagline),
+ * the navigation, the decorative divider, the footer, and the gentle ambient
+ * sparkles. Individual pages fill the content area; this file frames it.
+ *
+ * It reads all its colours, fonts and spacing from theme.css — no raw values here.
+ * Written mobile-first: the base rules target a ~360px phone, and a min-width
+ * media query at the bottom adds the roomier desktop refinements.
+ */
+
+/*
+ * Skip link: the first thing a keyboard/screen-reader user meets. It lets them
+ * jump straight past the header to the main content. It is hidden off-screen
+ * until focused, then appears.
+ */
+.skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 10;
+    background: var(--parchment);
+    color: var(--plum);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-weight: 700;
+}
+
+.skip-link:focus {
+    left: var(--space-2);
+    top: var(--space-2);
+}
+
+/*
+ * Ambient sparkles ("motes"): a few gold glyphs drifting slowly down the page,
+ * like dust in lamplight. Purely decorative, so hidden from screen readers, and
+ * sitting behind the content. They are turned off entirely for reduced-motion.
+ */
+.site-motes {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.site-motes span {
+    position: absolute;
+    color: var(--gold);
+    opacity: 0;
+    font-size: 0.9rem;
+    animation: mote-drift 16s linear infinite;
+}
+
+.site-motes span:nth-child(1) { left: 14%; animation-delay: 0s; }
+.site-motes span:nth-child(2) { left: 42%; animation-delay: 5s; font-size: 0.7rem; }
+.site-motes span:nth-child(3) { left: 68%; animation-delay: 9s; }
+.site-motes span:nth-child(4) { left: 86%; animation-delay: 13s; font-size: 0.7rem; }
+
+@keyframes mote-drift {
+    0% { transform: translateY(-30px) rotate(0); opacity: 0; }
+    12% { opacity: 0.5; }
+    88% { opacity: 0.5; }
+    100% { transform: translateY(102vh) rotate(220deg); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .site-motes {
+        display: none;
+    }
+}
+
+/*
+ * The frame: a parchment surface with a soft gold gradient border, floating on
+ * the plum field. The gradient border is drawn with two stacked backgrounds
+ * (one clipped to the padding box, one to the border box) — a standard CSS
+ * technique for a gradient outline that a plain "border" cannot produce.
+ */
+.site-frame {
+    position: relative;
+    z-index: 1;
+    max-width: var(--content-max);
+    margin: 0 auto;
+    background:
+        linear-gradient(var(--parchment), var(--parchment)) padding-box,
+        linear-gradient(150deg, var(--gold-lit), var(--gold) 45%, var(--border) 100%) border-box;
+    border: 2.5px solid transparent;
+    border-radius: calc(var(--radius-lg) + 6px);
+    padding: 7px;
+    box-shadow: var(--shadow-panel), 0 0 0 1px rgba(201, 162, 39, 0.18);
+}
+
+.site-frame__inner {
+    border-radius: var(--radius-lg);
+    padding: var(--space-6) var(--space-4) var(--space-8);
+    background:
+        radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.35), transparent 38%),
+        var(--parchment);
+}
+
+/* ---- Masthead (the site header) ---- */
+.site-header {
+    text-align: center;
+    padding: var(--space-2) 0 var(--space-4);
+}
+
+/* A small glowing moon above the wordmark — a gentle "cosy night" cue. */
+.site-header__moon {
+    display: inline-block;
+    font-size: 1rem;
+    color: var(--gold);
+    filter: drop-shadow(0 0 8px rgba(232, 201, 90, 0.7));
+    animation: moon-glow 5s ease-in-out infinite;
+}
+
+@keyframes moon-glow {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+
+/* The wordmark. Fraunces' soft optical settings give it warmth. The "kyo" is
+   gold for a spark of sparkle — this is decoration, so gold is allowed here. */
+.site-header__wordmark {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: clamp(2.4rem, 7vw, 3.6rem);
+    font-variation-settings: 'SOFT' 70, 'WONK' 1, 'opsz' 100;
+    color: var(--plum);
+    line-height: 0.95;
+}
+
+.site-header__wordmark b {
+    color: var(--gold);
+    font-weight: 900;
+    text-shadow: 0 1px 0 var(--border), 0 0 26px rgba(232, 201, 90, 0.55);
+}
+
+.site-header__sub {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.42em;
+    text-transform: uppercase;
+    color: var(--purple);
+    margin-top: var(--space-2);
+    padding-left: 0.42em; /* balances the wide letter-spacing visually */
+}
+
+.site-header__tagline {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 500;
+    color: var(--purple);
+    font-size: 1.05rem;
+    margin-top: var(--space-1);
+}
+
+/* ---- Navigation (pill buttons; never a dropdown — CLAUDE.md section 8) ---- */
+.site-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    justify-content: center;
+    margin-top: var(--space-4);
+}
+
+.site-nav a {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+    color: var(--plum);
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-pill);
+    min-height: 44px; /* comfortable touch target */
+    display: inline-flex;
+    align-items: center;
+    transition: transform 0.16s, background 0.16s, box-shadow 0.16s;
+}
+
+.site-nav a:hover {
+    background: var(--gold-lit);
+    color: var(--plum);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px -8px rgba(201, 162, 39, 0.7);
+}
+
+/* Marks the current page for everyone — not by colour alone, but with a heavier
+   border and weight, so it reads without relying on sight of the accent. */
+.site-nav a[aria-current="page"] {
+    background: var(--gold-lit);
+    border-color: var(--gold);
+}
+
+/* ---- Decorative divider with a central sparkle ---- */
+.rule {
+    height: 0;
+    border: none;
+    border-top: 1.5px solid var(--border);
+    opacity: 0.55;
+    margin: var(--space-6) var(--space-2);
+    position: relative;
+}
+
+.rule::after {
+    content: "\2726"; /* a four-point star sparkle */
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--parchment);
+    color: var(--gold);
+    padding: 0 var(--space-3);
+    font-size: 0.85rem;
+}
+
+/* ---- Footer ---- */
+.site-footer {
+    text-align: center;
+    margin-top: var(--space-8);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+}
+
+.site-footer .heart {
+    color: var(--gold);
+}
+
+/* ---- Desktop refinements (added on top of the mobile-first base) ---- */
+@media (min-width: 640px) {
+    .site-frame__inner {
+        padding: var(--space-8) var(--space-8) var(--space-12);
+    }
+}

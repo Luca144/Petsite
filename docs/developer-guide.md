@@ -131,3 +131,48 @@ and a foreign key really exist. Run the suite with:
 [schema.md](schema.md) — create a new migration, write the change, migrate both
 environments, update the docs. Never edit an already-applied migration or change
 tables by hand.
+
+---
+
+## Increment 0.3 — Design language and base layout
+
+**What it delivers:** the site's visual foundation — a central theme, a
+mobile-first base layout, the web fonts, and a small reusable component kit — so
+every later page inherits the cosy-autumn look instead of re-inventing it. The
+welcome page now renders inside the real themed layout.
+
+**The look:** "cosy autumn hygge" — a warm lamplit-evening plum background with a
+gold-edged parchment frame floating on it, the Fraunces wordmark, Space Mono
+labels, and a few restrained sparkles. It follows the palette and fonts fixed in
+CLAUDE.md exactly.
+
+**Where the styles live (split by concern, all in `public/css/`):**
+
+| File | What it holds |
+| --- | --- |
+| `theme.css` | The design **tokens** — every colour, font, spacing, radius and shadow as a CSS custom property (`--name`). The single place to retune the look. Also the reset, base typography, focus styles, and the global reduced-motion rule. |
+| `layout.css` | The shared page **structure** — skip link, the parchment frame, masthead/wordmark, nav pills, divider, footer, ambient sparkles. |
+| `components.css` | The reusable **components** — buttons (`.btn`, `.btn--primary`, `.btn--secondary`), cards (`.card`, `.card--dark`), tiles (`.tile-grid`, `.tile`), form fields (`.field*`), and badges. |
+
+**The golden rules this increment sets (follow them on every later page):**
+
+- **Components never hardcode a colour.** They only use the `--tokens` from
+  `theme.css`. Need a new colour? Add a named token to `theme.css` first. (There
+  is zero raw hex in `layout.css`/`components.css` — keep it that way.)
+- **No dropdowns, ever.** For choices, use `.tile-grid` tiles or a button group,
+  never a `<select>`. A test (`LayoutRenderTest`) fails if a `<select>` appears.
+- **Mobile-first.** Base styles target a ~360px phone; desktop tweaks live in
+  `@media (min-width: …)` blocks at the bottom of a file.
+- **Accessible by default.** Real landmarks (`<header>`/`<main>`/`<footer>`/`<nav>`),
+  a skip link, visible keyboard focus, ≥44px touch targets, gold used only on dark
+  or as decoration (never as readable text on parchment), and full
+  `prefers-reduced-motion` support (all motion off, sparkles hidden).
+
+**How to build a new page (the recipe):** create `templates/pages/yourpage.php`,
+call `$this->layout('layout', ['title' => '…'])` at the top, then write the body
+using the components above (a `.card` to group things, `.btn--primary` for the
+main action, `.tile-grid` for choices). Register its route in `public/index.php`
+and add a test. The themed shell, fonts and styles come for free.
+
+**Note on the logo:** the masthead wordmark is a typographic placeholder set in
+Fraunces. The finished logo art replaces it during the art-import step.
