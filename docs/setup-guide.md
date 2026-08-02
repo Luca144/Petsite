@@ -87,8 +87,30 @@ only by the automated tests, so tests can never harm real data).
 C:\xampp\mysql\bin\mysql.exe -u root -e "CREATE DATABASE IF NOT EXISTS felkyo CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE DATABASE IF NOT EXISTS felkyo_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 ```
 
-> The database **tables** are created by migrations (increment 0.2 onward). This
-> guide will gain a "run the migrations" step when they exist.
+## 4b. Create the tables (run the migrations)
+
+The tables are created by **migrations** (managed by Phinx). Apply them to the
+development database:
+
+```powershell
+C:\xampp\php\php.exe vendor/robmorgan/phinx/bin/phinx migrate -e development
+```
+
+You do **not** need to migrate `felkyo_test` by hand — the test suite migrates it
+automatically before it runs (see section 6). If you ever want to do it manually:
+
+```powershell
+C:\xampp\php\php.exe vendor/robmorgan/phinx/bin/phinx migrate -e testing
+```
+
+See [schema.md](schema.md) for what every table is and how to make schema changes.
+
+> **Note — legacy database backup.** This project previously had a scrapped
+> first iteration whose tables lived in the `felkyo` database. Before creating
+> the clean v2 schema, that old database was backed up to
+> `backups/felkyo-legacy-backup-20260702.sql` (kept locally, not committed to
+> Git). Nothing from it is used by v2; it is retained only in case anything is
+> ever needed from the old data. You can ignore it for normal work.
 
 ---
 

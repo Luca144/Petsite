@@ -16,6 +16,10 @@
 # The one-off Composer installer, if it is ever left behind by accident.
 composer-setup.php
 
+# Local database backups (e.g. the scrapped legacy schema). These can be large
+# and contain old data; they are kept on the machine, not in the repository.
+/backups/
+
 # PHPUnit's local cache (test results, etc.) — generated, per-machine.
 .phpunit.cache/
 

@@ -90,3 +90,44 @@ is the frame everything else hangs on.
 2. In `public/index.php`, register a route:
    `$router->get('/about', function () use ($templates) { return $templates->render('pages/about'); });`
 3. Add a test for it under `tests/`.
+
+---
+
+## Increment 0.2 — Database schema
+
+**What it delivers:** the whole database structure for the entire project,
+created by migrations, plus documentation and tests that prove it. No feature
+logic yet — this is the shape the data will live in.
+
+**Migrations (how the database is built).** The database is never edited by hand.
+Instead, each structural change is a small script in `migrations/`, run by
+**Phinx**. The scripts are numbered and run in order. This means anyone can build
+an identical database from nothing by running the migrations, and every change is
+recorded in Git. Configuration for Phinx is in `phinx.php` at the project root; it
+reads the same `.env` credentials the app uses, and defines three environments:
+`development` (your `felkyo`), `testing` (`felkyo_test`), and `production` (Phase D).
+
+**The tables** are described in plain language in [schema.md](schema.md). The
+short version: `users` own `creatures` (each of a `species`); `pettings` logs each
+pet; `exploration_visits` tracks click limits; `items` + `inventory` + `shops` +
+`shop_items` are the economy foundation; `rate_limit_hits` backs the rate limiter.
+
+**Two decisions worth knowing:**
+
+- **Growth is derived, not stored.** Creatures store only `xp`. Level and life
+  stage are calculated from `xp`, so they can never drift out of sync.
+- **`pettings` is an event log, not a counter.** Recording each pet (who, which
+  creature, when) is what lets us enforce a per-person cooldown and an anti-spam
+  currency cap later — a single "last petted" timestamp could not.
+
+**Tests migrate the test database for you.** `tests/bootstrap.php` runs the Phinx
+migrations against `felkyo_test` before any test, so the suite is self-contained —
+you never have to remember to migrate the test database. The integration test in
+`tests/Integration/SchemaTest.php` then checks the tables, required-column rules,
+and a foreign key really exist. Run the suite with:
+`C:\xampp\php\php.exe vendor/phpunit/phpunit/phpunit`.
+
+**How to change the schema later (the recipe):** see the end of
+[schema.md](schema.md) — create a new migration, write the change, migrate both
+environments, update the docs. Never edit an already-applied migration or change
+tables by hand.
