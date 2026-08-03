@@ -72,7 +72,7 @@ final class AuthControllerTest extends DatabaseTestCase
         $starterCreatures = new StarterCreatureService(
             new SpeciesRepository($this->connection),
             new CreatureRepository($this->connection),
-            $config['gameplay']['starter_creature_names']
+            $config['gameplay']['creature_names']
         );
 
         // Controllers.

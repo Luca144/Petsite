@@ -25,6 +25,7 @@ use Felkyo\Auth\RegistrationService;
 use Felkyo\Auth\Session;
 use Felkyo\Core\Database;
 use Felkyo\Core\FileLogger;
+use Felkyo\Creatures\AdoptionService;
 use Felkyo\Creatures\CreatureProfileBuilder;
 use Felkyo\Creatures\CreatureRepository;
 use Felkyo\Creatures\GrowthCalculator;
@@ -32,6 +33,8 @@ use Felkyo\Creatures\PettingRepository;
 use Felkyo\Creatures\PettingService;
 use Felkyo\Creatures\SpeciesRepository;
 use Felkyo\Creatures\StarterCreatureService;
+use Felkyo\Http\Controllers\AdoptionController;
+use Felkyo\Http\Controllers\CollectionController;
 use Felkyo\Http\Controllers\CreatureController;
 use Felkyo\Http\Controllers\HomeController;
 use Felkyo\Http\Controllers\LoginController;
@@ -86,7 +89,16 @@ $registrationService = new RegistrationService($userRepository, $userValidator, 
 $authenticator = new Authenticator($userRepository, $passwordHasher);
 $rateLimiter = new RateLimiter($rateLimitRepository);
 $starterCreatureService = new StarterCreatureService(
-    $speciesRepository, $creatureRepository, $config['gameplay']['starter_creature_names']
+    $speciesRepository, $creatureRepository, $config['gameplay']['creature_names']
+);
+$adoptionService = new AdoptionService(
+    $speciesRepository,
+    $creatureRepository,
+    $userRepository,
+    [
+        'cooldown_seconds' => $config['gameplay']['adoption']['cooldown_seconds'],
+        'names' => $config['gameplay']['creature_names'],
+    ]
 );
 $growthCalculator = new GrowthCalculator(
     $config['gameplay']['growth']['xp_per_level'],
@@ -129,6 +141,12 @@ $creatureController = new CreatureController(
 $petController = new PetController(
     $session, $csrf, $creatureRepository, $pettingService, $rateLimiter, $config['security']['rate_limit_pet']
 );
+$collectionController = new CollectionController(
+    $templates, $session, $creatureRepository, $creatureProfileBuilder
+);
+$adoptionController = new AdoptionController(
+    $templates, $session, $csrf, $adoptionService, $rateLimiter, $config['security']['rate_limit_adopt']
+);
 
 // ---- Routes ----
 $router = new Router();
@@ -142,6 +160,13 @@ $router->post('/register', [$registerController, 'submit']);
 $router->get('/login', [$loginController, 'show']);
 $router->post('/login', [$loginController, 'submit']);
 $router->post('/logout', [$logoutController, 'submit']);
+
+// The player's own collection of creatures.
+$router->get('/creatures', [$collectionController, 'show']);
+
+// Daily adoption.
+$router->get('/adopt', [$adoptionController, 'show']);
+$router->post('/adopt', [$adoptionController, 'adopt']);
 
 // A single creature's page. {id} is captured from the URL, e.g. /creature/42.
 $router->get('/creature/{id}', [$creatureController, 'show']);

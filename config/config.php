@@ -81,6 +81,11 @@ return [
             'window_seconds' => 60,  // ...per minute, per IP (anti-abuse; the
                                      // per-creature cooldown below is the main gate)
         ],
+        'rate_limit_adopt' => [
+            'max_attempts' => 10,     // at most 10 adoption attempts...
+            'window_seconds' => 3600, // ...per hour, per IP (anti-abuse; the
+                                      // once-per-day cooldown is the main gate)
+        ],
     ],
 
     // Gameplay tunables — the documented home for "knobs" so a beginner can
@@ -115,10 +120,18 @@ return [
             'xp_per_pet' => 20,
         ],
 
-        // The pool of friendly default names a brand-new creature can be given
-        // when a player first receives their starter. The player can be allowed to
-        // rename it in a later increment.
-        'starter_creature_names' => [
+        // Daily adoption — a player can adopt one new creature per "day" from the
+        // pool of adoptable species. "Once per day" is measured as a cooldown from
+        // their last adoption. (Short-ish default so it is easy to try; a real day
+        // is 86400 seconds — raise it to that for once-per-calendar-day feel.)
+        'adoption' => [
+            'cooldown_seconds' => 86400,
+        ],
+
+        // The pool of friendly default names a new creature can be given — used
+        // both for a player's starter and for adopted creatures. Players may be
+        // allowed to rename in a later increment.
+        'creature_names' => [
             'Pip', 'Biscuit', 'Clover', 'Marlow', 'Sage', 'Bramble', 'Dot', 'Fern',
         ],
     ],

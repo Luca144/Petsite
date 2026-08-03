@@ -116,6 +116,39 @@ final class UserRepository
     }
 
     /**
+     * Has this user adopted a creature within the last $withinSeconds seconds?
+     * This backs the "once per day" adoption limit. The number of seconds is cast
+     * to an integer and placed straight into the SQL (safe: it is our own value,
+     * and INTERVAL will not take a bound parameter).
+     */
+    public function hasAdoptedWithin(int $userId, int $withinSeconds): bool
+    {
+        $withinSeconds = max(0, $withinSeconds);
+
+        $statement = $this->connection->prepare(
+            'SELECT COUNT(*) FROM users
+              WHERE id = :id
+                AND last_adopted_at IS NOT NULL
+                AND last_adopted_at >= NOW() - INTERVAL ' . $withinSeconds . ' SECOND'
+        );
+        $statement->execute([':id' => $userId]);
+
+        return (int) $statement->fetchColumn() > 0;
+    }
+
+    /**
+     * Record that a user has just adopted a creature, by stamping last_adopted_at
+     * with the database's current time.
+     */
+    public function markAdopted(int $userId): void
+    {
+        $statement = $this->connection->prepare(
+            'UPDATE users SET last_adopted_at = NOW() WHERE id = :id'
+        );
+        $statement->execute([':id' => $userId]);
+    }
+
+    /**
      * Turn a fetched row into a User, or null if the query found nothing. PDO's
      * fetch() returns false when there is no row, which we treat as "not found".
      */

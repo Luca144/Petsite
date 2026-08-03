@@ -51,9 +51,50 @@ final class SpeciesRepository
             'SELECT ' . self::COLUMNS . ' FROM species WHERE is_starter = 1 ORDER BY id'
         );
 
+        return $this->rowsToSpecies($statement->fetchAll());
+    }
+
+    /**
+     * Get every species that can appear in the daily-adoption (and exploration)
+     * pool. These are the creatures a player can be given by adopting.
+     *
+     * @return Species[]
+     */
+    public function findAdoptable(): array
+    {
+        $statement = $this->connection->query(
+            'SELECT ' . self::COLUMNS . ' FROM species WHERE is_adoptable = 1 ORDER BY id'
+        );
+
+        return $this->rowsToSpecies($statement->fetchAll());
+    }
+
+    /**
+     * Get every species. Used where we need to look several up at once (e.g. the
+     * collection view builds a slug/name lookup so it does not query per creature).
+     *
+     * @return Species[]
+     */
+    public function all(): array
+    {
+        $statement = $this->connection->query(
+            'SELECT ' . self::COLUMNS . ' FROM species ORDER BY id'
+        );
+
+        return $this->rowsToSpecies($statement->fetchAll());
+    }
+
+    /**
+     * Turn a set of database rows into Species objects.
+     *
+     * @param array<int, array> $rows
+     * @return Species[]
+     */
+    private function rowsToSpecies(array $rows): array
+    {
         return array_map(
             static fn (array $row): Species => Species::fromRow($row),
-            $statement->fetchAll()
+            $rows
         );
     }
 }

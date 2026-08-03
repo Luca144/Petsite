@@ -94,4 +94,28 @@ final class UserRepositoryTest extends DatabaseTestCase
         $this->expectException(PDOException::class);
         $this->users->create('biscuit', 'second@example.com', 'hashed-value');
     }
+
+    public function testAdoptionTrackingRecordsAndReadsTheLastAdoptionTime(): void
+    {
+        $user = $this->users->create('biscuit', 'biscuit@example.com', 'hashed-value');
+
+        // A brand-new user has never adopted.
+        $this->assertFalse($this->users->hasAdoptedWithin($user->id, 3600));
+
+        // After marking an adoption, they count as having adopted within the hour.
+        $this->users->markAdopted($user->id);
+        $this->assertTrue($this->users->hasAdoptedWithin($user->id, 3600));
+    }
+
+    public function testAnOldAdoptionIsOutsideTheWindow(): void
+    {
+        $user = $this->users->create('biscuit', 'biscuit@example.com', 'hashed-value');
+
+        // An adoption two days ago does not count for a one-hour window.
+        $this->connection->exec(
+            'UPDATE users SET last_adopted_at = NOW() - INTERVAL 2 DAY WHERE id = ' . $user->id
+        );
+
+        $this->assertFalse($this->users->hasAdoptedWithin($user->id, 3600));
+    }
 }

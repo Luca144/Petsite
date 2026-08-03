@@ -42,4 +42,36 @@ final class CreatureProfileBuilder
             'timesPetted' => $this->pettings->countForCreature($creature->id),
         ];
     }
+
+    /**
+     * Build lightweight summaries for a LIST of creatures (used by the collection
+     * view). Each summary has just what a card needs: the creature, its species,
+     * and its level and stage.
+     *
+     * To stay efficient, we load every species once and look each creature's up
+     * from that, instead of querying the database once per creature.
+     *
+     * @param Creature[] $creatures
+     * @return array<int, array{creature: Creature, species: ?Species, level: int, stage: string}>
+     */
+    public function summariesFor(array $creatures): array
+    {
+        // Build a lookup of species id => Species, once.
+        $speciesById = [];
+        foreach ($this->species->all() as $species) {
+            $speciesById[$species->id] = $species;
+        }
+
+        $summaries = [];
+        foreach ($creatures as $creature) {
+            $summaries[] = [
+                'creature' => $creature,
+                'species' => $speciesById[$creature->speciesId] ?? null,
+                'level' => $this->growth->levelFor($creature->xp),
+                'stage' => $this->growth->stageFor($creature->xp),
+            ];
+        }
+
+        return $summaries;
+    }
 }

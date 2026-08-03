@@ -71,9 +71,11 @@
                     <a href="/"<?= ($currentPath ?? '') === '/' ? ' aria-current="page"' : '' ?>>home</a>
 
                     <?php if (!empty($currentUser)): ?>
-                        <!-- Logged in: greet the user and offer log out. Logging out
-                             changes state, so it is a POST form with a CSRF token,
-                             not a plain link. -->
+                        <!-- Logged in: links to the player's own pages, then greet
+                             them and offer log out. Logging out changes state, so it
+                             is a POST form with a CSRF token, not a plain link. -->
+                        <a href="/creatures"<?= ($currentPath ?? '') === '/creatures' ? ' aria-current="page"' : '' ?>>my creatures</a>
+                        <a href="/adopt"<?= ($currentPath ?? '') === '/adopt' ? ' aria-current="page"' : '' ?>>adopt</a>
                         <span class="site-nav__user">hi, <?= $this->e($currentUser->username) ?></span>
                         <form method="post" action="/logout" class="site-nav__form">
                             <?= $this->csrf_field() ?>

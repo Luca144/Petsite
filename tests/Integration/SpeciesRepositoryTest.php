@@ -50,4 +50,20 @@ final class SpeciesRepositoryTest extends DatabaseTestCase
     {
         $this->assertNull($this->species->findById(999999));
     }
+
+    public function testFindAdoptableReturnsOnlyAdoptableSpecies(): void
+    {
+        $adoptable = $this->species->findAdoptable();
+
+        $this->assertNotEmpty($adoptable);
+        foreach ($adoptable as $species) {
+            $this->assertTrue($species->isAdoptable);
+        }
+    }
+
+    public function testAllReturnsEverySeededSpecies(): void
+    {
+        // The seed migration adds three base species; there should be at least those.
+        $this->assertGreaterThanOrEqual(3, count($this->species->all()));
+    }
 }

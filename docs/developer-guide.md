@@ -362,3 +362,42 @@ controller stays thin and later pages that show creatures can reuse the assembly
 > class focused instead (e.g. petting was split into `PetController` +
 > `CreatureController`). Passing an untyped array-bag of dependencies would be
 > less clear, not more. Flag this if you'd prefer a different approach.
+
+---
+
+## Increments B.3 + B.4 — Collection and daily adoption
+
+**What they deliver:** a player can see all the creatures they own (the
+collection), and adopt one new creature per day from the adoptable pool — so the
+collection actually grows.
+
+**B.3 — Collection** (`GET /creatures`, `CollectionController`). Lists the
+logged-in player's creatures as cards. The one-to-many relationship was built in
+from the start, so this is mostly a view. To avoid a database query per creature,
+`CreatureProfileBuilder::summariesFor()` loads every species once and looks each
+creature's up from that.
+
+**B.4 — Daily adoption** (`GET`/`POST /adopt`, `AdoptionController` +
+`AdoptionService`). Adoption is limited to once per "day":
+
+- The limit is a **cooldown** measured from the user's `last_adopted_at`
+  (`gameplay.adoption.cooldown_seconds`, default a full day). `UserRepository`
+  gained `hasAdoptedWithin()` and `markAdopted()` for this.
+- `AdoptionService` refuses if the player has adopted within the cooldown;
+  otherwise it picks a **random** species from `SpeciesRepository::findAdoptable()`
+  and a random name from `gameplay.creature_names`, creates the creature, and
+  stamps `last_adopted_at`.
+- The controller is a state-changing POST (login + CSRF + a light IP rate limit),
+  and on success sends the player straight to their new creature's page.
+
+**Config note:** the starter and adoption name pools were merged into one
+`gameplay.creature_names`, used by both `StarterCreatureService` and
+`AdoptionService`.
+
+**New pieces:**
+
+| Layer | Classes / files |
+| --- | --- |
+| Domain | `AdoptionService`, `AdoptionResult`; `SpeciesRepository::findAdoptable/all`; `CreatureProfileBuilder::summariesFor`; `UserRepository::hasAdoptedWithin/markAdopted` |
+| Controllers | `CollectionController`, `AdoptionController` |
+| Templates/CSS | `pages/collection.php`, `pages/adopt.php`; nav links; `.creature-collection` / `.creature-card` styles |
