@@ -83,4 +83,25 @@ final class CreatureRepository
             $statement->fetchAll()
         );
     }
+
+    /**
+     * Apply the effects of one pet to a creature: add to its happiness and XP, and
+     * stamp when it was last interacted with. Doing the additions in the database
+     * (happiness = happiness + :amount) is safe even if two pets land at once.
+     */
+    public function applyPetting(int $creatureId, int $happinessGain, int $xpGain): void
+    {
+        $statement = $this->connection->prepare(
+            'UPDATE creatures
+                SET happiness = happiness + :happiness_gain,
+                    xp = xp + :xp_gain,
+                    last_interacted_at = NOW()
+              WHERE id = :id'
+        );
+        $statement->execute([
+            ':happiness_gain' => $happinessGain,
+            ':xp_gain' => $xpGain,
+            ':id' => $creatureId,
+        ]);
+    }
 }

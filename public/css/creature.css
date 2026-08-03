@@ -44,6 +44,11 @@
     min-width: 250px;
 }
 
+/* The pet form is just a wrapper around its button; give it a little space above. */
+.creature__pet {
+    margin-top: var(--space-4);
+}
+
 .creature__meta {
     font-family: var(--font-mono);
     font-size: 0.82rem;
@@ -51,11 +56,12 @@
     margin: var(--space-2) 0 var(--space-4);
 }
 
-/* The three-across stat panel. It reuses .card--dark, but we remove the card's
-   padding so the cells can divide the whole width evenly. */
+/* The stat panel. It reuses .card--dark, but we remove the card's padding so the
+   cells can divide the width evenly. auto-fit lets the cells wrap onto a second
+   row on a narrow phone instead of squashing. */
 .creature-stats {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
     padding: 0;
     overflow: hidden;
     margin-top: var(--space-4);

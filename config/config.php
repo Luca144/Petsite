@@ -76,6 +76,11 @@ return [
             'max_attempts' => 3,      // 3 new accounts...
             'window_seconds' => 3600, // ...per hour, per IP
         ],
+        'rate_limit_pet' => [
+            'max_attempts' => 20,    // at most 20 pet actions...
+            'window_seconds' => 60,  // ...per minute, per IP (anti-abuse; the
+                                     // per-creature cooldown below is the main gate)
+        ],
     ],
 
     // Gameplay tunables — the documented home for "knobs" so a beginner can
@@ -83,15 +88,31 @@ return [
     // it needs here.
     'gameplay' => [
 
-        // How a creature grows. A creature's life stage is worked out from its XP
-        // (see GrowthCalculator): it is the highest stage whose XP requirement it
-        // has reached. Every creature starts as a "baby" at 0 XP. The actual
-        // earning of XP arrives in increment B.2 — these thresholds are the knob
-        // that decides how much is needed to grow.
-        'stage_xp_thresholds' => [
-            'baby' => 0,
-            'juvenile' => 100,
-            'adult' => 300,
+        // How a creature grows (see GrowthCalculator). Both a creature's LEVEL and
+        // its life STAGE are worked out from its XP, so XP is the single source of
+        // truth. These are the knobs that decide how fast growth feels.
+        'growth' => [
+            // XP needed for each level. level = (xp / xp_per_level) + 1, so with 20
+            // here a creature gains a level for every 20 XP it earns.
+            'xp_per_level' => 20,
+            // The level at which each life stage begins. A creature's stage is the
+            // highest one whose start level it has reached.
+            'stage_start_levels' => [
+                'baby' => 1,
+                'juvenile' => 3,
+                'adult' => 6,
+            ],
+        ],
+
+        // Petting — the core interaction. Each successful pet raises happiness and
+        // grants XP, and the same person can only pet the same creature again once
+        // the cooldown has passed. Tune these to change how the game feels.
+        // (The cooldown is short by default so the loop is easy to try out; raise
+        // it for a slower, calmer game.)
+        'petting' => [
+            'cooldown_seconds' => 30,
+            'happiness_per_pet' => 1,
+            'xp_per_pet' => 20,
         ],
 
         // The pool of friendly default names a brand-new creature can be given

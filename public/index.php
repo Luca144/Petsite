@@ -25,14 +25,18 @@ use Felkyo\Auth\RegistrationService;
 use Felkyo\Auth\Session;
 use Felkyo\Core\Database;
 use Felkyo\Core\FileLogger;
+use Felkyo\Creatures\CreatureProfileBuilder;
 use Felkyo\Creatures\CreatureRepository;
 use Felkyo\Creatures\GrowthCalculator;
+use Felkyo\Creatures\PettingRepository;
+use Felkyo\Creatures\PettingService;
 use Felkyo\Creatures\SpeciesRepository;
 use Felkyo\Creatures\StarterCreatureService;
 use Felkyo\Http\Controllers\CreatureController;
 use Felkyo\Http\Controllers\HomeController;
 use Felkyo\Http\Controllers\LoginController;
 use Felkyo\Http\Controllers\LogoutController;
+use Felkyo\Http\Controllers\PetController;
 use Felkyo\Http\Controllers\RegisterController;
 use Felkyo\Http\Csrf;
 use Felkyo\Http\Request;
@@ -73,6 +77,7 @@ $userRepository = new UserRepository($pdo);
 $rateLimitRepository = new RateLimitRepository($pdo);
 $speciesRepository = new SpeciesRepository($pdo);
 $creatureRepository = new CreatureRepository($pdo);
+$pettingRepository = new PettingRepository($pdo);
 
 // ---- Services (own the business rules) ----
 $passwordHasher = new PasswordHasher();
@@ -83,7 +88,16 @@ $rateLimiter = new RateLimiter($rateLimitRepository);
 $starterCreatureService = new StarterCreatureService(
     $speciesRepository, $creatureRepository, $config['gameplay']['starter_creature_names']
 );
-$growthCalculator = new GrowthCalculator($config['gameplay']['stage_xp_thresholds']);
+$growthCalculator = new GrowthCalculator(
+    $config['gameplay']['growth']['xp_per_level'],
+    $config['gameplay']['growth']['stage_start_levels']
+);
+$pettingService = new PettingService(
+    $pettingRepository, $creatureRepository, $config['gameplay']['petting']
+);
+$creatureProfileBuilder = new CreatureProfileBuilder(
+    $speciesRepository, $userRepository, $growthCalculator, $pettingRepository
+);
 
 // ---- Who is logged in? ----
 // If the session holds a user id, load that user so the layout can greet them and
@@ -110,7 +124,10 @@ $loginController = new LoginController(
 );
 $logoutController = new LogoutController($session, $csrf);
 $creatureController = new CreatureController(
-    $templates, $session, $creatureRepository, $speciesRepository, $userRepository, $growthCalculator
+    $templates, $session, $creatureRepository, $creatureProfileBuilder
+);
+$petController = new PetController(
+    $session, $csrf, $creatureRepository, $pettingService, $rateLimiter, $config['security']['rate_limit_pet']
 );
 
 // ---- Routes ----
@@ -128,6 +145,8 @@ $router->post('/logout', [$logoutController, 'submit']);
 
 // A single creature's page. {id} is captured from the URL, e.g. /creature/42.
 $router->get('/creature/{id}', [$creatureController, 'show']);
+// Petting a creature (a state-changing action, so POST + CSRF).
+$router->post('/creature/{id}/pet', [$petController, 'pet']);
 
 // ---- Dispatch and send ----
 // Any unexpected error is logged and turned into a plain 500 page, so we never

@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace Felkyo\Http\Controllers;
 
 use Felkyo\Auth\Session;
+use Felkyo\Creatures\CreatureProfileBuilder;
 use Felkyo\Creatures\CreatureRepository;
-use Felkyo\Creatures\GrowthCalculator;
-use Felkyo\Creatures\SpeciesRepository;
 use Felkyo\Http\Request;
 use Felkyo\Http\Response;
-use Felkyo\Users\UserRepository;
 use League\Plates\Engine;
 
 /**
@@ -18,10 +16,10 @@ use League\Plates\Engine;
  *
  * @package Felkyo\Http\Controllers
  *
- * This gathers everything the creature page needs — the creature, its species,
- * its owner, and its calculated life stage — and renders it. It also enforces who
- * may see a creature: public creatures are visible to anyone (even logged-out
- * visitors), while a private creature is visible only to its owner.
+ * This loads the creature, asks CreatureProfileBuilder for everything needed to
+ * display it, and renders the page. It also enforces who may see a creature:
+ * public creatures are visible to anyone (even logged-out visitors), while a
+ * private creature is visible only to its owner.
  */
 final class CreatureController
 {
@@ -29,9 +27,7 @@ final class CreatureController
         private Engine $templates,
         private Session $session,
         private CreatureRepository $creatures,
-        private SpeciesRepository $species,
-        private UserRepository $users,
-        private GrowthCalculator $growth,
+        private CreatureProfileBuilder $profileBuilder,
     ) {
     }
 
@@ -57,15 +53,19 @@ final class CreatureController
             return $this->notFound();
         }
 
-        $species = $this->species->findById($creature->speciesId);
-        $owner = $this->users->findById($creature->ownerId);
-        $stage = $this->growth->stageFor($creature->xp);
+        $profile = $this->profileBuilder->buildFor($creature);
 
         $html = $this->templates->render('pages/creature', [
             'creature' => $creature,
-            'species' => $species,
-            'owner' => $owner,
-            'stage' => $stage,
+            'species' => $profile['species'],
+            'owner' => $profile['owner'],
+            'level' => $profile['level'],
+            'stage' => $profile['stage'],
+            'timesPetted' => $profile['timesPetted'],
+            // Any logged-in visitor may pet a creature they can see.
+            'canPet' => $this->session->has('user_id'),
+            // A one-time message from a just-completed action (e.g. after petting).
+            'flash' => $this->session->takeFlash(),
         ]);
 
         return Response::html($html);

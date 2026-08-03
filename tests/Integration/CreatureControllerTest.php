@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Felkyo\Tests\Integration;
 
 use Felkyo\Auth\Session;
+use Felkyo\Creatures\CreatureProfileBuilder;
 use Felkyo\Creatures\CreatureRepository;
 use Felkyo\Creatures\GrowthCalculator;
+use Felkyo\Creatures\PettingRepository;
 use Felkyo\Creatures\SpeciesRepository;
 use Felkyo\Http\Controllers\CreatureController;
 use Felkyo\Http\Request;
@@ -43,9 +45,15 @@ final class CreatureControllerTest extends DatabaseTestCase
         $users = new UserRepository($this->connection);
         $species = new SpeciesRepository($this->connection);
         $creatures = new CreatureRepository($this->connection);
-        $growth = new GrowthCalculator($config['gameplay']['stage_xp_thresholds']);
+        $growth = new GrowthCalculator(
+            $config['gameplay']['growth']['xp_per_level'],
+            $config['gameplay']['growth']['stage_start_levels']
+        );
+        $profileBuilder = new CreatureProfileBuilder(
+            $species, $users, $growth, new PettingRepository($this->connection)
+        );
 
-        $controller = new CreatureController($templates, $session, $creatures, $species, $users, $growth);
+        $controller = new CreatureController($templates, $session, $creatures, $profileBuilder);
 
         $this->router = new Router();
         $this->router->get('/creature/{id}', [$controller, 'show']);

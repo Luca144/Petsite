@@ -5,41 +5,56 @@ declare(strict_types=1);
 namespace Felkyo\Creatures;
 
 /**
- * Works out a creature's life stage from its XP.
+ * Works out a creature's level and life stage from its XP.
  *
  * @package Felkyo\Creatures
  *
- * WHY THIS EXISTS: a creature's stage (baby / juvenile / adult) is NOT stored in
- * the database — only its XP is. The stage is calculated from XP whenever it is
- * needed, so the two can never drift apart. This class is that calculation.
+ * WHY THIS EXISTS: a creature stores only its XP. Its LEVEL and its life STAGE
+ * (baby / juvenile / adult) are both CALCULATED from that XP whenever they are
+ * needed, so they can never drift out of step with it. This class is that
+ * calculation, and it is the single place the growth rules live.
  *
- * The thresholds come from config (gameplay.stage_xp_thresholds), so changing how
- * much XP a stage needs is a one-line config edit. Actually EARNING xp arrives in
- * increment B.2; for now every creature is a baby, and this class is ready for
- * when they start to grow.
+ * The two knobs come from config (gameplay.growth): how much XP a level costs,
+ * and the level at which each stage begins. Changing how fast creatures grow is a
+ * config edit, not a code change.
  */
 final class GrowthCalculator
 {
     /**
-     * @param array<string, int> $stageThresholds Stage name => XP required, in
-     *        ascending order (e.g. ['baby' => 0, 'juvenile' => 100, 'adult' => 300]).
+     * @param int                $xpPerLevel       XP needed for each level (at least 1).
+     * @param array<string, int> $stageStartLevels Stage name => the level it starts
+     *        at, in ascending order (e.g. ['baby' => 1, 'juvenile' => 3, 'adult' => 6]).
      */
-    public function __construct(private array $stageThresholds)
-    {
+    public function __construct(
+        private int $xpPerLevel,
+        private array $stageStartLevels,
+    ) {
+        // Guard against a mis-set config that would divide by zero.
+        $this->xpPerLevel = max(1, $xpPerLevel);
     }
 
     /**
-     * Return the life stage for a given amount of XP: the highest stage whose XP
-     * requirement the creature has met.
+     * The creature's level. A creature starts at level 1 with 0 XP, and gains a
+     * level for every $xpPerLevel of XP it earns.
+     */
+    public function levelFor(int $xp): int
+    {
+        $xp = max(0, $xp);
+
+        return intdiv($xp, $this->xpPerLevel) + 1;
+    }
+
+    /**
+     * The creature's life stage: the highest stage whose starting level the
+     * creature's current level has reached.
      */
     public function stageFor(int $xp): string
     {
-        // Start at the lowest stage and step up as long as the creature has enough
-        // XP to have reached the next one.
-        $currentStage = array_key_first($this->stageThresholds) ?? 'baby';
+        $level = $this->levelFor($xp);
 
-        foreach ($this->stageThresholds as $stage => $requiredXp) {
-            if ($xp >= $requiredXp) {
+        $currentStage = array_key_first($this->stageStartLevels) ?? 'baby';
+        foreach ($this->stageStartLevels as $stage => $startLevel) {
+            if ($level >= $startLevel) {
                 $currentStage = $stage;
             }
         }

@@ -100,4 +100,26 @@ final class Session
         $this->remove('user_id');
         $this->regenerateId();
     }
+
+    /**
+     * Store a one-time "flash" message to show on the very next page. This is how
+     * we tell the visitor the result of an action after redirecting them (e.g.
+     * "You petted Biscuit!"). See takeFlash().
+     */
+    public function flash(string $message): void
+    {
+        $_SESSION['flash'] = $message;
+    }
+
+    /**
+     * Read and remove the flash message, if there is one. Because it is removed as
+     * it is read, the message shows exactly once and does not linger.
+     */
+    public function takeFlash(): ?string
+    {
+        $message = $_SESSION['flash'] ?? null;
+        unset($_SESSION['flash']);
+
+        return is_string($message) ? $message : null;
+    }
 }

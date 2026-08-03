@@ -237,6 +237,19 @@ button.tile:hover {
     padding-left: 1.2em;
 }
 
+/* A one-time notice shown after an action (e.g. "You petted Biscuit!"). The gold
+   left edge and the message text carry the meaning together, not colour alone. */
+.flash {
+    background: var(--panel);
+    border: 1.5px solid var(--gold);
+    border-left-width: 5px;
+    border-radius: var(--radius-sm);
+    padding: var(--space-3) var(--space-4);
+    margin-bottom: var(--space-4);
+    font-weight: 700;
+    color: var(--plum);
+}
+
 /* A narrow, centred card for the login / registration forms. */
 .auth-card {
     max-width: 420px;

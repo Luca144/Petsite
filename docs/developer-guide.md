@@ -304,3 +304,61 @@ via **Git LFS** (see `.gitattributes`).
 | Templates | `pages/creature.php`, `pages/not-found.php`, updated `pages/hello.php` |
 | Styles | `public/css/creature.css` |
 | Data | species seed migration; the imported sprite art |
+
+---
+
+## Increments B.1 + B.2 — Petting and growth
+
+**What they deliver:** the core loop. A logged-in visitor can **pet** a creature;
+each pet raises its happiness and grants XP, gated by a **cooldown**; enough XP
+raises its **level** and moves it through **life stages** (baby → juvenile →
+adult), which swaps the animated sprite shown.
+
+**The pet action** (`POST /creature/{id}/pet`, handled by `PetController`):
+
+1. Must be logged in (else redirect to `/login`) and carry a valid CSRF token.
+2. An IP rate limit caps mass-petting (`security.rate_limit_pet`); the real gate
+   is the per-person, per-creature **cooldown** inside `PettingService`.
+3. `PettingService` refuses if this person petted this creature within
+   `gameplay.petting.cooldown_seconds`; otherwise it records the pet, and adds
+   `happiness_per_pet` and `xp_per_pet` to the creature.
+4. It redirects back to the creature page (Post/Redirect/Get, so a refresh does
+   not pet again), carrying a one-time **flash** message (`Session::flash()`).
+
+**Why petting is an event log.** Each pet is a row in `pettings` (who, which
+creature, when). That is what lets the cooldown be *per person* ("have YOU petted
+this recently?"), lets "times petted" be a count, and — later — lets currency be
+earned when *others* pet your creature (B.7). The cooldown being per person means
+two different players can each pet the same creature.
+
+**Growth is all derived from XP.** `GrowthCalculator` turns XP into a level
+(`levelFor`) and a stage (`stageFor`), using `gameplay.growth`
+(`xp_per_level`, `stage_start_levels`). Nothing about level/stage is stored, so it
+can never disagree with XP. The stage decides which sprite (`{stage}.gif`) the
+page shows, so the creature visibly changes as it grows — no extra code, the page
+just recomputes.
+
+**Tuning the feel** is one place: `config/config.php` → `gameplay.growth` and
+`gameplay.petting`. The defaults are deliberately quick (short cooldown, a level
+per pet) so the loop is easy to try; raise them for a slower game.
+
+**A small pattern introduced:** `CreatureProfileBuilder` gathers everything the
+creature page needs (species, owner, level, stage, times petted) so the
+controller stays thin and later pages that show creatures can reuse the assembly.
+
+**New pieces:**
+
+| Layer | Classes / files |
+| --- | --- |
+| Domain | `PettingRepository`, `PettingService`, `PettingResult`, `CreatureProfileBuilder`; `GrowthCalculator` (now level + stage); `CreatureRepository::applyPetting` |
+| Controllers | `PetController`; `CreatureController` (now shows level/stats, pet button, flash) |
+| Support | `Session::flash()` / `takeFlash()` |
+| Templates/CSS | pet button + flash + stat panel in `pages/creature.php`; `.flash` styles |
+
+> **A note on constructor size (CLAUDE.md §4).** Some controllers/services take
+> more than four constructor arguments. Those arguments are *dependency wiring*
+> (each becomes a typed, named property), not behavioural parameters — so we read
+> §4's "max 4 parameters" as applying to behavioural functions, and keep each
+> class focused instead (e.g. petting was split into `PetController` +
+> `CreatureController`). Passing an untyped array-bag of dependencies would be
+> less clear, not more. Flag this if you'd prefer a different approach.
