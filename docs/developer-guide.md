@@ -247,3 +247,60 @@ flag is a small, single-place change. It is intentionally not built yet.
 
 **Auth settings** (rate limits, password/username length rules) live in the
 `security` section of `config/config.php` — change them there, not in the code.
+
+---
+
+## Increments A.2 + A.3 — Creatures (ownership and the creature page)
+
+**What they deliver:** a new player is given a starter creature on registration,
+and every creature has its own page showing its animated portrait and state. This
+is the heart of the game appearing for the first time.
+
+**Species are content (data).** The kinds of creature live in the `species` table
+and are seeded by a migration (`...seed_base_creature_species`). A species has a
+`slug`, and its animated images are found by convention — **no image paths are
+stored**:
+
+```
+public/assets/creatures/{slug}/{stage}.gif
+e.g. public/assets/creatures/foxlen/baby.gif
+```
+
+To **add a species**: add a row (a new migration is the tidy way) with a unique
+slug and name, and drop `baby.gif` / `juvenile.gif` / `adult.gif` into
+`public/assets/creatures/{slug}/`. No code changes. (The three current names —
+Foxlen, Mossling, Pebblewing — are placeholders paired with the provided sprites;
+renaming them is just a data change.)
+
+**Growth is derived, not stored.** A creature stores only `xp`. `GrowthCalculator`
+turns that into a life stage (baby/juvenile/adult) using the thresholds in
+`config.gameplay.stage_xp_thresholds`. The stage decides *which* image is shown
+(`{stage}.gif`). Earning XP comes in B.2; for now every creature is a baby.
+
+**The starter creature.** On a successful registration, `RegisterController` calls
+`StarterCreatureService`, which picks a starter species and a friendly name (from
+`config.gameplay.starter_creature_names`) — chosen from the user's id so it is
+deterministic and testable — and creates the creature. A user owns *many*
+creatures in the schema and queries from the start, even though they get one now.
+
+**The creature page** (`/creature/{id}`) is the first page with a URL parameter.
+`Router` now supports `{id}` placeholders (see its comments). `CreatureController`
+loads the creature, its species and owner, computes the stage, and enforces **who
+can see it**: a public creature is visible to anyone (even logged out); a private
+one only to its owner — and a hidden creature returns the same 404 as a missing
+one, so its existence is not revealed.
+
+**Images:** shown with `<img class="… pixelated">` so pixel-art stays crisp when
+scaled up (CLAUDE.md section 8); GIFs loop on their own. The sprite art is stored
+via **Git LFS** (see `.gitattributes`).
+
+**New pieces:**
+
+| Layer | Classes / files |
+| --- | --- |
+| Domain | `Species`, `SpeciesRepository`, `Creature`, `CreatureRepository`, `GrowthCalculator` |
+| Services | `StarterCreatureService` |
+| Controllers | `HomeController` (welcome + your creatures), `CreatureController` |
+| Templates | `pages/creature.php`, `pages/not-found.php`, updated `pages/hello.php` |
+| Styles | `public/css/creature.css` |
+| Data | species seed migration; the imported sprite art |

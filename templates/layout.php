@@ -38,10 +38,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Nunito:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap">
 
-    <!-- Our styles, split by concern: tokens/base, layout, components. -->
+    <!-- Our styles, split by concern: tokens/base, layout, components, and the
+         creature page. Small enough that loading them together is simplest. -->
     <link rel="stylesheet" href="/css/theme.css">
     <link rel="stylesheet" href="/css/layout.css">
     <link rel="stylesheet" href="/css/components.css">
+    <link rel="stylesheet" href="/css/creature.css">
 </head>
 <body>
     <!-- Keyboard users can jump straight to the content with this link. -->

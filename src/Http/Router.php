@@ -14,14 +14,18 @@ namespace Felkyo\Http;
  * and then dispatch() looks at the incoming Request and runs the matching one,
  * returning its Response.
  *
+ * IT SUPPORTS PATH PARAMETERS: a route path may contain a placeholder in curly
+ * braces, e.g. "/creature/{id}". That matches "/creature/42" and captures
+ * id => "42", which is passed to the handler. This is how pages for a specific
+ * thing (a creature, later a user) get their id from the URL.
+ *
+ * A handler is any callable that receives the Request and an array of captured
+ * parameters, and returns a Response: function (Request $r, array $params).
+ * Handlers that do not need the parameters can simply ignore the second argument.
+ *
  * WHY WE WROTE OUR OWN INSTEAD OF ADDING A LIBRARY: routing for a site this size
  * is a short, readable amount of code, and CLAUDE.md (section 11) prefers that
- * over a dependency. This version matches exact paths, which is all we need so
- * far. When a later increment needs addresses with an id in them (for example
- * "/creature/42"), this is the one class to extend — the developer guide records
- * that as the place to add pattern matching.
- *
- * A handler is any callable that takes the Request and returns a Response.
+ * over a dependency.
  *
  * HOW THIS FITS THE BIGGER PICTURE: the front controller (public/index.php)
  * creates one Router, registers every route, and calls dispatch(). That keeps
@@ -30,54 +34,111 @@ namespace Felkyo\Http;
 final class Router
 {
     /**
-     * Registered routes, grouped by HTTP method, then keyed by exact path.
-     * Example: $routes['GET']['/'] = (the handler for the home page).
+     * Every registered route, each as: method, the path split into segments, and
+     * the handler. We keep them as a simple list and check them in order.
      *
-     * @var array<string, array<string, callable>>
+     * @var array<int, array{method: string, segments: string[], handler: callable}>
      */
     private array $routes = [];
 
     /**
-     * Register a handler for a GET request to an exact path.
-     * GET is the method a browser uses when it simply asks to view a page.
+     * Register a handler for a GET request (a browser asking to view a page).
      */
     public function get(string $path, callable $handler): void
     {
-        $this->routes['GET'][$path] = $handler;
+        $this->add('GET', $path, $handler);
     }
 
     /**
-     * Register a handler for a POST request to an exact path.
-     * POST is the method used when a form submits data that changes something.
+     * Register a handler for a POST request (a form submitting data that changes
+     * something).
      */
     public function post(string $path, callable $handler): void
     {
-        $this->routes['POST'][$path] = $handler;
+        $this->add('POST', $path, $handler);
+    }
+
+    private function add(string $method, string $path, callable $handler): void
+    {
+        $this->routes[] = [
+            'method' => $method,
+            'segments' => $this->splitPath($path),
+            'handler' => $handler,
+        ];
     }
 
     /**
-     * Find the handler matching the request and run it, returning its Response.
-     * If no route matches, we return a 404 ("page not found") response. The
-     * friendly, themed 404 page comes later (increment C.2); for now a plain
-     * message is enough.
+     * Find the route matching the request and run its handler, returning the
+     * Response. If nothing matches, return a 404. The friendly, themed 404 page
+     * comes later (increment C.2); a plain message is enough here.
      */
     public function dispatch(Request $request): Response
     {
-        $path = $request->path();
+        $requestSegments = $this->splitPath($request->path());
 
-        // Treat "/creatures/" and "/creatures" as the same address by removing a
-        // trailing slash, except for the site root which is just "/". This spares
-        // us from registering two entries for every route.
-        if ($path !== '/') {
-            $path = rtrim($path, '/');
+        foreach ($this->routes as $route) {
+            if ($route['method'] !== $request->method()) {
+                continue;
+            }
+
+            $parameters = $this->matchSegments($route['segments'], $requestSegments);
+            if ($parameters !== null) {
+                return ($route['handler'])($request, $parameters);
+            }
         }
 
-        $handler = $this->routes[$request->method()][$path] ?? null;
+        return Response::html('Page not found.', 404);
+    }
 
-        if ($handler === null) {
-            return Response::html('Page not found.', 404);
+    /**
+     * Break a path into its segments, ignoring leading/trailing slashes. So "/"
+     * becomes [] (no segments) and "/creature/42" becomes ["creature", "42"].
+     * Trimming the slashes also means "/login" and "/login/" are treated the same.
+     *
+     * @return string[]
+     */
+    private function splitPath(string $path): array
+    {
+        $trimmed = trim($path, '/');
+        if ($trimmed === '') {
+            return [];
         }
 
-        return $handler($request);
+        return explode('/', $trimmed);
+    }
+
+    /**
+     * Try to match one route's segments against the request's segments. Returns
+     * the captured parameters (an empty array if the route has none) on a match,
+     * or null if this route does not match.
+     *
+     * A "{name}" segment matches any single segment and captures its value; every
+     * other segment must match exactly.
+     *
+     * @param string[] $routeSegments
+     * @param string[] $requestSegments
+     * @return array<string, string>|null
+     */
+    private function matchSegments(array $routeSegments, array $requestSegments): ?array
+    {
+        if (count($routeSegments) !== count($requestSegments)) {
+            return null;
+        }
+
+        $parameters = [];
+
+        foreach ($routeSegments as $index => $routeSegment) {
+            $isPlaceholder = str_starts_with($routeSegment, '{') && str_ends_with($routeSegment, '}');
+
+            if ($isPlaceholder) {
+                // Strip the braces to get the parameter name, and capture the value.
+                $name = substr($routeSegment, 1, -1);
+                $parameters[$name] = $requestSegments[$index];
+            } elseif ($routeSegment !== $requestSegments[$index]) {
+                return null;
+            }
+        }
+
+        return $parameters;
     }
 }

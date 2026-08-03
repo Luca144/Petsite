@@ -6,6 +6,7 @@ namespace Felkyo\Http\Controllers;
 
 use Felkyo\Auth\RegistrationService;
 use Felkyo\Auth\Session;
+use Felkyo\Creatures\StarterCreatureService;
 use Felkyo\Http\Csrf;
 use Felkyo\Http\Request;
 use Felkyo\Http\Response;
@@ -32,6 +33,7 @@ final class RegisterController
         private Csrf $csrf,
         private Session $session,
         private RegistrationService $registration,
+        private StarterCreatureService $starterCreatures,
         private RateLimiter $rateLimiter,
         private array $securityConfig,
     ) {
@@ -91,7 +93,9 @@ final class RegisterController
             return $this->renderForm($result->errors(), $request, 422);
         }
 
-        // 4. Success: count it against the limit, log the new user in, and go home.
+        // 4. Success: give the new player their starter creature, count the
+        // sign-up against the limit, log them in, and go home.
+        $this->starterCreatures->grantStarterTo($result->user());
         $this->rateLimiter->record('register', $request->clientIp());
         $this->session->regenerateId();
         $this->session->set('user_id', $result->user()->id);

@@ -78,12 +78,28 @@ return [
         ],
     ],
 
-    // Gameplay tunables (cooldowns, XP thresholds, limits) will be added here as
-    // the increments that use them are built. Keeping them all in this one
-    // section is deliberate: it is the documented home for "knobs" so a beginner
-    // can retune the game without touching game logic.
+    // Gameplay tunables — the documented home for "knobs" so a beginner can
+    // retune the game without touching game logic. Each increment adds the knobs
+    // it needs here.
     'gameplay' => [
-        // (empty for now — populated from increment B.1 onwards)
+
+        // How a creature grows. A creature's life stage is worked out from its XP
+        // (see GrowthCalculator): it is the highest stage whose XP requirement it
+        // has reached. Every creature starts as a "baby" at 0 XP. The actual
+        // earning of XP arrives in increment B.2 — these thresholds are the knob
+        // that decides how much is needed to grow.
+        'stage_xp_thresholds' => [
+            'baby' => 0,
+            'juvenile' => 100,
+            'adult' => 300,
+        ],
+
+        // The pool of friendly default names a brand-new creature can be given
+        // when a player first receives their starter. The player can be allowed to
+        // rename it in a later increment.
+        'starter_creature_names' => [
+            'Pip', 'Biscuit', 'Clover', 'Marlow', 'Sage', 'Bramble', 'Dot', 'Fern',
+        ],
     ],
 
 ];

@@ -8,6 +8,9 @@ use Felkyo\Auth\Authenticator;
 use Felkyo\Auth\PasswordHasher;
 use Felkyo\Auth\RegistrationService;
 use Felkyo\Auth\Session;
+use Felkyo\Creatures\CreatureRepository;
+use Felkyo\Creatures\SpeciesRepository;
+use Felkyo\Creatures\StarterCreatureService;
 use Felkyo\Http\Controllers\LoginController;
 use Felkyo\Http\Controllers\LogoutController;
 use Felkyo\Http\Controllers\RegisterController;
@@ -65,9 +68,16 @@ final class AuthControllerTest extends DatabaseTestCase
         $authenticator = new Authenticator($this->users, $hasher);
         $rateLimiter = new RateLimiter(new RateLimitRepository($this->connection));
 
+        // Registration now also grants a starter creature (from the seeded species).
+        $starterCreatures = new StarterCreatureService(
+            new SpeciesRepository($this->connection),
+            new CreatureRepository($this->connection),
+            $config['gameplay']['starter_creature_names']
+        );
+
         // Controllers.
         $registerController = new RegisterController(
-            $templates, $this->csrf, $this->session, $this->registration, $rateLimiter, $security
+            $templates, $this->csrf, $this->session, $this->registration, $starterCreatures, $rateLimiter, $security
         );
         $loginController = new LoginController(
             $templates, $this->csrf, $this->session, $authenticator, $this->users, $rateLimiter, $security

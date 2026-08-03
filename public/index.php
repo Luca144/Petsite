@@ -25,6 +25,12 @@ use Felkyo\Auth\RegistrationService;
 use Felkyo\Auth\Session;
 use Felkyo\Core\Database;
 use Felkyo\Core\FileLogger;
+use Felkyo\Creatures\CreatureRepository;
+use Felkyo\Creatures\GrowthCalculator;
+use Felkyo\Creatures\SpeciesRepository;
+use Felkyo\Creatures\StarterCreatureService;
+use Felkyo\Http\Controllers\CreatureController;
+use Felkyo\Http\Controllers\HomeController;
 use Felkyo\Http\Controllers\LoginController;
 use Felkyo\Http\Controllers\LogoutController;
 use Felkyo\Http\Controllers\RegisterController;
@@ -65,6 +71,8 @@ $templates->registerFunction('csrf_field', function () use ($csrf): string {
 // ---- Repositories (own the database queries) ----
 $userRepository = new UserRepository($pdo);
 $rateLimitRepository = new RateLimitRepository($pdo);
+$speciesRepository = new SpeciesRepository($pdo);
+$creatureRepository = new CreatureRepository($pdo);
 
 // ---- Services (own the business rules) ----
 $passwordHasher = new PasswordHasher();
@@ -72,6 +80,10 @@ $userValidator = new UserValidator($config['security']);
 $registrationService = new RegistrationService($userRepository, $userValidator, $passwordHasher);
 $authenticator = new Authenticator($userRepository, $passwordHasher);
 $rateLimiter = new RateLimiter($rateLimitRepository);
+$starterCreatureService = new StarterCreatureService(
+    $speciesRepository, $creatureRepository, $config['gameplay']['starter_creature_names']
+);
+$growthCalculator = new GrowthCalculator($config['gameplay']['stage_xp_thresholds']);
 
 // ---- Who is logged in? ----
 // If the session holds a user id, load that user so the layout can greet them and
@@ -89,23 +101,23 @@ $templates->addData([
 ]);
 
 // ---- Controllers ----
+$homeController = new HomeController($templates, $session, $creatureRepository, $config['app']['name']);
 $registerController = new RegisterController(
-    $templates, $csrf, $session, $registrationService, $rateLimiter, $config['security']
+    $templates, $csrf, $session, $registrationService, $starterCreatureService, $rateLimiter, $config['security']
 );
 $loginController = new LoginController(
     $templates, $csrf, $session, $authenticator, $userRepository, $rateLimiter, $config['security']
 );
 $logoutController = new LogoutController($session, $csrf);
+$creatureController = new CreatureController(
+    $templates, $session, $creatureRepository, $speciesRepository, $userRepository, $growthCalculator
+);
 
 // ---- Routes ----
 $router = new Router();
 
-// The welcome page. (Its content is still the 0.3 placeholder for now.)
-$router->get('/', function () use ($templates, $config): Response {
-    return Response::html($templates->render('pages/hello', [
-        'appName' => $config['app']['name'],
-    ]));
-});
+// The home page (welcome for guests; the player's creatures when logged in).
+$router->get('/', [$homeController, 'show']);
 
 // Accounts.
 $router->get('/register', [$registerController, 'show']);
@@ -113,6 +125,9 @@ $router->post('/register', [$registerController, 'submit']);
 $router->get('/login', [$loginController, 'show']);
 $router->post('/login', [$loginController, 'submit']);
 $router->post('/logout', [$logoutController, 'submit']);
+
+// A single creature's page. {id} is captured from the URL, e.g. /creature/42.
+$router->get('/creature/{id}', [$creatureController, 'show']);
 
 // ---- Dispatch and send ----
 // Any unexpected error is logged and turned into a plain 500 page, so we never

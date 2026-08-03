@@ -296,3 +296,26 @@ button.tile:hover {
     0%, 100% { opacity: 0.45; }
     50% { opacity: 1; }
 }
+
+/* =====================================================================
+ * Section heading + empty state (shared small pieces)
+ * ===================================================================== */
+
+/* A small heading that labels a section (e.g. "Your creatures"). */
+.panel-label {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.3rem;
+    color: var(--plum);
+    margin-bottom: var(--space-3);
+}
+
+/* Gentle text for "there's nothing here yet" states. */
+.empty-state {
+    font-family: var(--font-display);
+    font-style: italic;
+    color: var(--ink-soft);
+}
+
+/* The creature page's own layout lives in its own file (creature.css) to keep
+   this components file focused and under its size limit. */

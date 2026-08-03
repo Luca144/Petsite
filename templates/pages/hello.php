@@ -1,59 +1,62 @@
 <?php
 /**
- * The "hello" / welcome page.
+ * The home / welcome page.
  *
  * @package Felkyo\Templates
  *
- * WHAT THIS IS: the temporary home page. In increment 0.3 its job is to show the
- * finished visual foundation — the themed layout plus a small, honest sample of
- * the reusable component kit (a card, tiles, buttons, a form field) so the look
- * can be checked on a real phone and desktop. Real content replaces it later.
+ * For a logged-in player this greets them and lists their creatures (each links
+ * to that creature's page). For a logged-out visitor it is a welcome with a small
+ * preview of the reusable component kit and the ways in. Rendered by HomeController
+ * (and by the 0.3 layout test, which passes only $appName — so everything here
+ * copes with the logged-out case by default).
  *
- * $appName is passed in from the route handler in public/index.php.
+ * Variables: $appName (string); $creatures (Creature[], may be absent/empty).
+ * $currentUser is shared with every template by the front controller.
  */
-
-// Wrap this page in the shared themed layout, and set the browser-tab title.
 $this->layout('layout', ['title' => 'Welcome to ' . $appName]);
+
+// Default so this template also renders for a plain guest (and in the layout test).
+$creatures = $creatures ?? [];
 ?>
 
-<section class="card">
-    <h2>Welcome to <?= $this->e($appName) ?></h2>
-    <p>
-        The foundations are in place and the room is warm. A cosy world of
-        creatures to collect, grow and pet is being built here, one careful
-        piece at a time.
-    </p>
-</section>
+<?php if (!empty($currentUser)): ?>
 
-<hr class="rule">
+    <section class="card">
+        <h2>Welcome back, <?= $this->e($currentUser->username) ?></h2>
+        <p>Here are the creatures in your care.</p>
+    </section>
 
-<!-- A small, honest preview of the reusable building blocks every later page
-     will share. These are samples of the kit, not finished features. -->
-<h3>What&rsquo;s coming</h3>
-<div class="tile-grid">
-    <div class="tile">
-        <span aria-hidden="true">&#127793;</span>
-        <span class="tile__label">Creatures</span>
-    </div>
-    <div class="tile">
-        <span aria-hidden="true">&#9832;</span>
-        <span class="tile__label">Wander</span>
-    </div>
-    <div class="tile">
-        <span aria-hidden="true">&#128717;</span>
-        <span class="tile__label">The shop</span>
-    </div>
-    <div class="tile">
-        <span aria-hidden="true">&#9829;</span>
-        <span class="tile__label">Pet &amp; play</span>
-    </div>
-</div>
+    <hr class="rule">
 
-<hr class="rule">
+    <h2 class="panel-label">Your creatures</h2>
+    <?php if ($creatures === []): ?>
+        <p class="empty-state">You don&rsquo;t have a creature yet.</p>
+    <?php else: ?>
+        <div class="tile-grid">
+            <?php foreach ($creatures as $creature): ?>
+                <a class="tile" href="/creature/<?= $this->e((string) $creature->id) ?>">
+                    <span aria-hidden="true">&#127793;</span>
+                    <span><?= $this->e($creature->name) ?></span>
+                </a>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
 
-<!-- Sample buttons and a form field, so the component styling is visible. -->
-<div class="button-row">
-    <a class="btn btn--primary" href="/">Look around</a>
-    <a class="btn btn--secondary" href="/">Maybe later</a>
-    <span class="badge"><span class="badge__dot" aria-hidden="true"></span> foundations laid</span>
-</div>
+<?php else: ?>
+
+    <section class="card">
+        <h2>Welcome to <?= $this->e($appName) ?></h2>
+        <p>
+            A cosy world of creatures to collect, grow and pet. Make an account to
+            meet your first one &mdash; the kettle&rsquo;s on.
+        </p>
+    </section>
+
+    <hr class="rule">
+
+    <div class="button-row">
+        <a class="btn btn--primary" href="/register">Create an account</a>
+        <a class="btn btn--secondary" href="/login">Log in</a>
+    </div>
+
+<?php endif; ?>
