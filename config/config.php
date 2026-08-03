@@ -47,6 +47,37 @@ return [
         'charset' => 'utf8mb4',
     ],
 
+    // Security and account policy. These are the "knobs" for how strict accounts
+    // and anti-abuse limits are. Changing the feel (e.g. a longer minimum
+    // password, or looser rate limits) is a one-line edit here — no code changes.
+    'security' => [
+        // Password rules. We use PHP's password_hash() with its default algorithm
+        // (currently bcrypt). bcrypt ignores anything past 72 bytes, so we cap the
+        // maximum there rather than silently accept characters that do nothing.
+        'password_min_length' => 8,
+        'password_max_length' => 72,
+
+        // Username rules. The allowed characters (letters, numbers, _ and -) are
+        // enforced by a clear rule in UserValidator.
+        'username_min_length' => 3,
+        'username_max_length' => 30,
+
+        // Email rules (format is checked with PHP's built-in email validator).
+        'email_max_length' => 255,
+
+        // Rate limits, keyed per IP address. Each is "at most this many attempts
+        // within this many seconds". They protect the state-changing public
+        // endpoints against brute-force and spam (CLAUDE.md section 6).
+        'rate_limit_login' => [
+            'max_attempts' => 5,     // 5 failed logins...
+            'window_seconds' => 900, // ...per 15 minutes, per IP
+        ],
+        'rate_limit_register' => [
+            'max_attempts' => 3,      // 3 new accounts...
+            'window_seconds' => 3600, // ...per hour, per IP
+        ],
+    ],
+
     // Gameplay tunables (cooldowns, XP thresholds, limits) will be added here as
     // the increments that use them are built. Keeping them all in this one
     // section is deliberate: it is the documented home for "knobs" so a beginner

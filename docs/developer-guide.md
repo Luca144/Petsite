@@ -176,3 +176,74 @@ and add a test. The themed shell, fonts and styles come for free.
 
 **Note on the logo:** the masthead wordmark is a typographic placeholder set in
 Fraunces. The finished logo art replaces it during the art-import step.
+
+---
+
+## Increment A.1 — Accounts
+
+**What it delivers:** people can register, log in, and log out. Passwords are
+hashed, input is validated, forms are CSRF-protected, and login/registration are
+rate-limited against abuse.
+
+**The request lifecycle now (read once, it explains the whole app).** A request
+flows through small, single-purpose pieces:
+
+```
+Browser → public/index.php (front controller)
+        → Request (a snapshot of the request)
+        → Router (picks the handler for the method + path)
+        → Controller (web glue: read input, call a service, return a Response)
+        → Service (the business rules)         ┐ never touched by the controller
+        → Repository (the SQL)                 ┘ directly — layers stay separate
+        → Response (status + headers + body) → sent back to the browser
+```
+
+`Request` and `Response` are deliberately tiny value objects. Because a
+controller **returns** a `Response` (instead of printing or redirecting itself),
+tests build a `Request` by hand, dispatch it through the `Router`, and check the
+returned `Response` — no web server needed. That is exactly how
+`tests/Integration/AuthControllerTest.php` works.
+
+**The pieces added, by layer:**
+
+| Layer | Classes | Job |
+| --- | --- | --- |
+| HTTP | `Request`, `Response`, `Router`, `Csrf` | The web plumbing. |
+| Controllers | `RegisterController`, `LoginController`, `LogoutController` | Read the form, call a service, return a page/redirect. |
+| Services | `RegistrationService`, `Authenticator`, `PasswordHasher` | The account rules. |
+| Repositories | `UserRepository`, `RateLimitRepository` | All the SQL (prepared statements). |
+| Support | `Session`, `UserValidator`, `RateLimiter`, `User`, `RegistrationResult` | Session state, input rules, throttling, data shapes. |
+
+**Security, and where each rule lives (CLAUDE.md section 6):**
+
+- **Passwords** are hashed with `password_hash()` (default algorithm) — see
+  `PasswordHasher`. The plain password is never stored or logged.
+- **CSRF:** every form includes a hidden token via the `csrf_field()` template
+  helper; every POST controller checks it with `Csrf::isValid()` before acting.
+- **Validation** lives in `UserValidator` (a dedicated class), not in controllers.
+- **Sessions** start with `HttpOnly`, `SameSite=Lax`, and (in production) `Secure`
+  cookies, and the session id is regenerated on login (anti session-fixation).
+- **Rate limits** (from config, per IP): login blocks after 5 failed attempts /
+  15 min; registration caps 3 new accounts / hour. Login records only *failed*
+  attempts; registration records only *successful* sign-ups.
+- **No user enumeration:** a failed login shows one message whether the username
+  or the password was wrong.
+
+**Registration can be closed later (Phase D):** all sign-ups go through the one
+`RegistrationService`/`RegisterController` path, so the future "registration off"
+flag is a small, single-place change. It is intentionally not built yet.
+
+**How to add a protected, state-changing page (the recipe):**
+
+1. Write a repository method for any new SQL, and a service for any new rules.
+2. Add a controller whose action reads the `Request`, checks `Csrf::isValid()`
+   for POSTs, calls the service, and returns a `Response`.
+3. To require login, check `$session->has('user_id')` at the top and redirect if
+   not (the controllers here show the pattern).
+4. Register the route in `public/index.php` and wire the controller's
+   dependencies there.
+5. Every form template must call `<?= $this->csrf_field() ?>`.
+6. Add unit tests for the service rules and an integration test through the router.
+
+**Auth settings** (rate limits, password/username length rules) live in the
+`security` section of `config/config.php` — change them there, not in the code.

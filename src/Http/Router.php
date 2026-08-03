@@ -11,7 +11,8 @@ namespace Felkyo\Http;
  *
  * WHAT THIS CLASS IS: it decides which piece of code runs for a given web
  * address. You "register" routes up front (e.g. GET "/" runs the home handler),
- * and then dispatch() looks at the incoming request and runs the matching one.
+ * and then dispatch() looks at the incoming Request and runs the matching one,
+ * returning its Response.
  *
  * WHY WE WROTE OUR OWN INSTEAD OF ADDING A LIBRARY: routing for a site this size
  * is a short, readable amount of code, and CLAUDE.md (section 11) prefers that
@@ -19,6 +20,8 @@ namespace Felkyo\Http;
  * far. When a later increment needs addresses with an id in them (for example
  * "/creature/42"), this is the one class to extend — the developer guide records
  * that as the place to add pattern matching.
+ *
+ * A handler is any callable that takes the Request and returns a Response.
  *
  * HOW THIS FITS THE BIGGER PICTURE: the front controller (public/index.php)
  * creates one Router, registers every route, and calls dispatch(). That keeps
@@ -53,15 +56,15 @@ final class Router
     }
 
     /**
-     * Find the handler matching the current request and run it.
-     *
-     * A handler returns the HTML string for the page; we echo it. If no route
-     * matches, we send a 404 ("page not found") so the browser and any tests can
-     * tell the address was unknown. The friendly, themed 404 page comes later
-     * (increment C.2); for now a plain message is enough.
+     * Find the handler matching the request and run it, returning its Response.
+     * If no route matches, we return a 404 ("page not found") response. The
+     * friendly, themed 404 page comes later (increment C.2); for now a plain
+     * message is enough.
      */
-    public function dispatch(string $method, string $path): void
+    public function dispatch(Request $request): Response
     {
+        $path = $request->path();
+
         // Treat "/creatures/" and "/creatures" as the same address by removing a
         // trailing slash, except for the site root which is just "/". This spares
         // us from registering two entries for every route.
@@ -69,14 +72,12 @@ final class Router
             $path = rtrim($path, '/');
         }
 
-        $handler = $this->routes[$method][$path] ?? null;
+        $handler = $this->routes[$request->method()][$path] ?? null;
 
         if ($handler === null) {
-            http_response_code(404);
-            echo 'Page not found.';
-            return;
+            return Response::html('Page not found.', 404);
         }
 
-        echo $handler();
+        return $handler($request);
     }
 }

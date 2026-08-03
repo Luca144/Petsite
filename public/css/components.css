@@ -215,6 +215,40 @@ button.tile:hover {
     outline: none; /* replaced by the clear :focus-visible ring from theme.css */
 }
 
+/* An error summary shown above a form (see the form-errors partial). The heavy
+   left border and the "Please fix…" heading carry the meaning as shape + text,
+   not colour alone. */
+.form-errors {
+    background: var(--panel);
+    border: 1.5px solid var(--plum);
+    border-left-width: 5px;
+    border-radius: var(--radius-sm);
+    padding: var(--space-3) var(--space-4);
+    margin-bottom: var(--space-4);
+}
+
+.form-errors__title {
+    font-weight: 800;
+    margin-bottom: var(--space-2);
+}
+
+.form-errors ul {
+    margin: 0;
+    padding-left: 1.2em;
+}
+
+/* A narrow, centred card for the login / registration forms. */
+.auth-card {
+    max-width: 420px;
+    margin: 0 auto;
+}
+
+/* The "already have an account?" / "new here?" line under an auth form. */
+.auth-alt {
+    margin-top: var(--space-4);
+    font-size: 0.95rem;
+}
+
 /* A short helper or error line under a field. Errors are marked with text and a
    symbol, never colour alone (accessibility rule). */
 .field__hint {

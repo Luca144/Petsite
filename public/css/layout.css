@@ -167,7 +167,10 @@
     margin-top: var(--space-4);
 }
 
-.site-nav a {
+/* Nav links and the log-out button share one "pill" look. Including the button
+   here means the log-out control matches the links exactly. */
+.site-nav a,
+.site-nav button {
     font-family: var(--font-mono);
     font-size: 0.82rem;
     font-weight: 700;
@@ -180,14 +183,33 @@
     min-height: 44px; /* comfortable touch target */
     display: inline-flex;
     align-items: center;
+    cursor: pointer;
     transition: transform 0.16s, background 0.16s, box-shadow 0.16s;
 }
 
-.site-nav a:hover {
+.site-nav a:hover,
+.site-nav button:hover {
     background: var(--gold-lit);
     color: var(--plum);
     transform: translateY(-2px);
     box-shadow: 0 8px 18px -8px rgba(201, 162, 39, 0.7);
+}
+
+/* The log-out form is just a wrapper around its button; keep it inline and
+   without its own spacing so the button sits neatly among the nav pills. */
+.site-nav__form {
+    margin: 0;
+    display: inline-flex;
+}
+
+/* The "hi, name" greeting: quiet text, not a pill. */
+.site-nav__user {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    display: inline-flex;
+    align-items: center;
+    padding: 0 var(--space-2);
 }
 
 /* Marks the current page for everyone — not by colour alone, but with a heavier

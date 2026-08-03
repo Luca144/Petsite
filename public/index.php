@@ -9,44 +9,119 @@ declare(strict_types=1);
  *
  * WHAT "FRONT CONTROLLER" MEANS: the web server is configured so that every URL
  * on the site is handled by this one file. That gives us a single, predictable
- * place where a request begins, where we wire up the pieces (router, templates,
- * logger) and where we list the routes the site responds to.
+ * place where a request begins, where we wire the pieces together (the "objects
+ * that do the work"), and where we list the routes the site responds to.
  *
- * HOW THIS FITS THE BIGGER PICTURE: read this file top-to-bottom to see the shape
- * of the whole request: start up, build the tools, declare the routes, dispatch.
+ * HOW TO READ THIS FILE: it goes top to bottom in the order a request needs —
+ * start up, build the shared tools, build the repositories/services, work out who
+ * is logged in, build the controllers, list the routes, then dispatch and send.
+ * This manual wiring (plain "new") is deliberate: it is fully visible and easy to
+ * follow, with no hidden framework magic (build plan section 2).
  */
 
-use Felkyo\Http\Router;
+use Felkyo\Auth\Authenticator;
+use Felkyo\Auth\PasswordHasher;
+use Felkyo\Auth\RegistrationService;
+use Felkyo\Auth\Session;
+use Felkyo\Core\Database;
 use Felkyo\Core\FileLogger;
+use Felkyo\Http\Controllers\LoginController;
+use Felkyo\Http\Controllers\LogoutController;
+use Felkyo\Http\Controllers\RegisterController;
+use Felkyo\Http\Csrf;
+use Felkyo\Http\Request;
+use Felkyo\Http\Response;
+use Felkyo\Http\Router;
+use Felkyo\Security\RateLimiter;
+use Felkyo\Security\RateLimitRepository;
+use Felkyo\Users\UserRepository;
+use Felkyo\Users\UserValidator;
 use League\Plates\Engine;
 
-// Start up: load the autoloader and configuration, and get our settings back.
+// ---- Start up ----
 $config = require dirname(__DIR__) . '/config/bootstrap.php';
+$request = Request::fromGlobals();
 
-// Build the tools this request may need.
-// The logger appends to /logs/app.log (that file is per-machine and gitignored).
+// ---- Shared tools ----
 $logger = new FileLogger(dirname(__DIR__) . '/logs/app.log');
+$pdo = Database::connect($config['database']);
 
-// Plates is our templating engine: it turns a template file plus some values
-// into the final HTML. We point it at the /templates folder.
+// Sessions: the cookie is HTTPS-only in production, but not in local http dev
+// (where a Secure cookie would never be sent). Production MUST run over HTTPS.
+$session = new Session(cookieSecure: $config['app']['environment'] === 'production');
+$session->start();
+$csrf = new Csrf($session);
+
 $templates = new Engine(dirname(__DIR__) . '/templates');
 
-$router = new Router();
-
-// ---- Routes ----
-// The "hello" route is here to prove the whole stack works end-to-end: a request
-// arrives, the router selects this handler, and it renders a Plates template to
-// HTML. Increment 0.3 will wrap this in the real, themed site layout.
-$router->get('/', function () use ($templates, $config) {
-    return $templates->render('pages/hello', [
-        'appName' => $config['app']['name'],
-    ]);
+// Make a csrf_field() helper available to every template. It outputs the hidden
+// field that protects a form; calling it in each <form> is how CSRF protection is
+// applied automatically and consistently (CLAUDE.md section 6).
+$templates->registerFunction('csrf_field', function () use ($csrf): string {
+    $token = htmlspecialchars($csrf->token(), ENT_QUOTES, 'UTF-8');
+    return '<input type="hidden" name="_csrf_token" value="' . $token . '">';
 });
 
-// ---- Dispatch ----
-// Work out what was requested. REQUEST_URI can include a "?query=string", so we
-// keep only the path part before handing it to the router.
-$requestMethod = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-$requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+// ---- Repositories (own the database queries) ----
+$userRepository = new UserRepository($pdo);
+$rateLimitRepository = new RateLimitRepository($pdo);
 
-$router->dispatch($requestMethod, $requestPath);
+// ---- Services (own the business rules) ----
+$passwordHasher = new PasswordHasher();
+$userValidator = new UserValidator($config['security']);
+$registrationService = new RegistrationService($userRepository, $userValidator, $passwordHasher);
+$authenticator = new Authenticator($userRepository, $passwordHasher);
+$rateLimiter = new RateLimiter($rateLimitRepository);
+
+// ---- Who is logged in? ----
+// If the session holds a user id, load that user so the layout can greet them and
+// show the log-out control. A guest simply has null here.
+$currentUser = null;
+$currentUserId = $session->get('user_id');
+if (is_int($currentUserId)) {
+    $currentUser = $userRepository->findById($currentUserId);
+}
+
+// Share these with every template (used by the shared layout's navigation).
+$templates->addData([
+    'currentUser' => $currentUser,
+    'currentPath' => $request->path(),
+]);
+
+// ---- Controllers ----
+$registerController = new RegisterController(
+    $templates, $csrf, $session, $registrationService, $rateLimiter, $config['security']
+);
+$loginController = new LoginController(
+    $templates, $csrf, $session, $authenticator, $userRepository, $rateLimiter, $config['security']
+);
+$logoutController = new LogoutController($session, $csrf);
+
+// ---- Routes ----
+$router = new Router();
+
+// The welcome page. (Its content is still the 0.3 placeholder for now.)
+$router->get('/', function () use ($templates, $config): Response {
+    return Response::html($templates->render('pages/hello', [
+        'appName' => $config['app']['name'],
+    ]));
+});
+
+// Accounts.
+$router->get('/register', [$registerController, 'show']);
+$router->post('/register', [$registerController, 'submit']);
+$router->get('/login', [$loginController, 'show']);
+$router->post('/login', [$loginController, 'submit']);
+$router->post('/logout', [$logoutController, 'submit']);
+
+// ---- Dispatch and send ----
+// Any unexpected error is logged and turned into a plain 500 page, so we never
+// leak internal details (like a stack trace) to visitors.
+try {
+    $response = $router->dispatch($request);
+} catch (\Throwable $error) {
+    $logger->error($error->getMessage() . ' @ ' . $error->getFile() . ':' . $error->getLine());
+    $response = Response::html('Something went wrong. Please try again.', 500);
+}
+
+$response->send();

@@ -64,8 +64,24 @@
                 <p class="site-header__tagline">come in &mdash; the kettle&rsquo;s on</p>
 
                 <nav class="site-nav" aria-label="Main">
-                    <!-- More links appear here as their pages are built. -->
-                    <a href="/" aria-current="page">home</a>
+                    <!-- aria-current marks the page you are on for screen readers.
+                         $currentPath is provided by the front controller. -->
+                    <a href="/"<?= ($currentPath ?? '') === '/' ? ' aria-current="page"' : '' ?>>home</a>
+
+                    <?php if (!empty($currentUser)): ?>
+                        <!-- Logged in: greet the user and offer log out. Logging out
+                             changes state, so it is a POST form with a CSRF token,
+                             not a plain link. -->
+                        <span class="site-nav__user">hi, <?= $this->e($currentUser->username) ?></span>
+                        <form method="post" action="/logout" class="site-nav__form">
+                            <?= $this->csrf_field() ?>
+                            <button type="submit">log out</button>
+                        </form>
+                    <?php else: ?>
+                        <!-- Logged out: offer the two ways in. -->
+                        <a href="/login"<?= ($currentPath ?? '') === '/login' ? ' aria-current="page"' : '' ?>>log in</a>
+                        <a href="/register"<?= ($currentPath ?? '') === '/register' ? ' aria-current="page"' : '' ?>>sign up</a>
+                    <?php endif; ?>
                 </nav>
             </header>
 
