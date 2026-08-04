@@ -1,0 +1,89 @@
+/*
+ * economy.css — styles for the inventory and shop pages.
+ *
+ * WHAT THIS FILE IS: the small, page-specific styles for the economy pages — the
+ * grouped inventory chips and the shop's item rows. Kept separate so the shared
+ * components file stays focused. Reads all colours/spacing from theme.css.
+ */
+
+/* ---- Inventory ---- */
+
+.inventory-type {
+    margin-top: var(--space-6);
+    margin-bottom: var(--space-2);
+}
+
+.inventory-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+}
+
+/* One owned item: a parchment chip with its name and how many are held. */
+.inventory-item {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+}
+
+.inventory-item__name {
+    font-weight: 700;
+}
+
+.inventory-item__qty {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+}
+
+/* ---- Shop ---- */
+
+.shop-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+}
+
+/* One item for sale: name, description, price, and a Buy button. */
+.shop-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+}
+
+.shop-item__name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.shop-item__desc {
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+}
+
+/* The price, shown as a small gold "coin" line. Gold on parchment is used only
+   as decoration here (the diamond glyph); the number is plum for readable contrast. */
+.shop-item__price {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--plum);
+}
+
+.shop-item__price span[aria-hidden] {
+    color: var(--gold);
+}
+
+/* Push the Buy button to the bottom of the card so all buttons line up. */
+.shop-item form {
+    margin-top: auto;
+}

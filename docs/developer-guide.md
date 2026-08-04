@@ -479,3 +479,59 @@ one from everyone but its owner. B.6 adds the discovery list on top:
 **New pieces:** `CreatureRepository::findRecentPublic`, `BrowseController`,
 `pages/browse.php`, `partials/creature-card.php` (shared), nav link, and the
 `gameplay.browse_recent_limit` knob.
+
+---
+
+## Increments B.7 + B.8 + B.9 — The economy foundation
+
+**What they deliver:** a single currency you earn by being petted, an inventory of
+what you own, and one shop to spend in. Deliberately minimal — no trading, no
+player shops — but built data-driven so those are later extensions.
+
+**B.7 — Currency.** A single currency lives as `users.currency_balance`. When
+someone pets a creature they do **not** own, `PettingService` gives the **owner**
+`gameplay.currency.per_pet` coins (`UserRepository::addCurrency`). Petting your own
+creature earns nothing, and the **petting cooldown is what caps the earning** —
+there is no separate anti-farm code. The balance shows as a chip in the header.
+
+**B.8 — Inventory.** `inventory` links a user to an item with a quantity.
+`InventoryRepository::findForUser` joins to `items` and returns whole `Item`
+objects plus quantities; `InventoryController` groups them by the item's `type`,
+so a **new item type appears as a new group with no code change**.
+
+**B.9 — Shop.** One shop, seeded by migration along with a few items and the
+`shop_items` links. The purchase flow is generic — *a shop has items, an item has
+a price; buying validates the balance, deducts it, grants the item*:
+
+- `PurchaseService::buy` gets the item's **real price from the database** via
+  `ShopRepository::findSoldItem` (never trusts the browser), then in a
+  **transaction** deducts and grants together.
+- **A balance can never go negative:** `UserRepository::deductCurrency` subtracts
+  only `WHERE currency_balance >= amount` and reports success by whether a row
+  actually changed. If it fails, the transaction rolls back and nothing changes.
+
+**Two gotchas worth remembering (both cost real bugs here):**
+
+1. **Reused SQL placeholders.** With real prepared statements (emulation off), a
+   named placeholder can't appear twice — `deductCurrency` needs `:amount` *and*
+   `:minimum`, both bound to the same value. (An earlier `:amount`-twice version
+   failed loudly, which is why the purchase tests exist.)
+2. **Route vs. folder collisions.** The front controller only handles a URL if no
+   real file/folder matches it first. An art folder at `public/shop/` will
+   **shadow the `/shop` route** (on the dev server and on a production
+   front-controller alike). Keep art under `public/assets/…`, never in a folder
+   named like a route. (Phase D's server config must also route all non-file
+   requests to `public/index.php`.)
+
+**Adding a shop item (the recipe):** add a row to `items` (slug, name, price,
+type), then a `shop_items` row linking it to a shop. It appears for sale and, once
+owned, in the inventory under its type — no code change.
+
+**New pieces:**
+
+| Layer | Classes / files |
+| --- | --- |
+| Domain | `Item`, `Shop`, `InventoryRepository`, `ShopRepository`, `PurchaseService`, `PurchaseResult`; `UserRepository::addCurrency/deductCurrency`; `PettingService` now awards currency |
+| Controllers | `InventoryController`, `ShopController` |
+| Templates/CSS | `pages/inventory.php`, `pages/shop.php`; `economy.css`; nav links + balance chip |
+| Data | migration seeding the shop, items, and their links |

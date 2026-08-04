@@ -45,6 +45,7 @@
     <link rel="stylesheet" href="/css/components.css">
     <link rel="stylesheet" href="/css/creature.css">
     <link rel="stylesheet" href="/css/explore.css">
+    <link rel="stylesheet" href="/css/economy.css">
 </head>
 <body>
     <!-- Keyboard users can jump straight to the content with this link. -->
@@ -80,7 +81,13 @@
                         <a href="/creatures"<?= ($currentPath ?? '') === '/creatures' ? ' aria-current="page"' : '' ?>>my creatures</a>
                         <a href="/adopt"<?= ($currentPath ?? '') === '/adopt' ? ' aria-current="page"' : '' ?>>adopt</a>
                         <a href="/explore"<?= str_starts_with($currentPath ?? '', '/explore') ? ' aria-current="page"' : '' ?>>explore</a>
+                        <a href="/shop"<?= str_starts_with($currentPath ?? '', '/shop') ? ' aria-current="page"' : '' ?>>shop</a>
+                        <a href="/inventory"<?= ($currentPath ?? '') === '/inventory' ? ' aria-current="page"' : '' ?>>things</a>
                         <span class="site-nav__user">hi, <?= $this->e($currentUser->username) ?></span>
+                        <span class="site-nav__coins">
+                            <span aria-hidden="true">&#9670;</span>
+                            <?= $this->e((string) $currentUser->currencyBalance) ?> <?= $this->e($currencyName ?? 'coins') ?>
+                        </span>
                         <form method="post" action="/logout" class="site-nav__form">
                             <?= $this->csrf_field() ?>
                             <button type="submit">log out</button>

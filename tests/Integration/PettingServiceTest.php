@@ -22,12 +22,19 @@ final class PettingServiceTest extends DatabaseTestCase
 {
     private PettingService $petting;
     private CreatureRepository $creatures;
+    private UserRepository $users;
     private int $creatureId;
+    private int $ownerId;
     private int $actorId;
     private int $otherActorId;
 
-    // A small, explicit petting policy for these tests.
-    private const CONFIG = ['cooldown_seconds' => 30, 'happiness_per_pet' => 1, 'xp_per_pet' => 20];
+    // A small, explicit petting policy for these tests (incl. the currency award).
+    private const CONFIG = [
+        'cooldown_seconds' => 30,
+        'happiness_per_pet' => 1,
+        'xp_per_pet' => 20,
+        'currency_per_pet' => 5,
+    ];
 
     protected function setUp(): void
     {
@@ -35,18 +42,24 @@ final class PettingServiceTest extends DatabaseTestCase
         $this->clearTables('pettings', 'creatures', 'users');
 
         $this->creatures = new CreatureRepository($this->connection);
+        $this->users = new UserRepository($this->connection);
         $this->petting = new PettingService(
             new PettingRepository($this->connection),
             $this->creatures,
+            $this->users,
             self::CONFIG
         );
 
-        $users = new UserRepository($this->connection);
         $species = new SpeciesRepository($this->connection);
-        $ownerId = $users->create('owner', 'owner@example.com', 'hash')->id;
-        $this->actorId = $users->create('actor', 'actor@example.com', 'hash')->id;
-        $this->otherActorId = $users->create('other', 'other@example.com', 'hash')->id;
-        $this->creatureId = $this->creatures->create($ownerId, $species->findStarters()[0]->id, 'Biscuit')->id;
+        $this->ownerId = $this->users->create('owner', 'owner@example.com', 'hash')->id;
+        $this->actorId = $this->users->create('actor', 'actor@example.com', 'hash')->id;
+        $this->otherActorId = $this->users->create('other', 'other@example.com', 'hash')->id;
+        $this->creatureId = $this->creatures->create($this->ownerId, $species->findStarters()[0]->id, 'Biscuit')->id;
+    }
+
+    private function ownerBalance(): int
+    {
+        return $this->users->findById($this->ownerId)->currencyBalance;
     }
 
     private function creature(): \Felkyo\Creatures\Creature
@@ -112,5 +125,33 @@ final class PettingServiceTest extends DatabaseTestCase
         $again = $this->petting->pet($this->actorId, $this->creature());
         $this->assertTrue($again->isSuccessful());
         $this->assertSame(40, $this->creature()->xp);
+    }
+
+    public function testPettingBySomeoneElseEarnsTheOwnerCurrency(): void
+    {
+        $this->assertSame(0, $this->ownerBalance());
+
+        $this->petting->pet($this->actorId, $this->creature());
+
+        // The owner earned the per-pet amount from someone else's pet.
+        $this->assertSame(5, $this->ownerBalance());
+    }
+
+    public function testPettingYourOwnCreatureEarnsNoCurrency(): void
+    {
+        // The owner pets their own creature: happiness/xp rise, but no currency.
+        $this->petting->pet($this->ownerId, $this->creature());
+
+        $this->assertSame(0, $this->ownerBalance());
+    }
+
+    public function testCurrencyCannotBeFarmedPastTheCooldown(): void
+    {
+        // First pet by the actor earns the owner currency...
+        $this->petting->pet($this->actorId, $this->creature());
+        // ...a second, immediate pet by the same actor is on cooldown, so no more.
+        $this->petting->pet($this->actorId, $this->creature());
+
+        $this->assertSame(5, $this->ownerBalance());
     }
 }

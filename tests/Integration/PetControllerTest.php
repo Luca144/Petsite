@@ -47,7 +47,8 @@ final class PetControllerTest extends DatabaseTestCase
         $pettingService = new PettingService(
             new PettingRepository($this->connection),
             $this->creatures,
-            $config['gameplay']['petting']
+            new UserRepository($this->connection),
+            $config['gameplay']['petting'] + ['currency_per_pet' => $config['gameplay']['currency']['per_pet']]
         );
         $rateLimiter = new RateLimiter(new RateLimitRepository($this->connection));
 

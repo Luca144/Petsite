@@ -212,6 +212,22 @@
     padding: 0 var(--space-2);
 }
 
+/* The currency balance: a small gold chip so it reads as "treasure". The diamond
+   glyph is decorative; the number and label carry the meaning. */
+.site-nav__coins {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--plum);
+    background: var(--panel);
+    border: 1.5px solid var(--gold);
+    border-radius: var(--radius-pill);
+    padding: var(--space-1) var(--space-3);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
 /* Marks the current page for everyone — not by colour alone, but with a heavier
    border and weight, so it reads without relying on sight of the accent. */
 .site-nav a[aria-current="page"] {

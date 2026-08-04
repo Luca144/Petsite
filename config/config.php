@@ -91,6 +91,10 @@ return [
             'window_seconds' => 60,  // ...per minute, per IP (anti-abuse; the
                                      // per-visit click limit is the main gate)
         ],
+        'rate_limit_purchase' => [
+            'max_attempts' => 30,    // at most 30 purchases...
+            'window_seconds' => 60,  // ...per minute, per IP (anti-abuse)
+        ],
     ],
 
     // Gameplay tunables — the documented home for "knobs" so a beginner can
@@ -175,6 +179,14 @@ return [
 
         // How many recent public creatures the "browse" page shows.
         'browse_recent_limit' => 12,
+
+        // The single in-game currency. A creature's OWNER earns this each time
+        // someone ELSE pets their creature (the petting cooldown limits how often,
+        // so it can't be farmed). "name" is only the label shown to players.
+        'currency' => [
+            'name' => 'coins',
+            'per_pet' => 5,
+        ],
     ],
 
 ];

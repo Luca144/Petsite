@@ -149,6 +149,45 @@ final class UserRepository
     }
 
     /**
+     * Add currency to a user's balance (e.g. when their creature is petted). The
+     * addition happens in the database so it is safe even if two land at once.
+     */
+    public function addCurrency(int $userId, int $amount): void
+    {
+        $statement = $this->connection->prepare(
+            'UPDATE users SET currency_balance = currency_balance + :amount WHERE id = :id'
+        );
+        $statement->execute([':amount' => $amount, ':id' => $userId]);
+    }
+
+    /**
+     * Try to subtract currency from a user's balance for a purchase. Returns true
+     * if it succeeded, false if the balance was too low.
+     *
+     * The condition "AND currency_balance >= :amount" is what makes this safe: the
+     * subtraction only happens if the user can afford it, so a balance can NEVER go
+     * negative, even if two purchases are attempted at the same moment. We report
+     * success by whether a row was actually changed.
+     */
+    public function deductCurrency(int $userId, int $amount): bool
+    {
+        // Note: the amount appears twice in the query (to subtract, and to check
+        // there is enough). With real prepared statements each placeholder must be
+        // named separately, so we use :amount and :minimum and bind both to $amount.
+        $statement = $this->connection->prepare(
+            'UPDATE users SET currency_balance = currency_balance - :amount
+              WHERE id = :id AND currency_balance >= :minimum'
+        );
+        $statement->execute([
+            ':amount' => $amount,
+            ':minimum' => $amount,
+            ':id' => $userId,
+        ]);
+
+        return $statement->rowCount() > 0;
+    }
+
+    /**
      * Turn a fetched row into a User, or null if the query found nothing. PDO's
      * fetch() returns false when there is no row, which we treat as "not found".
      */

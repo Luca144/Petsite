@@ -33,6 +33,9 @@ use Felkyo\Creatures\PettingRepository;
 use Felkyo\Creatures\PettingService;
 use Felkyo\Creatures\SpeciesRepository;
 use Felkyo\Creatures\StarterCreatureService;
+use Felkyo\Economy\InventoryRepository;
+use Felkyo\Economy\PurchaseService;
+use Felkyo\Economy\ShopRepository;
 use Felkyo\Exploration\ExplorationRepository;
 use Felkyo\Exploration\ExplorationService;
 use Felkyo\Exploration\WeightedPicker;
@@ -42,10 +45,12 @@ use Felkyo\Http\Controllers\CollectionController;
 use Felkyo\Http\Controllers\CreatureController;
 use Felkyo\Http\Controllers\ExplorationController;
 use Felkyo\Http\Controllers\HomeController;
+use Felkyo\Http\Controllers\InventoryController;
 use Felkyo\Http\Controllers\LoginController;
 use Felkyo\Http\Controllers\LogoutController;
 use Felkyo\Http\Controllers\PetController;
 use Felkyo\Http\Controllers\RegisterController;
+use Felkyo\Http\Controllers\ShopController;
 use Felkyo\Http\Csrf;
 use Felkyo\Http\Request;
 use Felkyo\Http\Response;
@@ -87,6 +92,8 @@ $speciesRepository = new SpeciesRepository($pdo);
 $creatureRepository = new CreatureRepository($pdo);
 $pettingRepository = new PettingRepository($pdo);
 $explorationRepository = new ExplorationRepository($pdo);
+$shopRepository = new ShopRepository($pdo);
+$inventoryRepository = new InventoryRepository($pdo);
 
 // ---- Services (own the business rules) ----
 $passwordHasher = new PasswordHasher();
@@ -111,10 +118,16 @@ $growthCalculator = new GrowthCalculator(
     $config['gameplay']['growth']['stage_start_levels']
 );
 $pettingService = new PettingService(
-    $pettingRepository, $creatureRepository, $config['gameplay']['petting']
+    $pettingRepository,
+    $creatureRepository,
+    $userRepository,
+    $config['gameplay']['petting'] + ['currency_per_pet' => $config['gameplay']['currency']['per_pet']]
 );
 $creatureProfileBuilder = new CreatureProfileBuilder(
     $speciesRepository, $userRepository, $growthCalculator, $pettingRepository
+);
+$purchaseService = new PurchaseService(
+    $pdo, $shopRepository, $userRepository, $inventoryRepository
 );
 $explorationService = new ExplorationService(
     $explorationRepository,
@@ -141,6 +154,8 @@ if (is_int($currentUserId)) {
 $templates->addData([
     'currentUser' => $currentUser,
     'currentPath' => $request->path(),
+    // The label for the currency (e.g. "coins"), shown next to the balance.
+    'currencyName' => $config['gameplay']['currency']['name'],
 ]);
 
 // ---- Controllers ----
@@ -174,6 +189,14 @@ $explorationController = new ExplorationController(
         'rate_limit' => $config['security']['rate_limit_explore'],
     ]
 );
+$inventoryController = new InventoryController($templates, $session, $inventoryRepository);
+$shopController = new ShopController(
+    $templates, $session, $csrf, $shopRepository, $purchaseService, $rateLimiter,
+    [
+        'slug' => 'general-store',
+        'rate_limit' => $config['security']['rate_limit_purchase'],
+    ]
+);
 
 // ---- Routes ----
 $router = new Router();
@@ -202,6 +225,11 @@ $router->post('/adopt', [$adoptionController, 'adopt']);
 $router->get('/explore', [$explorationController, 'index']);
 $router->get('/explore/{area}', [$explorationController, 'show']);
 $router->post('/explore/{area}', [$explorationController, 'search']);
+
+// The economy: the shop (view + buy) and the player's inventory.
+$router->get('/shop', [$shopController, 'show']);
+$router->post('/shop/buy', [$shopController, 'buy']);
+$router->get('/inventory', [$inventoryController, 'show']);
 
 // A single creature's page. {id} is captured from the URL, e.g. /creature/42.
 $router->get('/creature/{id}', [$creatureController, 'show']);
