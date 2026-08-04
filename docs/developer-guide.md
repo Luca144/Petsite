@@ -566,3 +566,34 @@ owned, in the inventory under its type — no code change.
 species-flavour migration; `RouterTest` + `ContentFilterTest` (unit) and
 bio-service / bio-controller tests. Config gained `gameplay.bio_max_length`,
 `moderation.blocked_words`, and `security.rate_limit_bio`.
+
+---
+
+## Increment C.3 — The magic pass
+
+**What it delivers:** a small, deliberate set of touches that make the site feel
+alive — chosen for restraint, not spectacle.
+
+- **Frame settle-in:** the content frame gently rises/fades in on each page load.
+- **Tactile buttons:** a quick "press" on `:active` (on top of the hover lift).
+- **Flash notices** slide in gently.
+- **Creature portrait** lifts and glows a little more on hover.
+- **Pet celebration:** right after a pet, a small heart floats up from the
+  portrait — **once**. This uses a one-time `Session::celebrate('pet')` /
+  `takeCelebration()` flag (like the flash): `PetController` sets it only on a real
+  pet (not a cooldown), and `CreatureController` reads-and-clears it, adding a CSS
+  class that plays the heart. No JavaScript — the heart is pure CSS.
+
+**Reduced motion is respected throughout.** The global rule already disables
+animations/transitions; crucially, every entrance animation's *resting* state is
+"visible", so with motion disabled the content simply appears (never stuck
+invisible), and the decorative heart is hidden entirely.
+
+**Deliberately NOT added** (restraint): a level-up/stage-change animation would
+need extra state tracking, and the sprite swap already marks that moment — so it
+was left out rather than over-animate.
+
+**New/changed:** `Session::celebrate/takeCelebration`; `PetController` +
+`CreatureController` set/consume the flag; CSS touches across `layout.css`,
+`components.css`, `creature.css`; tests for the celebration flag (set on a real
+pet, not on cooldown; shown once then cleared).

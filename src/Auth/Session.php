@@ -122,4 +122,25 @@ final class Session
 
         return is_string($message) ? $message : null;
     }
+
+    /**
+     * Mark that a one-time "celebration" should play on the next page (e.g. the
+     * little heart when a creature is petted). Like the flash, it is read once and
+     * cleared, so the effect plays exactly once.
+     */
+    public function celebrate(string $kind): void
+    {
+        $_SESSION['celebrate'] = $kind;
+    }
+
+    /**
+     * Read and remove the pending celebration, if any.
+     */
+    public function takeCelebration(): ?string
+    {
+        $kind = $_SESSION['celebrate'] ?? null;
+        unset($_SESSION['celebrate']);
+
+        return is_string($kind) ? $kind : null;
+    }
 }

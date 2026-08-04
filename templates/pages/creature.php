@@ -39,7 +39,8 @@ $createdLabel = $creature->createdAt !== null
 <?php endif; ?>
 
 <article class="creature">
-    <div class="creature__portrait">
+    <!-- After a pet, the --celebrate class makes a little heart float up (C.3). -->
+    <div class="creature__portrait<?= !empty($justPetted) ? ' creature__portrait--celebrate' : '' ?>">
         <img class="creature__img pixelated"
              src="<?= $this->e($imagePath) ?>"
              alt="<?= $this->e($creature->name . ', a ' . $speciesName . ' (' . $stage . ')') ?>"

@@ -39,6 +39,12 @@
     transform: translateY(-3px) scale(1.02);
 }
 
+/* A tactile "press" when a button is actually clicked/tapped (the magic pass,
+   C.3). Small and quick, so it feels responsive rather than showy. */
+.btn:active {
+    transform: translateY(-1px) scale(0.98);
+}
+
 /* Primary action — the warm, glowing "hero" button (e.g. "Pet [name]"). Parchment
    text on a purple-to-plum gradient gives good contrast; the gold border and a
    soft ember glow give it the "a little magic" feel. */
@@ -248,6 +254,14 @@ button.tile:hover {
     margin-bottom: var(--space-4);
     font-weight: 700;
     color: var(--plum);
+    /* Slide in gently (the magic pass, C.3). Resting state is visible, so reduced
+       motion simply shows it in place. */
+    animation: flash-in 0.4s ease-out;
+}
+
+@keyframes flash-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: none; }
 }
 
 /* A narrow, centred card for the login / registration forms. */

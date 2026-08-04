@@ -87,6 +87,19 @@ final class CreatureControllerTest extends DatabaseTestCase
         $this->assertStringContainsString('/assets/creatures/foxlen/baby.gif', $response->body());
     }
 
+    public function testTheHeartCelebrationShowsOnceThenIsCleared(): void
+    {
+        // Set the one-time celebration (as PetController does after a pet).
+        $_SESSION['celebrate'] = 'pet';
+
+        $first = $this->get('/creature/' . $this->publicCreatureId);
+        $this->assertStringContainsString('creature__portrait--celebrate', $first->body());
+
+        // Viewing again does not celebrate — the flag was consumed.
+        $second = $this->get('/creature/' . $this->publicCreatureId);
+        $this->assertStringNotContainsString('creature__portrait--celebrate', $second->body());
+    }
+
     public function testAnUnknownCreatureGivesA404(): void
     {
         $response = $this->get('/creature/999999');

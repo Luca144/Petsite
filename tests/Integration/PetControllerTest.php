@@ -125,4 +125,25 @@ final class PetControllerTest extends DatabaseTestCase
         $this->postPet($token);
         $this->assertSame($xpAfterFirst, $this->currentXp());
     }
+
+    public function testASuccessfulPetAsksForTheHeartCelebration(): void
+    {
+        $_SESSION['user_id'] = $this->ownerId;
+
+        $this->postPet($this->csrf->token());
+
+        $this->assertSame('pet', $_SESSION['celebrate'] ?? null);
+    }
+
+    public function testACooldownPetDoesNotCelebrate(): void
+    {
+        $_SESSION['user_id'] = $this->ownerId;
+        $token = $this->csrf->token();
+
+        $this->postPet($token);          // succeeds, sets the flag
+        unset($_SESSION['celebrate']);   // the creature page would clear it
+
+        $this->postPet($token);          // on cooldown now — should NOT celebrate
+        $this->assertArrayNotHasKey('celebrate', $_SESSION);
+    }
 }

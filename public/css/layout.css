@@ -91,6 +91,14 @@
     border-radius: calc(var(--radius-lg) + 6px);
     padding: 7px;
     box-shadow: var(--shadow-panel), 0 0 0 1px rgba(201, 162, 39, 0.18);
+    /* Gentle "settle in" on load (the magic pass, C.3). The resting state is fully
+       visible, so with reduced motion (animation disabled) it simply appears. */
+    animation: frame-rise 0.5s ease-out;
+}
+
+@keyframes frame-rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: none; }
 }
 
 .site-frame__inner {

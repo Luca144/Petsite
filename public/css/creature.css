@@ -23,10 +23,12 @@
 .creature__portrait {
     flex: 0 0 240px;
     margin: 0 auto;
+    position: relative; /* so the celebration heart can be placed over it */
 }
 
 /* The animated creature image. .pixelated (from theme.css) keeps pixel-art crisp
-   when scaled up; a GIF loops on its own. A gold ring and soft glow frame it. */
+   when scaled up; a GIF loops on its own. A gold ring and soft glow frame it.
+   It lifts and glows a touch on hover (the magic pass, C.3). */
 .creature__img {
     display: block;
     width: 100%;
@@ -37,6 +39,39 @@
     border: 3px solid var(--gold);
     border-radius: var(--radius-md);
     box-shadow: 0 0 0 6px var(--parchment), var(--glow-gold), var(--shadow-raised);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.creature__img:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0 0 6px var(--parchment), 0 0 34px rgba(232, 201, 90, 0.65), var(--shadow-raised);
+}
+
+/* The pet "celebration": right after petting, a little heart floats up from the
+   portrait, once. The class is added by the server only just after a pet. */
+.creature__portrait--celebrate::after {
+    content: "\2665"; /* heart */
+    position: absolute;
+    left: 50%;
+    top: 34%;
+    color: var(--gold-lit);
+    font-size: 1.8rem;
+    pointer-events: none;
+    animation: heart-float 1.1s ease-out;
+}
+
+@keyframes heart-float {
+    0% { opacity: 0; transform: translate(-50%, 0) scale(0.6); }
+    30% { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%, -64px) scale(1.1); }
+}
+
+/* With reduced motion, skip the heart entirely (it is purely decorative) rather
+   than leave a static one sitting there. */
+@media (prefers-reduced-motion: reduce) {
+    .creature__portrait--celebrate::after {
+        display: none;
+    }
 }
 
 .creature__info {

@@ -82,6 +82,12 @@ final class PetController
         $result = $this->petting->pet($userId, $creature);
         $this->session->flash($result->message());
 
+        // On a real pet (not a cooldown), ask the creature page to play the little
+        // "heart" celebration once (increment C.3).
+        if ($result->isSuccessful()) {
+            $this->session->celebrate('pet');
+        }
+
         return Response::redirect($creaturePath);
     }
 }

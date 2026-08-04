@@ -68,6 +68,8 @@ final class CreatureController
             'isOwner' => $this->viewerOwns($creature->ownerId),
             // A one-time message from a just-completed action (e.g. after petting).
             'flash' => $this->session->takeFlash(),
+            // True just after a successful pet, so the page plays the heart once.
+            'justPetted' => $this->session->takeCelebration() === 'pet',
         ]);
 
         return Response::html($html);
