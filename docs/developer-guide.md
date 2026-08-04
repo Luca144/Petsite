@@ -456,3 +456,26 @@ table; drop in a background if you have one. Nothing else changes.
 | Controllers | `ExplorationController` (index / show / search) |
 | Templates/CSS | `pages/explore-index.php`, `pages/explore-area.php`; `explore.css`; nav link |
 | Data | migration making a user's exploration visit unique per area |
+
+---
+
+## Increment B.6 — Seeing other people's creatures
+
+**What it delivers:** a public **browse** page listing recently met creatures, so
+players can discover and visit each other's creatures.
+
+**Most of the visibility work was already in place.** The creature page (A.3)
+already shows a public creature to anyone (even logged out) and hides a private
+one from everyone but its owner. B.6 adds the discovery list on top:
+
+- `CreatureRepository::findRecentPublic($limit)` returns the newest **public**
+  creatures across all users (private ones are never included).
+- `BrowseController` (`GET /browse`) is a **public** page — no login required.
+  It reuses `CreatureProfileBuilder::summariesFor()` for the card data.
+- The card markup was extracted into `partials/creature-card.php`, now shared by
+  the collection and browse pages.
+- "browse" is in the nav for **everyone** (logged in or not).
+
+**New pieces:** `CreatureRepository::findRecentPublic`, `BrowseController`,
+`pages/browse.php`, `partials/creature-card.php` (shared), nav link, and the
+`gameplay.browse_recent_limit` knob.

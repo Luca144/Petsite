@@ -20,23 +20,7 @@ $this->layout('layout', ['title' => 'Your creatures — Felkyo Creatures']);
 <?php else: ?>
     <div class="creature-collection">
         <?php foreach ($summaries as $summary): ?>
-            <?php
-            $creature = $summary['creature'];
-            $species = $summary['species'];
-            $slug = $species?->slug ?? '';
-            // Same convention as the creature page: slug + current stage.
-            $image = '/assets/creatures/' . rawurlencode($slug) . '/' . rawurlencode($summary['stage']) . '.gif';
-            ?>
-            <a class="creature-card" href="/creature/<?= $this->e((string) $creature->id) ?>">
-                <img class="creature-card__img pixelated"
-                     src="<?= $this->e($image) ?>"
-                     alt="<?= $this->e($creature->name) ?>"
-                     width="96" height="96">
-                <span class="creature-card__name"><?= $this->e($creature->name) ?></span>
-                <span class="creature-card__meta">
-                    <?= $this->e($species?->name ?? 'Unknown') ?> &middot; lvl <?= $this->e((string) $summary['level']) ?>
-                </span>
-            </a>
+            <?= $this->insert('partials/creature-card', ['summary' => $summary]) ?>
         <?php endforeach; ?>
     </div>
 <?php endif; ?>

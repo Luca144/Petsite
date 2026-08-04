@@ -37,6 +37,7 @@ use Felkyo\Exploration\ExplorationRepository;
 use Felkyo\Exploration\ExplorationService;
 use Felkyo\Exploration\WeightedPicker;
 use Felkyo\Http\Controllers\AdoptionController;
+use Felkyo\Http\Controllers\BrowseController;
 use Felkyo\Http\Controllers\CollectionController;
 use Felkyo\Http\Controllers\CreatureController;
 use Felkyo\Http\Controllers\ExplorationController;
@@ -144,6 +145,9 @@ $templates->addData([
 
 // ---- Controllers ----
 $homeController = new HomeController($templates, $session, $creatureRepository, $config['app']['name']);
+$browseController = new BrowseController(
+    $templates, $creatureRepository, $creatureProfileBuilder, $config['gameplay']['browse_recent_limit']
+);
 $registerController = new RegisterController(
     $templates, $csrf, $session, $registrationService, $starterCreatureService, $rateLimiter, $config['security']
 );
@@ -176,6 +180,9 @@ $router = new Router();
 
 // The home page (welcome for guests; the player's creatures when logged in).
 $router->get('/', [$homeController, 'show']);
+
+// The public browse page — recent public creatures.
+$router->get('/browse', [$browseController, 'show']);
 
 // Accounts.
 $router->get('/register', [$registerController, 'show']);

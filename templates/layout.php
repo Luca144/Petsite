@@ -70,6 +70,8 @@
                     <!-- aria-current marks the page you are on for screen readers.
                          $currentPath is provided by the front controller. -->
                     <a href="/"<?= ($currentPath ?? '') === '/' ? ' aria-current="page"' : '' ?>>home</a>
+                    <!-- Browse is public, so it is shown to everyone. -->
+                    <a href="/browse"<?= ($currentPath ?? '') === '/browse' ? ' aria-current="page"' : '' ?>>browse</a>
 
                     <?php if (!empty($currentUser)): ?>
                         <!-- Logged in: links to the player's own pages, then greet

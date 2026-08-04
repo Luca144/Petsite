@@ -85,6 +85,31 @@ final class CreatureRepository
     }
 
     /**
+     * Get the most recently created PUBLIC creatures, across all users, for the
+     * browse page. Private creatures are never included. The limit is cast to an
+     * integer and placed straight into the SQL (safe: it is our own value; MySQL
+     * will not accept a bound parameter for LIMIT under real prepared statements).
+     *
+     * @return Creature[]
+     */
+    public function findRecentPublic(int $limit): array
+    {
+        $limit = max(1, $limit);
+
+        $statement = $this->connection->query(
+            'SELECT ' . self::COLUMNS . ' FROM creatures
+              WHERE is_public = 1
+              ORDER BY created_at DESC, id DESC
+              LIMIT ' . $limit
+        );
+
+        return array_map(
+            static fn (array $row): Creature => Creature::fromRow($row),
+            $statement->fetchAll()
+        );
+    }
+
+    /**
      * Apply the effects of one pet to a creature: add to its happiness and XP, and
      * stamp when it was last interacted with. Doing the additions in the database
      * (happiness = happiness + :amount) is safe even if two pets land at once.

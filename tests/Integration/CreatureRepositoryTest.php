@@ -84,4 +84,31 @@ final class CreatureRepositoryTest extends DatabaseTestCase
         $this->expectException(PDOException::class);
         $this->creatures->create(999999, $this->speciesId, 'Ghost');
     }
+
+    public function testFindRecentPublicReturnsOnlyPublicCreaturesNewestFirst(): void
+    {
+        // Two public creatures (Biscuit first, then Clover) and one private one.
+        $this->creatures->create($this->ownerId, $this->speciesId, 'Biscuit');
+        $this->creatures->create($this->ownerId, $this->speciesId, 'Clover');
+        $this->connection->prepare(
+            'INSERT INTO creatures (owner_id, species_id, name, is_public) VALUES (?, ?, ?, 0)'
+        )->execute([$this->ownerId, $this->speciesId, 'SecretPrivate']);
+
+        $recent = $this->creatures->findRecentPublic(10);
+
+        // Only the two public ones, and the newest (Clover) comes first.
+        $this->assertCount(2, $recent);
+        $this->assertSame('Clover', $recent[0]->name);
+        $names = array_map(static fn ($c) => $c->name, $recent);
+        $this->assertNotContains('SecretPrivate', $names);
+    }
+
+    public function testFindRecentPublicRespectsTheLimit(): void
+    {
+        for ($i = 0; $i < 5; $i++) {
+            $this->creatures->create($this->ownerId, $this->speciesId, 'Creature' . $i);
+        }
+
+        $this->assertCount(3, $this->creatures->findRecentPublic(3));
+    }
 }

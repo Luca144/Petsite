@@ -172,6 +172,9 @@ return [
         'creature_names' => [
             'Pip', 'Biscuit', 'Clover', 'Marlow', 'Sage', 'Bramble', 'Dot', 'Fern',
         ],
+
+        // How many recent public creatures the "browse" page shows.
+        'browse_recent_limit' => 12,
     ],
 
 ];
