@@ -1,0 +1,81 @@
+/*
+ * explore.css — the exploration area's scene and its clickable spots.
+ *
+ * WHAT THIS FILE IS: the styles for an exploration area — the "scene" (a framed
+ * panel that stands in for the area's artwork) and the glowing spots a player
+ * clicks to search. Kept as its own small, page-specific stylesheet.
+ *
+ * The scene background here is a themed placeholder built from theme tokens; real
+ * area art can replace it later. Reads all colours/spacing from theme.css.
+ */
+
+.explore-clicks {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    margin-bottom: var(--space-4);
+}
+
+/* The scene: a wide framed panel the spots sit on. position: relative so the
+   spots can be placed against it. The gold radial is a soft "lamplight" glow. */
+.explore-scene {
+    position: relative;
+    width: 100%;
+    max-width: 640px;
+    aspect-ratio: 16 / 10;
+    margin: 0 auto var(--space-4);
+    border: 2px solid var(--gold);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 30% 22%, rgba(232, 201, 90, 0.20), transparent 55%),
+        linear-gradient(160deg, var(--purple), var(--plum-deep));
+}
+
+/* When the visit is spent, we still show the framed scene, but with the note
+   centred inside it instead of spots. */
+.explore-scene--spent {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: var(--space-6);
+}
+
+.explore-scene--spent .empty-state {
+    color: var(--panel);
+}
+
+/* A clickable spot. It is positioned by the --x/--y custom properties set inline
+   on each button (percentages across the scene), and centred on that point. It is
+   a comfortable tap target and gently pulses to invite a click. */
+.explore-spot {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    transform: translate(-50%, -50%);
+    min-width: 48px;
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    color: var(--gold-lit);
+    background: rgba(42, 28, 58, 0.55);
+    border: 2px solid var(--gold);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: var(--glow-gold);
+    transition: transform 0.16s, background 0.16s;
+    animation: explore-spot-pulse 2.6s ease-in-out infinite;
+}
+
+.explore-spot:hover {
+    transform: translate(-50%, -50%) scale(1.15);
+    background: rgba(106, 76, 147, 0.7);
+}
+
+@keyframes explore-spot-pulse {
+    0%, 100% { box-shadow: 0 0 12px -2px rgba(232, 201, 90, 0.4); }
+    50% { box-shadow: 0 0 22px 2px rgba(232, 201, 90, 0.7); }
+}

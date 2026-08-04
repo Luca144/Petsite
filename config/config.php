@@ -86,6 +86,11 @@ return [
             'window_seconds' => 3600, // ...per hour, per IP (anti-abuse; the
                                       // once-per-day cooldown is the main gate)
         ],
+        'rate_limit_explore' => [
+            'max_attempts' => 30,    // at most 30 explore clicks...
+            'window_seconds' => 60,  // ...per minute, per IP (anti-abuse; the
+                                     // per-visit click limit is the main gate)
+        ],
     ],
 
     // Gameplay tunables — the documented home for "knobs" so a beginner can
@@ -128,9 +133,42 @@ return [
             'cooldown_seconds' => 86400,
         ],
 
+        // Exploration areas. Each area is CONTENT defined as data, so adding a
+        // second area is a new entry here (plus a background image) — not new code.
+        // An area has clickable "spots" (positions on its scene, as percentages)
+        // and a "loot" table of weighted rewards. When a spot is clicked, one
+        // reward is chosen at random, weighted by its "weight" (higher = more
+        // likely). Each visit allows a limited number of clicks, which refreshes
+        // after the window passes.
+        'exploration' => [
+            'clicks_per_visit' => 5,
+            'window_seconds' => 3600, // the click allowance refreshes after this
+            'areas' => [
+                'whispering-wood' => [
+                    'name' => 'The Whispering Wood',
+                    'description' => 'A hush of amber trees where small things rustle just out of sight.',
+                    // Clickable spots, positioned by percentage across the scene.
+                    'spots' => [
+                        ['x' => 18, 'y' => 60],
+                        ['x' => 40, 'y' => 42],
+                        ['x' => 63, 'y' => 66],
+                        ['x' => 80, 'y' => 48],
+                        ['x' => 52, 'y' => 78],
+                    ],
+                    // Weighted rewards. Weights are relative and need not total 100.
+                    // "type" says what is granted: "nothing", or a new "creature".
+                    // (Currency and item rewards can be added here in later increments.)
+                    'loot' => [
+                        ['type' => 'nothing', 'weight' => 85, 'message' => 'Only leaves and a soft wind. Nothing this time.'],
+                        ['type' => 'creature', 'weight' => 15, 'message' => 'Something small blinks in the undergrowth — a new creature follows you home!'],
+                    ],
+                ],
+            ],
+        ],
+
         // The pool of friendly default names a new creature can be given — used
-        // both for a player's starter and for adopted creatures. Players may be
-        // allowed to rename in a later increment.
+        // for a player's starter, for adopted creatures, and for exploration finds.
+        // Players may be allowed to rename in a later increment.
         'creature_names' => [
             'Pip', 'Biscuit', 'Clover', 'Marlow', 'Sage', 'Bramble', 'Dot', 'Fern',
         ],

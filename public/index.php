@@ -33,9 +33,13 @@ use Felkyo\Creatures\PettingRepository;
 use Felkyo\Creatures\PettingService;
 use Felkyo\Creatures\SpeciesRepository;
 use Felkyo\Creatures\StarterCreatureService;
+use Felkyo\Exploration\ExplorationRepository;
+use Felkyo\Exploration\ExplorationService;
+use Felkyo\Exploration\WeightedPicker;
 use Felkyo\Http\Controllers\AdoptionController;
 use Felkyo\Http\Controllers\CollectionController;
 use Felkyo\Http\Controllers\CreatureController;
+use Felkyo\Http\Controllers\ExplorationController;
 use Felkyo\Http\Controllers\HomeController;
 use Felkyo\Http\Controllers\LoginController;
 use Felkyo\Http\Controllers\LogoutController;
@@ -81,6 +85,7 @@ $rateLimitRepository = new RateLimitRepository($pdo);
 $speciesRepository = new SpeciesRepository($pdo);
 $creatureRepository = new CreatureRepository($pdo);
 $pettingRepository = new PettingRepository($pdo);
+$explorationRepository = new ExplorationRepository($pdo);
 
 // ---- Services (own the business rules) ----
 $passwordHasher = new PasswordHasher();
@@ -109,6 +114,17 @@ $pettingService = new PettingService(
 );
 $creatureProfileBuilder = new CreatureProfileBuilder(
     $speciesRepository, $userRepository, $growthCalculator, $pettingRepository
+);
+$explorationService = new ExplorationService(
+    $explorationRepository,
+    new WeightedPicker(),
+    $creatureRepository,
+    $speciesRepository,
+    [
+        'clicks_per_visit' => $config['gameplay']['exploration']['clicks_per_visit'],
+        'window_seconds' => $config['gameplay']['exploration']['window_seconds'],
+        'creature_names' => $config['gameplay']['creature_names'],
+    ]
 );
 
 // ---- Who is logged in? ----
@@ -147,6 +163,13 @@ $collectionController = new CollectionController(
 $adoptionController = new AdoptionController(
     $templates, $session, $csrf, $adoptionService, $rateLimiter, $config['security']['rate_limit_adopt']
 );
+$explorationController = new ExplorationController(
+    $templates, $session, $csrf, $explorationService, $rateLimiter,
+    [
+        'areas' => $config['gameplay']['exploration']['areas'],
+        'rate_limit' => $config['security']['rate_limit_explore'],
+    ]
+);
 
 // ---- Routes ----
 $router = new Router();
@@ -167,6 +190,11 @@ $router->get('/creatures', [$collectionController, 'show']);
 // Daily adoption.
 $router->get('/adopt', [$adoptionController, 'show']);
 $router->post('/adopt', [$adoptionController, 'adopt']);
+
+// Exploration: the list of areas, one area's scene, and searching it.
+$router->get('/explore', [$explorationController, 'index']);
+$router->get('/explore/{area}', [$explorationController, 'show']);
+$router->post('/explore/{area}', [$explorationController, 'search']);
 
 // A single creature's page. {id} is captured from the URL, e.g. /creature/42.
 $router->get('/creature/{id}', [$creatureController, 'show']);

@@ -44,6 +44,7 @@
     <link rel="stylesheet" href="/css/layout.css">
     <link rel="stylesheet" href="/css/components.css">
     <link rel="stylesheet" href="/css/creature.css">
+    <link rel="stylesheet" href="/css/explore.css">
 </head>
 <body>
     <!-- Keyboard users can jump straight to the content with this link. -->
@@ -76,6 +77,7 @@
                              is a POST form with a CSRF token, not a plain link. -->
                         <a href="/creatures"<?= ($currentPath ?? '') === '/creatures' ? ' aria-current="page"' : '' ?>>my creatures</a>
                         <a href="/adopt"<?= ($currentPath ?? '') === '/adopt' ? ' aria-current="page"' : '' ?>>adopt</a>
+                        <a href="/explore"<?= str_starts_with($currentPath ?? '', '/explore') ? ' aria-current="page"' : '' ?>>explore</a>
                         <span class="site-nav__user">hi, <?= $this->e($currentUser->username) ?></span>
                         <form method="post" action="/logout" class="site-nav__form">
                             <?= $this->csrf_field() ?>

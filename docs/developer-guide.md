@@ -401,3 +401,58 @@ creature's up from that.
 | Domain | `AdoptionService`, `AdoptionResult`; `SpeciesRepository::findAdoptable/all`; `CreatureProfileBuilder::summariesFor`; `UserRepository::hasAdoptedWithin/markAdopted` |
 | Controllers | `CollectionController`, `AdoptionController` |
 | Templates/CSS | `pages/collection.php`, `pages/adopt.php`; nav links; `.creature-collection` / `.creature-card` styles |
+
+---
+
+## Increment B.5 — Exploration
+
+**What it delivers:** a themed area you can explore. It has clickable spots; each
+click searches once, yielding a weighted-random reward (mostly nothing, sometimes
+a new creature), and each visit allows a limited number of searches that refreshes
+after a window. **This is the reusable template for all future areas.**
+
+**Areas are data.** Every area lives in `config` under
+`gameplay.exploration.areas` — its name, description, spot positions, and a
+**loot table** of weighted rewards. One `ExplorationService` and one
+`ExplorationController` drive them all, so **adding an area is a config entry (plus
+a background image), not new code.**
+
+**How a search works** (`POST /explore/{area}`):
+
+1. Login + CSRF + a light IP rate limit.
+2. `ExplorationService` checks the per-visit click limit. It asks
+   `ExplorationRepository` how many clicks were used in the *current window*
+   (a window counts only if it started within `window_seconds`); if there is no
+   current window it starts a fresh one. At the limit, it returns "come back later".
+3. Otherwise it rolls the loot table and spends a click.
+4. If the reward is a creature, one is created for the player (random adoptable
+   species + random name).
+
+**Weighted randomness, made testable.** `WeightedPicker` does the maths, but the
+**dice roll is passed in** to `pickByRoll()`. That keeps the selection logic pure
+and exactly testable (a test hands it a specific roll); `ExplorationService`
+generates the real `random_int` roll. This is the pattern to copy whenever
+randomness needs testing.
+
+**The visit window.** `exploration_visits` holds one row per (user, area) —
+`clicks_used` and `window_started_at`. A migration made `(user_id, area_slug)`
+unique so the row can be reset with a single "insert-or-update" statement. "Used
+up your searches" persists until the window (from `window_started_at`) passes,
+then the next search starts a fresh window.
+
+**The scene** is one `<form>`; each spot is a submit button positioned by CSS
+custom properties (`--x`/`--y`) set inline as data. The background is a themed
+placeholder (`explore.css`) — real area art can replace it later.
+
+**Adding a second area (the recipe):** add an entry under
+`gameplay.exploration.areas` with a slug, name, description, `spots`, and a `loot`
+table; drop in a background if you have one. Nothing else changes.
+
+**New pieces:**
+
+| Layer | Classes / files |
+| --- | --- |
+| Domain | `WeightedPicker`, `ExplorationRepository`, `ExplorationService`, `ExplorationResult` |
+| Controllers | `ExplorationController` (index / show / search) |
+| Templates/CSS | `pages/explore-index.php`, `pages/explore-area.php`; `explore.css`; nav link |
+| Data | migration making a user's exploration visit unique per area |
