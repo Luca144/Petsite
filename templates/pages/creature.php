@@ -53,6 +53,10 @@ $createdLabel = $creature->createdAt !== null
             &middot; cared for by <?= $this->e($owner?->username ?? 'someone') ?>
             &middot; here since <?= $this->e($createdLabel) ?>
         </p>
+        <?php if (!empty($species?->flavourText)): ?>
+            <!-- A little flavour about the species (increment C.2). -->
+            <p class="creature__flavour"><?= $this->e($species->flavourText) ?></p>
+        <?php endif; ?>
 
         <!-- Current state. Level, stage and happiness rise as the creature is
              petted (increments B.1, B.2). -->
@@ -96,5 +100,16 @@ $createdLabel = $creature->createdAt !== null
         <p><?= $this->e($creature->bio) ?></p>
     <?php else: ?>
         <p class="empty-state"><?= $this->e($creature->name) ?> doesn&rsquo;t have a bio yet.</p>
+    <?php endif; ?>
+
+    <?php if (!empty($isOwner)): ?>
+        <!-- Only the owner sees this. It lets them write or change the bio. -->
+        <form method="post" action="/creature/<?= $this->e((string) $creature->id) ?>/bio" class="bio-form">
+            <?= $this->csrf_field() ?>
+            <label class="field__label" for="bio">Edit bio</label>
+            <textarea class="field__textarea" id="bio" name="bio" maxlength="500"
+                      placeholder="Tell everyone a little about <?= $this->e($creature->name) ?>…"><?= $this->e($creature->bio ?? '') ?></textarea>
+            <button class="btn btn--secondary" type="submit">Save bio</button>
+        </form>
     <?php endif; ?>
 </div>

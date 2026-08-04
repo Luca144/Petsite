@@ -110,6 +110,19 @@ final class CreatureRepository
     }
 
     /**
+     * Save a creature's bio (its owner-written description). The caller is
+     * responsible for checking that the person doing this owns the creature, and
+     * for validating the text — this method just stores it.
+     */
+    public function updateBio(int $creatureId, string $bio): void
+    {
+        $statement = $this->connection->prepare(
+            'UPDATE creatures SET bio = :bio WHERE id = :id'
+        );
+        $statement->execute([':bio' => $bio, ':id' => $creatureId]);
+    }
+
+    /**
      * Apply the effects of one pet to a creature: add to its happiness and XP, and
      * stamp when it was last interacted with. Doing the additions in the database
      * (happiness = happiness + :amount) is safe even if two pets land at once.

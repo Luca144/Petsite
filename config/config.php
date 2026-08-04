@@ -95,6 +95,10 @@ return [
             'max_attempts' => 30,    // at most 30 purchases...
             'window_seconds' => 60,  // ...per minute, per IP (anti-abuse)
         ],
+        'rate_limit_bio' => [
+            'max_attempts' => 20,     // at most 20 bio edits...
+            'window_seconds' => 3600, // ...per hour, per IP (anti-abuse)
+        ],
     ],
 
     // Gameplay tunables — the documented home for "knobs" so a beginner can
@@ -187,6 +191,17 @@ return [
             'name' => 'coins',
             'per_pet' => 5,
         ],
+
+        // The longest a creature's bio (written by its owner) may be.
+        'bio_max_length' => 500,
+    ],
+
+    // Content moderation. A simple list of words that user-written text (like a
+    // creature's bio) may not contain. Matched whole-word and case-insensitively,
+    // so "scam" does not trip on "scamper". This is a starting point — the Product
+    // Owner can expand it. It is intentionally NOT profanity here; add what you need.
+    'moderation' => [
+        'blocked_words' => ['spam', 'scam', 'viagra'],
     ],
 
 ];

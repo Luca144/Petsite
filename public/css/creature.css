@@ -53,7 +53,20 @@
     font-family: var(--font-mono);
     font-size: 0.82rem;
     color: var(--ink-soft);
-    margin: var(--space-2) 0 var(--space-4);
+    margin: var(--space-2) 0 var(--space-3);
+}
+
+/* A line of species flavour text, in the characterful display italic. */
+.creature__flavour {
+    font-family: var(--font-display);
+    font-style: italic;
+    color: var(--purple);
+    margin-bottom: var(--space-4);
+}
+
+/* The owner's "edit bio" form sits under the bio, with a little space above. */
+.bio-form {
+    margin-top: var(--space-4);
 }
 
 /* The stat panel. It reuses .card--dark, but we remove the card's padding so the

@@ -42,6 +42,23 @@ final class Router
     private array $routes = [];
 
     /**
+     * What to run when no route matches. Set by setNotFoundHandler() so the app
+     * can show a friendly, themed 404 page. If left unset, a plain message is used.
+     *
+     * @var callable|null
+     */
+    private $notFoundHandler = null;
+
+    /**
+     * Set the handler used when no route matches (the "404" page). It receives the
+     * Request and returns a Response, just like a normal handler.
+     */
+    public function setNotFoundHandler(callable $handler): void
+    {
+        $this->notFoundHandler = $handler;
+    }
+
+    /**
      * Register a handler for a GET request (a browser asking to view a page).
      */
     public function get(string $path, callable $handler): void
@@ -69,8 +86,8 @@ final class Router
 
     /**
      * Find the route matching the request and run its handler, returning the
-     * Response. If nothing matches, return a 404. The friendly, themed 404 page
-     * comes later (increment C.2); a plain message is enough here.
+     * Response. If nothing matches, run the not-found handler (a themed 404 page
+     * when one is set), or fall back to a plain message.
      */
     public function dispatch(Request $request): Response
     {
@@ -85,6 +102,10 @@ final class Router
             if ($parameters !== null) {
                 return ($route['handler'])($request, $parameters);
             }
+        }
+
+        if ($this->notFoundHandler !== null) {
+            return ($this->notFoundHandler)($request);
         }
 
         return Response::html('Page not found.', 404);

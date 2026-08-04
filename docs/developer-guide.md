@@ -535,3 +535,34 @@ owned, in the inventory under its type — no code change.
 | Controllers | `InventoryController`, `ShopController` |
 | Templates/CSS | `pages/inventory.php`, `pages/shop.php`; `economy.css`; nav links + balance chip |
 | Data | migration seeding the shop, items, and their links |
+
+---
+
+## Increments C.1 + C.2 — Pet bio, and character & polish
+
+**C.1 — Pet bio.** A creature's owner can write a bio; nobody else can.
+
+- The creature page shows the bio, and — **only to the owner** — an edit form.
+- `BioController` enforces ownership: even if a non-owner submits the form, it is
+  refused (checked against the session's user id). It also needs login + CSRF and
+  is IP rate-limited.
+- `CreatureBioService` validates length (`gameplay.bio_max_length`) and runs the
+  text through `ContentFilter`, a simple **whole-word, case-insensitive**
+  blocked-word check (list in `config.moderation.blocked_words`). "scam" is caught
+  but "scamper" is not. Then `CreatureRepository::updateBio` saves it.
+
+**C.2 — Character & polish.**
+
+- **Species flavour text:** a migration fills in a characterful line per species
+  (placeholder content the PO can rewrite); it shows on the creature page.
+- **Themed 404:** the `Router` now takes a `setNotFoundHandler`; the front
+  controller registers one that renders the themed `pages/not-found.php` (a soft
+  "nothing here but moonlight" page). Unmatched routes now get the real layout,
+  not a plain string.
+- General tidy and consistent empty states.
+
+**New pieces:** `ContentFilter`, `CreatureBioService`, `BioResult`,
+`CreatureRepository::updateBio`, `BioController`; `Router::setNotFoundHandler`;
+species-flavour migration; `RouterTest` + `ContentFilterTest` (unit) and
+bio-service / bio-controller tests. Config gained `gameplay.bio_max_length`,
+`moderation.blocked_words`, and `security.rate_limit_bio`.

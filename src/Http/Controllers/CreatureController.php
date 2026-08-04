@@ -64,6 +64,8 @@ final class CreatureController
             'timesPetted' => $profile['timesPetted'],
             // Any logged-in visitor may pet a creature they can see.
             'canPet' => $this->session->has('user_id'),
+            // Only the owner sees the "edit bio" form.
+            'isOwner' => $this->viewerOwns($creature->ownerId),
             // A one-time message from a just-completed action (e.g. after petting).
             'flash' => $this->session->takeFlash(),
         ]);

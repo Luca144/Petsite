@@ -26,6 +26,8 @@ use Felkyo\Auth\Session;
 use Felkyo\Core\Database;
 use Felkyo\Core\FileLogger;
 use Felkyo\Creatures\AdoptionService;
+use Felkyo\Creatures\ContentFilter;
+use Felkyo\Creatures\CreatureBioService;
 use Felkyo\Creatures\CreatureProfileBuilder;
 use Felkyo\Creatures\CreatureRepository;
 use Felkyo\Creatures\GrowthCalculator;
@@ -40,6 +42,7 @@ use Felkyo\Exploration\ExplorationRepository;
 use Felkyo\Exploration\ExplorationService;
 use Felkyo\Exploration\WeightedPicker;
 use Felkyo\Http\Controllers\AdoptionController;
+use Felkyo\Http\Controllers\BioController;
 use Felkyo\Http\Controllers\BrowseController;
 use Felkyo\Http\Controllers\CollectionController;
 use Felkyo\Http\Controllers\CreatureController;
@@ -129,6 +132,11 @@ $creatureProfileBuilder = new CreatureProfileBuilder(
 $purchaseService = new PurchaseService(
     $pdo, $shopRepository, $userRepository, $inventoryRepository
 );
+$creatureBioService = new CreatureBioService(
+    $creatureRepository,
+    new ContentFilter($config['moderation']['blocked_words']),
+    $config['gameplay']['bio_max_length']
+);
 $explorationService = new ExplorationService(
     $explorationRepository,
     new WeightedPicker(),
@@ -176,6 +184,9 @@ $creatureController = new CreatureController(
 $petController = new PetController(
     $session, $csrf, $creatureRepository, $pettingService, $rateLimiter, $config['security']['rate_limit_pet']
 );
+$bioController = new BioController(
+    $session, $csrf, $creatureRepository, $creatureBioService, $rateLimiter, $config['security']['rate_limit_bio']
+);
 $collectionController = new CollectionController(
     $templates, $session, $creatureRepository, $creatureProfileBuilder
 );
@@ -200,6 +211,14 @@ $shopController = new ShopController(
 
 // ---- Routes ----
 $router = new Router();
+
+// When no route matches, show the friendly themed 404 page.
+$router->setNotFoundHandler(function () use ($templates): Response {
+    return Response::html(
+        $templates->render('pages/not-found', ['message' => 'We couldn\'t find that page.']),
+        404
+    );
+});
 
 // The home page (welcome for guests; the player's creatures when logged in).
 $router->get('/', [$homeController, 'show']);
@@ -235,6 +254,8 @@ $router->get('/inventory', [$inventoryController, 'show']);
 $router->get('/creature/{id}', [$creatureController, 'show']);
 // Petting a creature (a state-changing action, so POST + CSRF).
 $router->post('/creature/{id}/pet', [$petController, 'pet']);
+// Saving a creature's bio (owner only).
+$router->post('/creature/{id}/bio', [$bioController, 'update']);
 
 // ---- Dispatch and send ----
 // Any unexpected error is logged and turned into a plain 500 page, so we never

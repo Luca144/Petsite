@@ -330,5 +330,17 @@ button.tile:hover {
     color: var(--ink-soft);
 }
 
+/* The themed 404 page: centred, with a big soft moon. */
+.not-found {
+    text-align: center;
+}
+
+.not-found__moon {
+    font-size: 2.5rem;
+    color: var(--gold);
+    filter: drop-shadow(0 0 10px rgba(232, 201, 90, 0.7));
+    margin-bottom: var(--space-2);
+}
+
 /* The creature page's own layout lives in its own file (creature.css) to keep
    this components file focused and under its size limit. */
