@@ -115,35 +115,26 @@
     padding: var(--space-2) 0 var(--space-4);
 }
 
-/* A small glowing moon above the wordmark — a gentle "cosy night" cue. */
-.site-header__moon {
-    display: inline-block;
-    font-size: 1rem;
-    color: var(--gold);
-    filter: drop-shadow(0 0 8px rgba(232, 201, 90, 0.7));
-    animation: moon-glow 5s ease-in-out infinite;
-}
-
-@keyframes moon-glow {
-    0%, 100% { opacity: 0.7; }
-    50% { opacity: 1; }
-}
-
-/* The wordmark. Fraunces' soft optical settings give it warmth. The "kyo" is
-   gold for a spark of sparkle — this is decoration, so gold is allowed here. */
+/* The wordmark is the artist's logo art rather than type. It stays inside a real
+   <h1> — screen readers and search engines need a heading here — so this rule only
+   has to stop the heading's line box from adding a stray gap under the image. */
 .site-header__wordmark {
-    font-family: var(--font-display);
-    font-weight: 900;
-    font-size: clamp(2.4rem, 7vw, 3.6rem);
-    font-variation-settings: 'SOFT' 70, 'WONK' 1, 'opsz' 100;
-    color: var(--plum);
-    line-height: 0.95;
+    line-height: 0;
 }
 
-.site-header__wordmark b {
-    color: var(--gold);
-    font-weight: 900;
-    text-shadow: 0 1px 0 var(--border), 0 0 26px rgba(232, 201, 90, 0.55);
+/* The logo image itself. It never overflows a narrow screen, and "height: auto"
+   keeps its proportions while it shrinks.
+
+   NOTE — no "image-rendering: pixelated" here, deliberately. That setting is for
+   pixel art being scaled UP (as the creature portraits are). These logos are only
+   ever displayed at their own size or smaller, and forcing pixelated on a
+   shrinking image makes it look ragged instead of crisp. */
+.site-header__logo {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-md);
+    /* A soft gold glow seats the art on the parchment, echoing the page frame. */
+    filter: drop-shadow(0 6px 18px rgba(201, 162, 39, 0.35));
 }
 
 .site-header__sub {
@@ -283,5 +274,11 @@
 @media (min-width: 640px) {
     .site-frame__inner {
         padding: var(--space-8) var(--space-8) var(--space-12);
+    }
+
+    /* From here up, <picture> has swapped in the wide banner, which already reads
+       "Felkyo Creatures" — so the helper line under it would just repeat the word. */
+    .site-header__sub {
+        display: none;
     }
 }

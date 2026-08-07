@@ -13,7 +13,12 @@ $this->layout('layout', ['title' => 'Not found — Felkyo Creatures']);
 ?>
 
 <section class="card auth-card not-found">
-    <p class="not-found__moon" aria-hidden="true">&#9790;</p>
+    <!-- The artist's animated 404 art. It loops on its own because it is a GIF —
+         nothing needs to start it. It gets real alt text rather than being hidden,
+         because it is the subject of this page, not a background flourish. -->
+    <img class="not-found__art" src="/assets/art/not-found.gif"
+         alt="A startled little creature tumbling through a torn hole marked 404"
+         width="300" height="300">
     <h2>Nothing here but moonlight</h2>
     <p><?= $this->e($message) ?></p>
     <p class="auth-alt">

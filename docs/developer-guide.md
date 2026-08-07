@@ -28,9 +28,12 @@ vendor/        Installed libraries (not committed; restored by Composer).
 **The layered design (why files are split the way they are).** We deliberately
 keep three jobs separate so each can change without breaking the others:
 
-- **Controllers / route handlers** decide *what to do* for a request.
-- **Services** hold *game rules* (coming in later increments).
-- **Repositories** own *database access* (coming in later increments).
+- **Controllers / route handlers** decide *what to do* for a request — who is
+  allowed, then hand off. Example: `GuestbookController`.
+- **Services** hold *game rules*. Example: `GuestbookService` decides whether a
+  signing is valid; `PettingService` decides what a pet does.
+- **Repositories** own *database access* — all the SQL, and nothing else.
+  Example: `GuestbookRepository`.
 
 Controllers never talk to the database directly. This boundary is a rule
 (CLAUDE.md section 5), and the reason is that it keeps each piece small and
@@ -174,8 +177,9 @@ using the components above (a `.card` to group things, `.btn--primary` for the
 main action, `.tile-grid` for choices). Register its route in `public/index.php`
 and add a test. The themed shell, fonts and styles come for free.
 
-**Note on the logo:** the masthead wordmark is a typographic placeholder set in
-Fraunces. The finished logo art replaces it during the art-import step.
+**Note on the logo:** at this point the masthead was a typographic stand-in set in
+Fraunces. It was replaced by the artist's real logo art later — see the
+"Art import" section below.
 
 ---
 
@@ -597,3 +601,48 @@ was left out rather than over-animate.
 `CreatureController` set/consume the flag; CSS touches across `layout.css`,
 `components.css`, `creature.css`; tests for the celebration flag (set on a real
 pet, not on cooldown; shown once then cleared).
+
+---
+
+## Art import — the artist's real logo and 404 artwork
+
+Until now the masthead was a typographic stand-in and the favicon was a little
+inline moon. Both are now the artist's real pixel art.
+
+**Where artwork lives.** Finished site artwork goes in `public/assets/art/`.
+(Creature sprites keep their own folder, `public/assets/creatures/<species>/`,
+because they are looked up by species slug and life stage.)
+
+| File | Used by | Why |
+|---|---|---|
+| `art/favicon.png` | `templates/layout.php` | the browser-tab icon |
+| `art/logo-small.png` | `templates/layout.php` | square badge — the phone masthead |
+| `art/logo-large.png` | `templates/layout.php` | wide banner — the desktop masthead |
+| `art/not-found.gif` | `templates/pages/not-found.php` | the animated 404 |
+
+**How the logo picks a version.** The masthead uses the standard HTML `<picture>`
+element. The plain `<img>` inside it is the phone version, and a `<source>` with
+`media="(min-width: 640px)"` offers the wide banner above that width. The browser
+reads the rule and downloads **only** the file it will actually show — so this is
+responsive art with no JavaScript at all. The square badge only reads "Felkyo", so
+a small "Creatures" line sits under it on phones; CSS hides that line from 640px
+up, where the banner already contains the word.
+
+**Two things worth knowing before you touch the images:**
+
+1. **Do not add `image-rendering: pixelated` to the logo or the 404 art.** That
+   setting is for pixel art being scaled *up* (the creature portraits), where it
+   keeps the pixels crisp. These images only ever display at their own size or
+   smaller, and forcing it on a shrinking image makes it look ragged. The comments
+   in the CSS say so too, so nobody "fixes" it later.
+2. **`tests/Unit/ArtAssetsTest.php` guards the artwork.** It checks both that each
+   file exists in `/public` and that the template really points at it — because a
+   broken image is a silent failure that HTML alone cannot reveal. **If you add new
+   artwork, add it to that test.**
+
+**Still waiting on clean files.** The shop artwork (`shop-background.gif`,
+`shopkeeper.png`, `item-cosmetic.png`) was delivered with a large "Felkyo"
+watermark stamped across it, so it is **not** in the site. It is parked in
+`public/assets/_incoming/shop/` until unwatermarked versions arrive. A default
+avatar was also delivered, but there is no user-profile page in the plan for it to
+appear on, so it is parked too.

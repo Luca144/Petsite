@@ -344,16 +344,19 @@ button.tile:hover {
     color: var(--ink-soft);
 }
 
-/* The themed 404 page: centred, with a big soft moon. */
+/* The themed 404 page: centred, with the artist's animated art above the message. */
 .not-found {
     text-align: center;
 }
 
-.not-found__moon {
-    font-size: 2.5rem;
-    color: var(--gold);
-    filter: drop-shadow(0 0 10px rgba(232, 201, 90, 0.7));
-    margin-bottom: var(--space-2);
+/* The 404 artwork. "max-width: 100%" lets it shrink to fit a narrow phone rather
+   than pushing the card wider than the screen. As with the logo we do NOT force
+   pixelated rendering, because this image only ever scales down. */
+.not-found__art {
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto var(--space-2);
+    display: block;
 }
 
 /* The creature page's own layout lives in its own file (creature.css) to keep
