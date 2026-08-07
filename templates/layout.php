@@ -54,6 +54,18 @@
         <span>&#10086;</span><span>&#10022;</span><span>&#10087;</span><span>&#10022;</span>
     </div>
 
+    <?php if (!empty($showDemoNotice)): ?>
+        <!-- On the deployed site this says plainly that Felkyo is a demo, not a
+             live service, so nobody mistakes it for one. role="note" marks it as
+             an aside rather than an alert — it is information, not a warning, and
+             should not interrupt anyone. -->
+        <p class="demo-notice" role="note">
+            <span aria-hidden="true">&#9788;</span>
+            This is a <b>development demo</b> of Felkyo Creatures &mdash; not a live
+            service. Accounts and creatures here are made up for demonstration.
+        </p>
+    <?php endif; ?>
+
     <div class="site-frame">
         <div class="site-frame__inner">
             <header class="site-header">
@@ -111,9 +123,16 @@
                             <button type="submit">log out</button>
                         </form>
                     <?php else: ?>
-                        <!-- Logged out: offer the two ways in. -->
+                        <!-- Logged out: offer the ways in. The sign-up link only
+                             appears when registration is actually open — on the
+                             deployed demo it is closed, and offering a link that
+                             leads to "no thanks" would be unkind. The controller
+                             refuses the action too; hiding a link is never the
+                             protection, only the courtesy. -->
                         <a href="/login"<?= ($currentPath ?? '') === '/login' ? ' aria-current="page"' : '' ?>>log in</a>
-                        <a href="/register"<?= ($currentPath ?? '') === '/register' ? ' aria-current="page"' : '' ?>>sign up</a>
+                        <?php if (!empty($registrationOpen)): ?>
+                            <a href="/register"<?= ($currentPath ?? '') === '/register' ? ' aria-current="page"' : '' ?>>sign up</a>
+                        <?php endif; ?>
                     <?php endif; ?>
                 </nav>
             </header>

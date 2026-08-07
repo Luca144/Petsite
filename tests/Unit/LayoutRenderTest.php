@@ -71,6 +71,61 @@ final class LayoutRenderTest extends TestCase
     }
 
     /**
+     * Render the welcome page with the closed-demo settings in a chosen position.
+     */
+    private function renderWith(bool $registrationOpen, bool $showDemoNotice): string
+    {
+        $templates = new Engine(dirname(__DIR__, 2) . '/templates');
+
+        // These two are shared with EVERY template via addData(), exactly as the
+        // front controller does it, because the shared layout needs them — the
+        // banner and the navigation both live there. Variables handed to a single
+        // render() call reach that page's own template, not the layout around it,
+        // so mirroring addData() here is what makes this test match the real site.
+        $templates->addData([
+            'registrationOpen' => $registrationOpen,
+            'showDemoNotice' => $showDemoNotice,
+        ]);
+
+        return $templates->render('pages/hello', ['appName' => 'Felkyo Creatures']);
+    }
+
+    /**
+     * When sign-ups are closed, no page should offer a link to them — following it
+     * would only lead to a "sorry, not today" page. (The controller refuses the
+     * action regardless; this is about not making the offer in the first place.)
+     */
+    public function testNoSignUpLinkIsOfferedWhenRegistrationIsClosed(): void
+    {
+        $html = $this->renderWith(registrationOpen: false, showDemoNotice: false);
+
+        $this->assertStringNotContainsString('href="/register"', $html);
+    }
+
+    public function testTheSignUpLinkIsOfferedWhenRegistrationIsOpen(): void
+    {
+        $html = $this->renderWith(registrationOpen: true, showDemoNotice: false);
+
+        $this->assertStringContainsString('href="/register"', $html);
+    }
+
+    /**
+     * The deployed demo must say plainly that it is a demo, so nobody mistakes it
+     * for a live service.
+     */
+    public function testTheDemoBannerAppearsOnlyWhenItIsSwitchedOn(): void
+    {
+        $this->assertStringContainsString(
+            'development demo',
+            $this->renderWith(registrationOpen: false, showDemoNotice: true)
+        );
+        $this->assertStringNotContainsString(
+            'development demo',
+            $this->renderWith(registrationOpen: true, showDemoNotice: false)
+        );
+    }
+
+    /**
      * Enforces CLAUDE.md section 8: no dropdown menus, anywhere, ever. If someone
      * later adds a <select> to a template, this test fails and explains why.
      */

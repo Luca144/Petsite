@@ -1,8 +1,9 @@
 # Felkyo Creatures
 
 A cosy creature-collecting website. Players collect **creatures**, watch them
-grow, pet them, explore, and spend a gentle in-game currency. It is built as a
-learning project and as a clean foundation for a beginner to extend.
+grow, pet them, explore, spend a gentle in-game currency, and sign each other's
+guestbooks. It is built as a learning project and as a clean foundation for a
+beginner to extend.
 
 This repository is also teaching material: the code favours clarity over
 cleverness, and everything is commented to explain *why*, not just *what*. The
@@ -14,6 +15,9 @@ coding rules live in [CLAUDE.md](CLAUDE.md); the build plan lives in
 - **Run it on your machine:** [docs/setup-guide.md](docs/setup-guide.md)
 - **Understand how it works:** [docs/developer-guide.md](docs/developer-guide.md)
 - **The database:** [docs/schema.md](docs/schema.md)
+- **Putting it online:** [docs/deployment-guide.md](docs/deployment-guide.md) — and
+  **read its section 1 first**: the deployed site is a *closed demo*, not a live
+  service, and the difference matters.
 
 ## Tech stack
 

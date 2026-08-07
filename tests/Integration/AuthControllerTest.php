@@ -76,8 +76,12 @@ final class AuthControllerTest extends DatabaseTestCase
         );
 
         // Controllers.
+        // These tests are about registration and login working, so registration is
+        // explicitly OPEN here. The switch that closes it has its own test file,
+        // RegistrationClosedTest.
         $registerController = new RegisterController(
-            $templates, $this->csrf, $this->session, $this->registration, $starterCreatures, $rateLimiter, $security
+            $templates, $this->csrf, $this->session, $this->registration, $starterCreatures, $rateLimiter,
+            $security, true
         );
         $loginController = new LoginController(
             $templates, $this->csrf, $this->session, $authenticator, $this->users, $rateLimiter, $security

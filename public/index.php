@@ -184,6 +184,10 @@ $templates->addData([
     'currentPath' => $request->path(),
     // The label for the currency (e.g. "coins"), shown next to the balance.
     'currencyName' => $config['gameplay']['currency']['name'],
+    // Whether to offer the "sign up" link, and whether to show the demo banner.
+    // Both are closed-demo settings — see config/config.php under "app".
+    'registrationOpen' => $config['app']['registration_open'],
+    'showDemoNotice' => $config['app']['show_demo_notice'],
 ]);
 
 // ---- Controllers ----
@@ -193,7 +197,7 @@ $browseController = new BrowseController(
 );
 $registerController = new RegisterController(
     $templates, $csrf, $session, $registrationService, $starterCreatureService, $rateLimiter,
-    $config['security']
+    $config['security'], $config['app']['registration_open']
 );
 $loginController = new LoginController(
     $templates, $csrf, $session, $authenticator, $userRepository, $rateLimiter, $config['security']

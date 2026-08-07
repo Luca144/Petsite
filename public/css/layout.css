@@ -74,6 +74,42 @@
 }
 
 /*
+ * The demo notice: a calm strip above the page frame saying plainly that this is
+ * a demo, not a live service. It only appears when config turns it on, which by
+ * default means on the deployed site and not on your machine.
+ *
+ * It sits on the dark plum background, so its text is parchment — light on dark,
+ * which reads easily. Gold appears only on the little sun glyph and the bold
+ * words, both on the dark panel where gold has enough contrast (gold on parchment
+ * would not — see the accessibility rules in CLAUDE.md).
+ */
+.demo-notice {
+    position: relative;
+    z-index: 1;
+    /* Overrides the global 62ch limit on paragraphs so the strip lines up with
+       the page frame beneath it. */
+    max-width: var(--content-max);
+    margin: 0 auto var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    background: rgba(42, 28, 58, 0.85);
+    border: 1.5px solid var(--gold);
+    border-radius: var(--radius-md);
+    color: var(--parchment);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.demo-notice b {
+    color: var(--gold-lit);
+}
+
+.demo-notice span[aria-hidden] {
+    color: var(--gold);
+}
+
+/*
  * The frame: a parchment surface with a soft gold gradient border, floating on
  * the plum field. The gradient border is drawn with two stacked backgrounds
  * (one clipped to the padding box, one to the border box) — a standard CSS

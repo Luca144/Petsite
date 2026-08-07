@@ -717,3 +717,111 @@ everything on output, so `&rsquo;` would appear literally on the page.
 **Currently allowed:** the creature's own owner may sign their creature's guestbook.
 Nothing stops it, matching how petting works (you may pet your own creature). If
 that should be forbidden, it is a one-line ownership check in `GuestbookController`.
+
+---
+
+## Increment D.1 — Production preparation
+
+**What it delivers:** the three things the site needs before it can go live as a
+**closed demo** — a switch that closes registration, a script that populates demo
+content, and a banner saying this is a demo.
+
+Full instructions live in [deployment-guide.md](deployment-guide.md). This section
+covers how the pieces work in the code.
+
+### A bug worth understanding: where settings actually come from
+
+Building this uncovered a real problem that would only have appeared on the live
+server, silently. It is worth reading, because the lesson applies far beyond this
+project.
+
+Config used to read settings from `$_ENV` alone:
+
+```php
+'environment' => $_ENV['APP_ENV'] ?? 'development',
+```
+
+That works perfectly on your machine, because the `.env` file's values are put into
+`$_ENV` by phpdotenv. **But a hosting platform has no `.env` file** — it supplies
+settings as *real* environment variables, and PHP only copies those into `$_ENV`
+when a `php.ini` setting called `variables_order` includes an `"E"`, which it very
+often does not.
+
+So on the live server every setting would have quietly fallen back to its
+*development* default. Nothing would have looked broken. And one of those defaults
+is `registration_open` — **the closed demo would have been accepting real sign-ups.**
+
+Two changes fixed it, both in the "configuration comes from the environment" spirit
+of `CLAUDE.md` section 6:
+
+1. **`config/config.php` reads through a small `$readEnv` helper** that checks
+   `getenv()` first (which always sees real environment variables), then falls back
+   to `$_ENV`/`$_SERVER` (where `.env` values land). Real environment variables win,
+   because what a server is configured to say must beat a file that happens to be
+   lying around.
+2. **`config/bootstrap.php` no longer dies when there is no `.env`.** It loads the
+   file when present and carries on when absent — but still gives the clear
+   first-run message when there is *neither* a `.env` *nor* anything in the
+   environment, which is the actual mistake it was written to catch.
+
+`tests/Unit/ConfigEnvironmentTest.php` guards all of this: it clears `$_ENV`, sets a
+real environment variable, and checks the config sees it — plus that production
+defaults to registration closed, and that a typo like `REGISTRATION_OPEN=yes` fails
+*safe* rather than opening the site.
+
+### Two settings, with defaults that depend on the environment
+
+`config/config.php` now reads `APP_ENV` into a variable first, because two settings
+take their default from it:
+
+| Setting | Env variable | Default in development | Default in production |
+| --- | --- | --- | --- |
+| `app.registration_open` | `REGISTRATION_OPEN` | open | **closed** |
+| `app.show_demo_notice` | `SHOW_DEMO_NOTICE` | hidden | **shown** |
+
+Defaulting by environment means the live site is closed **even if somebody forgets
+to set anything** — the safe state is the one you get for free. A small helper
+closure, `$readFlag`, turns the environment's `"true"`/`"false"` text into real
+booleans in one place instead of repeating the same comparison.
+
+### The registration switch, and why it is checked twice
+
+When registration is closed:
+
+- `templates/layout.php` hides the "sign up" link,
+- `RegisterController::show()` returns a friendly page with HTTP 403,
+- `RegisterController::submit()` **also** returns it, before doing anything else.
+
+That last one is the important one. **Hiding a form does not stop anyone posting to
+its address** — a bookmark, a script, or a curious person with the browser's
+developer tools will all reach `POST /register` directly. So the refusal lives on
+the action itself; the hidden link is only a courtesy. This is a general lesson
+worth carrying to every feature you build: enforce rules where the work happens,
+not where the button is drawn.
+
+### The seed script
+
+`seeds/DemoContent.php` is a Phinx seeder (Phinx was already a dependency for
+migrations, so this needed nothing new). It creates three demo players, four
+creatures, and some pettings and guestbook entries so the demo does not look
+abandoned.
+
+Three details worth copying if you write another seeder:
+
+- **It looks species up by slug**, not by guessing id numbers, so it works whatever
+  ids the database happened to assign.
+- **It is safe to run twice** — it checks whether the demo accounts already exist
+  and returns early. Somebody will run it twice.
+- **It refuses to run without `DEMO_ACCOUNT_PASSWORD`** rather than inventing a
+  weak default. These accounts sit on a public URL; a password written in the code
+  would be a password everyone with the repository knows.
+
+### Tests
+
+- `RegistrationClosedTest` — the switch, from both directions, and specifically
+  that a direct POST creates no account while it is closed.
+- `DemoSeedTest` — actually runs the seeder against the test database, checks the
+  world it builds, checks running it twice changes nothing, and checks no seeded
+  creature is left without an owner or species. A seed script is run once, on the
+  live server, at the worst possible moment to discover a typo — so it is tested
+  here instead.

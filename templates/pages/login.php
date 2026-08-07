@@ -36,5 +36,8 @@ $this->layout('layout', ['title' => 'Log in — Felkyo Creatures']);
         <button class="btn btn--primary" type="submit">Log in</button>
     </form>
 
-    <p class="auth-alt">New here? <a href="/register">Create an account</a>.</p>
+    <?php if (!empty($registrationOpen)): ?>
+        <!-- Only offered when sign-ups are actually open — see layout.php. -->
+        <p class="auth-alt">New here? <a href="/register">Create an account</a>.</p>
+    <?php endif; ?>
 </section>

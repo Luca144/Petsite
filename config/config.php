@@ -18,30 +18,112 @@ declare(strict_types=1);
  * edit in a documented place, not a hunt through the code. Increments add their
  * own knobs under the "gameplay" section as the features that need them arrive.
  *
- * We read settings from $_ENV (populated from .env) with a sensible fallback so
- * a fresh checkout still runs. Reading $_ENV directly keeps this file obvious —
- * there is no magic helper to learn.
+ * Settings come from the environment, with a sensible fallback so a fresh checkout
+ * still runs. The two small helpers below are the only "machinery" in this file.
  */
+
+/**
+ * Read one setting from the environment, or null if it is not set anywhere.
+ *
+ * WHY THIS LOOKS IN THREE PLACES — this matters, so it is worth the paragraph.
+ * PHP does not reliably copy real environment variables into $_ENV; whether it
+ * does is controlled by a php.ini setting called "variables_order", which very
+ * often does not include the "E". On your own machine that is invisible, because
+ * the values come from the .env file and phpdotenv writes those into $_ENV itself.
+ * But on a hosting platform there is no .env at all — the settings are real
+ * environment variables, which only getenv() can be relied on to see.
+ *
+ * Reading just $_ENV would therefore work perfectly on your machine and silently
+ * fail on the live server: every setting would fall back to its development
+ * default, which includes leaving REGISTRATION OPEN on a site meant to be closed.
+ * Checking all three sources is what makes one config file correct in both places.
+ *
+ * THE ORDER MATTERS TOO: a real environment variable wins over the .env file. On a
+ * server, what the platform is configured to say must always beat a file that
+ * happens to be lying around — and it also lets you try a production setting
+ * locally for a moment without editing .env.
+ */
+$readEnv = static function (string $name): ?string {
+    // getenv() sees real environment variables; it returns false (not null) when
+    // there is none, so both "false" and "null" mean "not set" here.
+    $value = getenv($name);
+
+    if ($value === false || $value === '') {
+        // Nothing in the real environment — fall back to what phpdotenv loaded
+        // from the .env file.
+        $value = $_ENV[$name] ?? $_SERVER[$name] ?? null;
+    }
+
+    if ($value === false || $value === null) {
+        return null;
+    }
+
+    return (string) $value;
+};
+
+// "development" on your machine, "production" on the live server. Several settings
+// below take their DEFAULT from this, so it is read once into a variable first.
+$environment = $readEnv('APP_ENV') ?? 'development';
+
+/**
+ * Read a true/false setting from the environment, falling back to a default.
+ *
+ * Environment variables are always text, so "true"/"false" arrive as strings.
+ * This turns them into real booleans in one obvious place instead of repeating
+ * the same comparison at each setting.
+ */
+$readFlag = static function (?string $value, bool $default): bool {
+    if ($value === null) {
+        return $default;
+    }
+
+    return $value === 'true';
+};
 
 return [
 
     // General information about the running application.
     'app' => [
         'name' => 'Felkyo Creatures',
-        // "development" on your machine, "production" on the live server.
-        'environment' => $_ENV['APP_ENV'] ?? 'development',
+        'environment' => $environment,
         // When true, the app may show detailed errors. Turned off in production.
-        'debug' => ($_ENV['APP_DEBUG'] ?? 'true') === 'true',
+        'debug' => $readFlag($readEnv('APP_DEBUG'), true),
+
+        // IS PUBLIC REGISTRATION OPEN?
+        //
+        // The deployed site is a CLOSED DEMO: it runs on a handful of seeded demo
+        // accounts, has no real users, and holds no real personal data. So
+        // registration is CLOSED by default in production and OPEN by default in
+        // development, where you need to be able to create test accounts freely.
+        //
+        // Setting REGISTRATION_OPEN in the environment ("true" or "false")
+        // overrides the default either way.
+        //
+        // IMPORTANT: opening registration on a live site means taking on real
+        // responsibilities for real people's data. Read the security note in
+        // docs/deployment-guide.md before you switch this on.
+        'registration_open' => $readFlag(
+            $readEnv('REGISTRATION_OPEN'),
+            $environment !== 'production'
+        ),
+
+        // Show the "this is a demo, not a live service" banner? On by default in
+        // production so nobody mistakes the deployed demo for a real service.
+        // Set SHOW_DEMO_NOTICE=true locally if you want to see how it looks.
+        'show_demo_notice' => $readFlag(
+            $readEnv('SHOW_DEMO_NOTICE'),
+            $environment === 'production'
+        ),
     ],
 
     // How to connect to the database. The values come from .env so that no
     // password is ever committed to the repository (see CLAUDE.md section 6).
     'database' => [
-        'host' => $_ENV['DB_HOST'] ?? '127.0.0.1',
-        'port' => $_ENV['DB_PORT'] ?? '3306',
-        'name' => $_ENV['DB_NAME'] ?? 'felkyo',
-        'user' => $_ENV['DB_USER'] ?? 'root',
-        'password' => $_ENV['DB_PASSWORD'] ?? '',
+        'host' => $readEnv('DB_HOST') ?? '127.0.0.1',
+        'port' => $readEnv('DB_PORT') ?? '3306',
+        'name' => $readEnv('DB_NAME') ?? 'felkyo',
+        'user' => $readEnv('DB_USER') ?? 'root',
+        'password' => $readEnv('DB_PASSWORD') ?? '',
         // utf8mb4 is the full Unicode character set — it stores emoji and every
         // language correctly, which a friendly creature site will want.
         'charset' => 'utf8mb4',
@@ -140,8 +222,8 @@ return [
 
         // Daily adoption — a player can adopt one new creature per "day" from the
         // pool of adoptable species. "Once per day" is measured as a cooldown from
-        // their last adoption. (Short-ish default so it is easy to try; a real day
-        // is 86400 seconds — raise it to that for once-per-calendar-day feel.)
+        // their last adoption, not from midnight. 86400 seconds is a full day; lower
+        // it (e.g. to 60) if you want to try the flow repeatedly while developing.
         'adoption' => [
             'cooldown_seconds' => 86400,
         ],

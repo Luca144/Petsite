@@ -24,10 +24,15 @@ use League\Plates\Engine;
  * in repositories and services. This boundary is deliberate (CLAUDE.md section 5).
  *
  * This controller has two actions: show() displays the empty form, and submit()
- * processes it.
+ * processes it. Both are switched off when registration is closed (see below).
  */
 final class RegisterController
 {
+    /**
+     * @param bool $registrationOpen Whether public sign-ups are allowed at all.
+     *                               False on the deployed demo, which runs only on
+     *                               seeded accounts (see config app.registration_open).
+     */
     public function __construct(
         private Engine $templates,
         private Csrf $csrf,
@@ -36,6 +41,7 @@ final class RegisterController
         private StarterCreatureService $starterCreatures,
         private RateLimiter $rateLimiter,
         private array $securityConfig,
+        private bool $registrationOpen,
     ) {
     }
 
@@ -45,6 +51,10 @@ final class RegisterController
      */
     public function show(Request $request): Response
     {
+        if (!$this->registrationOpen) {
+            return $this->registrationClosedPage();
+        }
+
         if ($this->session->has('user_id')) {
             return Response::redirect('/');
         }
@@ -57,6 +67,14 @@ final class RegisterController
      */
     public function submit(Request $request): Response
     {
+        // The closed check comes FIRST, before anything else is read or done. The
+        // form is hidden when registration is closed, but hiding a form does not
+        // stop anyone posting to the address directly — so the refusal has to live
+        // here, on the action itself, not only in the page that shows the form.
+        if (!$this->registrationOpen) {
+            return $this->registrationClosedPage();
+        }
+
         if ($this->session->has('user_id')) {
             return Response::redirect('/');
         }
@@ -101,6 +119,20 @@ final class RegisterController
         $this->session->set('user_id', $result->user()->id);
 
         return Response::redirect('/');
+    }
+
+    /**
+     * The page shown when sign-ups are closed. Both show() and submit() return
+     * this same page, so a visitor who bookmarked the form and a script posting
+     * straight to the address get the identical, clear answer — and neither can
+     * create an account.
+     *
+     * 403 ("Forbidden") is the honest status: the page exists, but this action is
+     * not allowed right now.
+     */
+    private function registrationClosedPage(): Response
+    {
+        return Response::html($this->templates->render('pages/registration-closed'), 403);
     }
 
     /**

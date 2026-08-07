@@ -44,18 +44,33 @@ $creatures = $creatures ?? [];
 
 <?php else: ?>
 
+    <!-- What we invite a visitor to do depends on whether they CAN sign up. On the
+         deployed demo registration is closed, so inviting them to make an account
+         would only lead to a "sorry, not today" page. We point them at the
+         creatures instead. -->
     <section class="card">
         <h2>Welcome to <?= $this->e($appName) ?></h2>
-        <p>
-            A cosy world of creatures to collect, grow and pet. Make an account to
-            meet your first one &mdash; the kettle&rsquo;s on.
-        </p>
+        <?php if (!empty($registrationOpen)): ?>
+            <p>
+                A cosy world of creatures to collect, grow and pet. Make an account to
+                meet your first one &mdash; the kettle&rsquo;s on.
+            </p>
+        <?php else: ?>
+            <p>
+                A cosy world of creatures to collect, grow and pet. Have a wander and
+                meet the ones who already live here &mdash; the kettle&rsquo;s on.
+            </p>
+        <?php endif; ?>
     </section>
 
     <hr class="rule">
 
     <div class="button-row">
-        <a class="btn btn--primary" href="/register">Create an account</a>
+        <?php if (!empty($registrationOpen)): ?>
+            <a class="btn btn--primary" href="/register">Create an account</a>
+        <?php else: ?>
+            <a class="btn btn--primary" href="/browse">Browse the creatures</a>
+        <?php endif; ?>
         <a class="btn btn--secondary" href="/login">Log in</a>
     </div>
 

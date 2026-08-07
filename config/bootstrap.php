@@ -29,12 +29,29 @@ $projectRoot = dirname(__DIR__);
 // guards against loading it twice if two entry points chain together.
 require_once $projectRoot . '/vendor/autoload.php';
 
-// A missing .env file is the single most common first-run mistake. We catch it
-// here and explain exactly how to fix it, rather than letting it surface later
-// as a confusing "unknown database" error deep in the code.
-if (!file_exists($projectRoot . '/.env')) {
-    $message = 'Configuration error: no .env file found. '
-        . 'Copy .env.example to .env and fill in your database details.';
+// WHERE CONFIGURATION COMES FROM, IN TWO DIFFERENT PLACES:
+//
+//   - On your own machine, it comes from a .env file in the project root.
+//   - On a hosting platform there is NO .env file. The platform supplies the
+//     settings as real environment variables instead — that is the whole point of
+//     keeping configuration out of the code (CLAUDE.md section 6).
+//
+// So we load .env when it exists and carry on quietly when it does not.
+if (file_exists($projectRoot . '/.env')) {
+    // "createImmutable" will NOT overwrite a variable that is already set. That is
+    // what lets the tests force the test database name before this runs, so they
+    // can never touch real data.
+    Dotenv\Dotenv::createImmutable($projectRoot)->load();
+} elseif (getenv('APP_ENV') === false && !isset($_ENV['APP_ENV'])) {
+    // No .env file AND nothing configured in the environment either. On a fresh
+    // checkout this is the single most common first-run mistake, so we say exactly
+    // how to fix it rather than letting it surface later as a confusing "unknown
+    // database" error deep in the code.
+    $message = 'Configuration error: no .env file found and no APP_ENV set. '
+        . 'On your own machine: copy .env.example to .env and fill in your database '
+        . 'details. On a server: set the environment variables (see '
+        . 'docs/deployment-guide.md).';
+
     // Show the message whether we are running on the web or on the command line.
     if (PHP_SAPI === 'cli') {
         fwrite(STDERR, $message . PHP_EOL);
@@ -44,13 +61,6 @@ if (!file_exists($projectRoot . '/.env')) {
     }
     exit(1);
 }
-
-// phpdotenv reads the .env file and copies its values into PHP's environment
-// ($_ENV). "createImmutable" means it will NOT overwrite a variable that is
-// already set — this is important for the tests, which set the test database
-// name first so they can never touch real data.
-$dotenv = Dotenv\Dotenv::createImmutable($projectRoot);
-$dotenv->load();
 
 // Hand back the fully assembled settings for the caller to use.
 return require __DIR__ . '/config.php';
