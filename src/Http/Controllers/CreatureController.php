@@ -7,6 +7,7 @@ namespace Felkyo\Http\Controllers;
 use Felkyo\Auth\Session;
 use Felkyo\Creatures\CreatureProfileBuilder;
 use Felkyo\Creatures\CreatureRepository;
+use Felkyo\Guestbook\GuestbookPanel;
 use Felkyo\Http\Request;
 use Felkyo\Http\Response;
 use League\Plates\Engine;
@@ -28,6 +29,7 @@ final class CreatureController
         private Session $session,
         private CreatureRepository $creatures,
         private CreatureProfileBuilder $profileBuilder,
+        private GuestbookPanel $guestbookPanel,
     ) {
     }
 
@@ -55,6 +57,14 @@ final class CreatureController
 
         $profile = $this->profileBuilder->buildFor($creature);
 
+        // The guestbook needs to know who is looking, so it can show this visitor
+        // their own entry as already selected. A guest passes null.
+        $viewerId = $this->session->get('user_id');
+        $guestbook = $this->guestbookPanel->forCreature(
+            $creature,
+            is_int($viewerId) ? $viewerId : null
+        );
+
         $html = $this->templates->render('pages/creature', [
             'creature' => $creature,
             'species' => $profile['species'],
@@ -66,6 +76,10 @@ final class CreatureController
             'canPet' => $this->session->has('user_id'),
             // Only the owner sees the "edit bio" form.
             'isOwner' => $this->viewerOwns($creature->ownerId),
+            // The guestbook: its signatures, the choosable messages, and which one
+            // this visitor already picked. Any logged-in visitor may sign.
+            'guestbook' => $guestbook,
+            'canSignGuestbook' => $this->session->has('user_id'),
             // A one-time message from a just-completed action (e.g. after petting).
             'flash' => $this->session->takeFlash(),
             // True just after a successful pet, so the page plays the heart once.

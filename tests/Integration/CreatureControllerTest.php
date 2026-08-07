@@ -10,6 +10,9 @@ use Felkyo\Creatures\CreatureRepository;
 use Felkyo\Creatures\GrowthCalculator;
 use Felkyo\Creatures\PettingRepository;
 use Felkyo\Creatures\SpeciesRepository;
+use Felkyo\Guestbook\GuestbookMessages;
+use Felkyo\Guestbook\GuestbookPanel;
+use Felkyo\Guestbook\GuestbookRepository;
 use Felkyo\Http\Controllers\CreatureController;
 use Felkyo\Http\Request;
 use Felkyo\Http\Router;
@@ -32,7 +35,7 @@ final class CreatureControllerTest extends DatabaseTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->clearTables('pettings', 'creatures', 'users');
+        $this->clearTables('guestbook_entries', 'pettings', 'creatures', 'users');
         $_SESSION = [];
 
         $config = require dirname(__DIR__, 2) . '/config/config.php';
@@ -53,7 +56,18 @@ final class CreatureControllerTest extends DatabaseTestCase
             $species, $users, $growth, new PettingRepository($this->connection)
         );
 
-        $controller = new CreatureController($templates, $session, $creatures, $profileBuilder);
+        // The creature page also shows the guestbook, so the controller needs the
+        // panel that gathers it. A small stand-in catalogue keeps these tests from
+        // breaking whenever the real messages in config are reworded.
+        $guestbookPanel = new GuestbookPanel(
+            new GuestbookRepository($this->connection),
+            new GuestbookMessages(['lovely-creature' => 'What a lovely creature.']),
+            $config['gameplay']['guestbook']['entries_shown']
+        );
+
+        $controller = new CreatureController(
+            $templates, $session, $creatures, $profileBuilder, $guestbookPanel
+        );
 
         $this->router = new Router();
         $this->router->get('/creature/{id}', [$controller, 'show']);
@@ -98,6 +112,48 @@ final class CreatureControllerTest extends DatabaseTestCase
         // Viewing again does not celebrate — the flag was consumed.
         $second = $this->get('/creature/' . $this->publicCreatureId);
         $this->assertStringNotContainsString('creature__portrait--celebrate', $second->body());
+    }
+
+    /**
+     * A guest can read a guestbook but is invited to log in rather than shown the
+     * form — signing needs an identity to keep "one entry per person" meaningful.
+     */
+    public function testAGuestSeesTheGuestbookButIsAskedToLogInToSign(): void
+    {
+        $body = $this->get('/creature/' . $this->publicCreatureId)->body();
+
+        $this->assertStringContainsString('Guestbook', $body);
+        $this->assertStringNotContainsString('name="message_key"', $body);
+    }
+
+    public function testALoggedInVisitorIsOfferedTheMessageChooser(): void
+    {
+        $_SESSION['user_id'] = $this->ownerId;
+
+        $body = $this->get('/creature/' . $this->publicCreatureId)->body();
+
+        $this->assertStringContainsString('name="message_key"', $body);
+        $this->assertStringContainsString('What a lovely creature.', $body);
+    }
+
+    /**
+     * Enforces CLAUDE.md section 8 for the guestbook specifically: the message
+     * chooser must be radio buttons, never a dropdown. If someone later "tidies"
+     * the eight cards into a <select>, this test fails and says why.
+     */
+    public function testTheMessageChooserIsRadioButtonsAndNotADropdown(): void
+    {
+        $_SESSION['user_id'] = $this->ownerId;
+
+        $body = $this->get('/creature/' . $this->publicCreatureId)->body();
+
+        $this->assertStringContainsString('type="radio"', $body);
+        $this->assertStringNotContainsString(
+            '<select',
+            $body,
+            'Dropdown menus are forbidden by CLAUDE.md section 8 — the guestbook '
+            . 'chooser must stay radio-style cards.'
+        );
     }
 
     public function testAnUnknownCreatureGivesA404(): void

@@ -181,6 +181,40 @@ whether the next attempt is allowed.
 
 Index: `(action_key, identifier, created_at)`.
 
+### `guestbook_entries` — visitors signing a creature's guestbook
+Added in increment C.4. Each row is one person's signature in one creature's
+guestbook.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | int unsigned | Primary key. |
+| `creature_id` | int unsigned, NOT NULL, FK → `creatures.id` (CASCADE) | Whose guestbook. |
+| `author_user_id` | int unsigned, NOT NULL, FK → `users.id` (CASCADE) | Who signed. |
+| `message_key` | varchar(60), NOT NULL | Which predefined message they chose. |
+| `created_at` | timestamp, NOT NULL | When they first signed. |
+| `updated_at` | timestamp, NOT NULL | When the entry was last changed. |
+
+Unique `(creature_id, author_user_id)` — **one entry per person per creature.**
+Index `(creature_id, created_at)` for listing a guestbook newest-first.
+
+**Three things about this table are worth understanding:**
+
+- **It stores a message KEY, not message text.** Visitors never type anything; they
+  choose from a fixed list in `config/config.php` under `gameplay.guestbook.messages`.
+  Storing the short key means the Product Owner can reword a message and every
+  entry using it updates instantly, with no database change. It also means no
+  user-written text is ever stored — which is what makes the guestbook spam-proof
+  by design rather than by filtering.
+- **The unique index is the real rule, not just an optimisation.** "One entry per
+  person per creature" is enforced by the database itself, so a double-submitted
+  form or two simultaneous requests still cannot produce a second row. The service
+  layer checks it too, but only so it can give a friendly message.
+- **`updated_at` powers the once-a-day change.** It is set when the entry is created
+  and refreshed whenever the message is changed; the cooldown
+  (`gameplay.guestbook.edit_cooldown_seconds`) is measured from it. MySQL's automatic
+  `ON UPDATE` behaviour is deliberately switched off so the value only changes when
+  our own code decides it should.
+
 ---
 
 ## What is intentionally NOT here (yet)

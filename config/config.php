@@ -99,6 +99,11 @@ return [
             'max_attempts' => 20,     // at most 20 bio edits...
             'window_seconds' => 3600, // ...per hour, per IP (anti-abuse)
         ],
+        'rate_limit_guestbook' => [
+            'max_attempts' => 20,     // at most 20 guestbook signings...
+            'window_seconds' => 3600, // ...per hour, per IP (anti-abuse; the
+                                      // one-entry-per-creature rule is the main gate)
+        ],
     ],
 
     // Gameplay tunables — the documented home for "knobs" so a beginner can
@@ -194,6 +199,42 @@ return [
 
         // The longest a creature's bio (written by its owner) may be.
         'bio_max_length' => 500,
+
+        // The guestbook. Visitors sign a creature's guestbook by CHOOSING one of
+        // the messages below — there is no free typing anywhere in it. That single
+        // design decision is what makes the guestbook safe: if nobody can write
+        // their own words, there is nothing to spam, no abuse to moderate, and no
+        // user text to filter. Each person may leave one entry per creature, and
+        // may swap it for a different message once a day.
+        //
+        // CONTENT AS DATA: the key on the left is what gets stored in the database;
+        // the text on the right is what players read. Reword the text here and every
+        // existing entry that uses that key updates instantly — no database change.
+        //
+        // To ADD a message: add a line. To RETIRE one: delete the line — entries that
+        // already used it keep working and fall back to a neutral wording.
+        // Two rules for the keys: keep them short, lowercase and hyphenated, and
+        // NEVER reuse a key for a different meaning — old entries would silently
+        // start saying something their author never chose.
+        'guestbook' => [
+            // How long before someone may change their entry again. 86400 = one day.
+            'edit_cooldown_seconds' => 86400,
+            // How many entries a creature's page shows.
+            'entries_shown' => 20,
+            'messages' => [
+                'what-a-sweetheart' => 'What a sweetheart!',
+                'lovely-creature' => 'What a lovely creature.',
+                'passing-through' => 'Just passing through — hello!',
+                'made-me-smile' => 'This one made me smile today.',
+                'well-cared-for' => 'You can tell this one is well cared for.',
+                'cosy-corner' => 'Such a cosy little corner of the world.',
+                // Write plain text here, never HTML entities like &rsquo; — the
+                // templates escape everything on output, so an entity would show up
+                // as literal "&rsquo;" on the page. A real ’ character is correct.
+                'come-back-again' => 'I’ll come back to visit again.',
+                'warm-wishes' => 'Warm wishes from a fellow wanderer.',
+            ],
+        ],
     ],
 
     // Content moderation. A simple list of words that user-written text (like a

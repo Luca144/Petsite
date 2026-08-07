@@ -646,3 +646,74 @@ watermark stamped across it, so it is **not** in the site. It is parked in
 `public/assets/_incoming/shop/` until unwatermarked versions arrive. A default
 avatar was also delivered, but there is no user-profile page in the plan for it to
 appear on, so it is parked too.
+
+---
+
+## Increment C.4 — The guestbook
+
+**What it delivers:** visitors can sign a creature's guestbook. Each person leaves
+**one entry per creature**, chosen from a **fixed list of messages**, and may change
+their entry **once a day**.
+
+### The design decision that makes this safe
+
+A guestbook is normally the most dangerous thing on a small site: free text from
+strangers means spam, abuse, and moderation forever. Ours removes the danger at the
+root — **there is no free typing anywhere in it.** A visitor picks one of the
+messages defined in config, and we store only its short key.
+
+Because no visitor-written text is ever stored, there is nothing to spam with,
+nothing to filter, and nothing to moderate. The safety comes from the shape of the
+feature, not from a filter fighting a losing battle. Keep it that way: **adding a
+free-text field to the guestbook would undo this entirely**, and would need real
+spam protection built first.
+
+### Where the pieces live
+
+| File | Job |
+| --- | --- |
+| `config/config.php` → `gameplay.guestbook` | the messages, the once-a-day setting, how many entries a page shows |
+| `src/Guestbook/GuestbookMessages.php` | the catalogue: "is this a real message?", "what does this key say?" |
+| `src/Guestbook/GuestbookRepository.php` | all the SQL |
+| `src/Guestbook/GuestbookService.php` | the three rules (see below) |
+| `src/Guestbook/GuestbookPanel.php` | gathers what the creature page needs to display |
+| `src/Http/Controllers/GuestbookController.php` | who is allowed to sign at all |
+| `templates/partials/guestbook.php` | the entries and the chooser |
+| `public/css/guestbook.css` | its styles |
+
+### The three rules, and where each is enforced
+
+1. **Only an offered message may be chosen** — `GuestbookService`, via
+   `GuestbookMessages::has()`. This is what stops someone editing the form in their
+   browser and submitting a key we never offered.
+2. **One entry per person per creature** — the **unique database index** is the real
+   guarantee; the service checks first only so it can give a friendly message and
+   change the existing entry rather than fail.
+3. **One change per day** — `GuestbookService`, measured from `updated_at`. Choosing
+   the message that is *already* stored is a deliberate no-op that does **not** use
+   up the day's change; spending someone's one change on nothing would be an
+   unpleasant surprise.
+
+Permission questions (logged in? allowed to see this creature?) live in the
+controller instead, so game rules and web plumbing stay separable.
+
+### Two notes for whoever works on this next
+
+- **The chooser must stay radio buttons.** They are real `<input type="radio">`
+  elements styled as cards, so keyboard use and screen-reader announcements work for
+  free. A dropdown is forbidden (`CLAUDE.md` section 8) and a test in
+  `CreatureControllerTest` fails if one appears.
+- **Retiring a message is safe.** Delete the line from config; entries that used it
+  fall back to neutral wording instead of breaking. But **never reuse a key for a
+  different meaning** — old entries would silently start saying something their
+  author never chose.
+
+### How to add or reword a message
+
+Edit `gameplay.guestbook.messages` in `config/config.php`. That is the whole job —
+no code, no migration. Write plain text, not HTML entities: the templates escape
+everything on output, so `&rsquo;` would appear literally on the page.
+
+**Currently allowed:** the creature's own owner may sign their creature's guestbook.
+Nothing stops it, matching how petting works (you may pet your own creature). If
+that should be forbidden, it is a one-line ownership check in `GuestbookController`.

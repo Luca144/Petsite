@@ -41,12 +41,17 @@ use Felkyo\Economy\ShopRepository;
 use Felkyo\Exploration\ExplorationRepository;
 use Felkyo\Exploration\ExplorationService;
 use Felkyo\Exploration\WeightedPicker;
+use Felkyo\Guestbook\GuestbookMessages;
+use Felkyo\Guestbook\GuestbookPanel;
+use Felkyo\Guestbook\GuestbookRepository;
+use Felkyo\Guestbook\GuestbookService;
 use Felkyo\Http\Controllers\AdoptionController;
 use Felkyo\Http\Controllers\BioController;
 use Felkyo\Http\Controllers\BrowseController;
 use Felkyo\Http\Controllers\CollectionController;
 use Felkyo\Http\Controllers\CreatureController;
 use Felkyo\Http\Controllers\ExplorationController;
+use Felkyo\Http\Controllers\GuestbookController;
 use Felkyo\Http\Controllers\HomeController;
 use Felkyo\Http\Controllers\InventoryController;
 use Felkyo\Http\Controllers\LoginController;
@@ -97,6 +102,7 @@ $pettingRepository = new PettingRepository($pdo);
 $explorationRepository = new ExplorationRepository($pdo);
 $shopRepository = new ShopRepository($pdo);
 $inventoryRepository = new InventoryRepository($pdo);
+$guestbookRepository = new GuestbookRepository($pdo);
 
 // ---- Services (own the business rules) ----
 $passwordHasher = new PasswordHasher();
@@ -137,6 +143,20 @@ $creatureBioService = new CreatureBioService(
     new ContentFilter($config['moderation']['blocked_words']),
     $config['gameplay']['bio_max_length']
 );
+// The guestbook. The catalogue of choosable messages is shared by the service
+// (which validates a choice) and the panel (which displays them), so it is built
+// once here and handed to both.
+$guestbookMessages = new GuestbookMessages($config['gameplay']['guestbook']['messages']);
+$guestbookService = new GuestbookService(
+    $guestbookRepository,
+    $guestbookMessages,
+    $config['gameplay']['guestbook']['edit_cooldown_seconds']
+);
+$guestbookPanel = new GuestbookPanel(
+    $guestbookRepository,
+    $guestbookMessages,
+    $config['gameplay']['guestbook']['entries_shown']
+);
 $explorationService = new ExplorationService(
     $explorationRepository,
     new WeightedPicker(),
@@ -172,14 +192,19 @@ $browseController = new BrowseController(
     $templates, $creatureRepository, $creatureProfileBuilder, $config['gameplay']['browse_recent_limit']
 );
 $registerController = new RegisterController(
-    $templates, $csrf, $session, $registrationService, $starterCreatureService, $rateLimiter, $config['security']
+    $templates, $csrf, $session, $registrationService, $starterCreatureService, $rateLimiter,
+    $config['security']
 );
 $loginController = new LoginController(
     $templates, $csrf, $session, $authenticator, $userRepository, $rateLimiter, $config['security']
 );
 $logoutController = new LogoutController($session, $csrf);
 $creatureController = new CreatureController(
-    $templates, $session, $creatureRepository, $creatureProfileBuilder
+    $templates, $session, $creatureRepository, $creatureProfileBuilder, $guestbookPanel
+);
+$guestbookController = new GuestbookController(
+    $session, $csrf, $creatureRepository, $guestbookService, $rateLimiter,
+    $config['security']['rate_limit_guestbook']
 );
 $petController = new PetController(
     $session, $csrf, $creatureRepository, $pettingService, $rateLimiter, $config['security']['rate_limit_pet']
@@ -256,6 +281,8 @@ $router->get('/creature/{id}', [$creatureController, 'show']);
 $router->post('/creature/{id}/pet', [$petController, 'pet']);
 // Saving a creature's bio (owner only).
 $router->post('/creature/{id}/bio', [$bioController, 'update']);
+// Signing a creature's guestbook (any logged-in visitor, one entry each).
+$router->post('/creature/{id}/guestbook', [$guestbookController, 'sign']);
 
 // ---- Dispatch and send ----
 // Any unexpected error is logged and turned into a plain 500 page, so we never

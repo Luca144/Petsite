@@ -17,6 +17,8 @@
  *   $timesPetted (int)
  *   $canPet   (bool)   — whether the current visitor may pet it
  *   $flash    (string|null) — a one-time message (e.g. the result of petting)
+ *   $guestbook (array) — the guestbook panel data (see partials/guestbook.php)
+ *   $canSignGuestbook (bool)
  */
 $this->layout('layout', ['title' => $this->e($creature->name) . ' — Felkyo Creatures']);
 
@@ -114,3 +116,11 @@ $createdLabel = $creature->createdAt !== null
         </form>
     <?php endif; ?>
 </div>
+
+<hr class="rule">
+
+<?= $this->insert('partials/guestbook', [
+    'creature' => $creature,
+    'guestbook' => $guestbook,
+    'canSign' => $canSignGuestbook,
+]) ?>

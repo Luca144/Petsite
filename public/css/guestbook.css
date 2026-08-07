@@ -1,0 +1,147 @@
+/*
+ * guestbook.css — a creature's guestbook: the signatures, and the message chooser.
+ *
+ * WHAT THIS FILE IS: the page-specific styles for the guestbook panel on a
+ * creature's page. Kept as its own small stylesheet so components.css stays under
+ * its size limit and focused on things every page uses.
+ *
+ * THE ONE IDEA TO UNDERSTAND HERE: the message chooser is a set of REAL radio
+ * buttons. We only change how they look — never how they work. That is what makes
+ * it keyboard-operable and correctly announced by screen readers without a single
+ * line of JavaScript. (It is also why this is not a dropdown, which CLAUDE.md
+ * section 8 forbids outright.)
+ *
+ * Written mobile-first, and reads every colour and space from theme.css.
+ */
+
+/* ---- The signatures already left ---- */
+
+.guestbook-entries {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+/* Each signature is a little parchment slip. The purple edge on the left gives the
+   list a rhythm and makes each entry easy to tell apart at a glance. */
+.guestbook-entry {
+    background: var(--parchment);
+    border: 1.5px solid var(--border);
+    border-left: 4px solid var(--purple);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+}
+
+/* The message is set in the display serif, italic, so it reads like something
+   handwritten in a real visitors' book rather than like interface text. */
+.guestbook-entry__message {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 1.05rem;
+    color: var(--plum);
+}
+
+.guestbook-entry__meta {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+    margin-top: var(--space-1);
+}
+
+/* ---- The chooser ---- */
+
+/* A fieldset's default browser frame does not suit the design, so it is removed.
+   The element itself stays, because grouping radio buttons in a fieldset with a
+   legend is what tells a screen reader what the choice is about. */
+.guestbook-choices {
+    border: none;
+    padding: 0;
+    margin: 0 0 var(--space-4);
+}
+
+.guestbook-choices__legend {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--purple);
+    padding: 0;
+    margin-bottom: var(--space-3);
+}
+
+/* Mobile-first: one message per row, so every option is a wide, easy tap target. */
+.guestbook-choices__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+}
+
+/* One choosable message, drawn as a card. The whole card is a <label>, so tapping
+   anywhere on it selects the radio inside — a much larger target than the little
+   circle alone, which matters a great deal on a phone. */
+.guestbook-choice {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 44px; /* comfortable touch target */
+    padding: var(--space-2) var(--space-3);
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: border-color 0.16s, transform 0.16s, box-shadow 0.16s;
+}
+
+.guestbook-choice:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-raised);
+}
+
+/* The radio stays visible rather than being hidden and faked. It is the control
+   screen readers announce and keyboards operate; accent-color simply tints it to
+   match the palette. */
+.guestbook-choice__input {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    accent-color: var(--purple);
+    cursor: pointer;
+}
+
+.guestbook-choice__text {
+    font-size: 0.95rem;
+}
+
+/*
+ * The selected card. ":has()" lets a parent react to something inside it — here,
+ * the card notices that its own radio is checked.
+ *
+ * WORTH KNOWING: selection is shown by a HEAVIER BORDER as well as colour, never
+ * by colour alone (CLAUDE.md accessibility rules). And if a browser ever did not
+ * understand ":has()", nothing important would break — the radio's own filled dot
+ * still shows which message is chosen. The card styling is a bonus, not the signal.
+ */
+.guestbook-choice:has(.guestbook-choice__input:checked) {
+    border-color: var(--purple);
+    border-width: 2.5px;
+    background: var(--parchment);
+}
+
+/* Keyboard focus is drawn around the whole card, not just the small circle, so a
+   keyboard user can see clearly where they are. */
+.guestbook-choice:has(.guestbook-choice__input:focus-visible) {
+    outline: 3px solid var(--purple);
+    outline-offset: 3px;
+}
+
+/* ---- Desktop refinement (added on top of the mobile-first base) ---- */
+@media (min-width: 640px) {
+    /* There is room for two messages side by side once the screen is wider. */
+    .guestbook-choices__grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
