@@ -120,6 +120,41 @@ handled for you.
 > and correct this guide afterwards — a deployment guide that says what *actually*
 > happened is worth far more than one that says what was expected.
 
+### Before anything else: two prerequisites
+
+**1. This will cost money — roughly £4/$5 a month.** Railway has no permanent free
+tier that can keep a website and a database running around the clock. What it has:
+
+| | What you get |
+| --- | --- |
+| Free trial | $5 of credit, valid 30 days. **No credit card needed** to start. |
+| Free plan | $1 of credit per month — not enough for an always-on site plus a database. |
+| Hobby plan | $5/month, which includes $5 of usage. |
+
+So the honest expectation is: the trial covers the first month while you learn the
+pipeline, and after that it is about $5 a month for as long as the demo stays up.
+Usage above the included credit is billed on top, so **check the usage page after
+the first week** rather than assuming. If the demo is only meant to be shown to a
+few people, it is entirely reasonable to deploy it, take screenshots, and take it
+down again — nothing about this project requires it to run forever.
+
+**2. The code has to be on GitHub first.** Railway deploys *from a repository*, and
+at the time of writing this project only exists on one computer — `git remote -v`
+shows nothing. Creating the Railway project cannot work until the code is pushed.
+
+Create an empty repository on GitHub (**do not** let it add a README, `.gitignore`
+or licence — the project already has those), then connect and push:
+
+```
+git remote add origin https://github.com/<your-username>/<repo-name>.git
+git push -u origin master
+```
+
+**Public or private is your choice, and both are safe here.** It has been checked:
+`.env` and the `backups/` folder have never been committed and are gitignored,
+`.env.example` contains only empty placeholders, and no passwords or keys are
+written anywhere in the tracked files. Nothing secret would become visible.
+
 ### What builds the app
 
 Railway's builder is **Railpack**. It notices `composer.json`, installs the
