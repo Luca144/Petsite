@@ -4,9 +4,9 @@ This guide explains how Felkyo goes live, how to update it once it is live, and 
 just as importantly — **what this deployment is and is not**. It is written for
 someone who has not deployed a website before.
 
-> **Status:** the preparation described in "Before you deploy" is finished and
-> tested. The platform-specific steps in "Putting it on the internet" are still to
-> be done — the hosting platform has not been chosen yet.
+> **Status:** the preparation in "Before you deploy" is finished and tested, and
+> the Railway steps in "Putting it on the internet" are written and ready to
+> follow — but they have not been run yet. Nothing is live.
 
 ---
 
@@ -108,36 +108,118 @@ on every test run, so a typo in it is caught here rather than on the live server
 
 ---
 
-## 3. Putting it on the internet (increment D.2 — not done yet)
+## 3. Putting it on the internet (increment D.2)
 
-**This section is waiting on one decision: which hosting platform.** The choice is
-between managed platforms — Railway, Render, or Fly.io. All three handle SSL and
-deploy-on-push for you, which is exactly what makes them suitable for a first
-deployment.
+**Platform: Railway.** Chosen because it needs the least new knowledge for a first
+deployment — the database is a couple of clicks, deploys happen on push, and SSL is
+handled for you.
 
-Once the platform is chosen, this section will cover, step by step:
+> **These steps have not been run yet.** They are written from Railway's current
+> documentation so you have something to follow, but hosting platforms change their
+> interfaces often. If a screen does not look like it does here, trust the screen
+> and correct this guide afterwards — a deployment guide that says what *actually*
+> happened is worth far more than one that says what was expected.
 
-1. Connecting the Git repository so a push deploys automatically.
-2. Provisioning a managed MariaDB/MySQL database.
-3. Setting the environment variables on the platform (never in the code):
-   `APP_ENV=production`, `APP_DEBUG=false`, the database credentials, and
-   `DEMO_ACCOUNT_PASSWORD`.
-4. Running the migrations against the production database.
-5. Running the seed script against production.
-6. Confirming SSL is active (the padlock in the browser).
-7. **Finding out and writing down the platform's database backup situation** —
-   whether backups happen automatically, how often, and how a restore works. For a
-   demo with no real data this is low-stakes, but it should be *known* rather than
-   assumed.
+### What builds the app
+
+Railway's builder is **Railpack**. It notices `composer.json`, installs the
+dependencies itself, and serves the site with **FrankenPHP**. You do not have to
+configure a web server.
+
+**The one setting that is not optional:**
+
+```
+RAILPACK_PHP_ROOT_DIR = /app/public
+```
+
+Railpack only defaults the document root to `public/` for Laravel projects; for
+everything else it serves from the project root. Without this variable, visitors
+would be served the *repository* — including `.env`-style files and `src/` — instead
+of the site. Set it before the first deploy.
+
+### Step by step
+
+1. **Create the project.** In Railway, create a new project and choose "Deploy from
+   GitHub repo", pointing at this repository. That connection is what makes future
+   pushes deploy automatically.
+2. **Add the database.** Add a MySQL (MariaDB-compatible) database to the same
+   project. Railway creates it and exposes its credentials as variables.
+3. **Set the environment variables** on the *app* service. Never in the code:
+
+   | Variable | Value |
+   | --- | --- |
+   | `RAILPACK_PHP_ROOT_DIR` | `/app/public` |
+   | `APP_ENV` | `production` |
+   | `APP_DEBUG` | `false` |
+   | `DB_HOST` | from the database service |
+   | `DB_PORT` | from the database service |
+   | `DB_NAME` | from the database service |
+   | `DB_USER` | from the database service |
+   | `DB_PASSWORD` | from the database service |
+   | `DEMO_ACCOUNT_PASSWORD` | a long password you choose |
+
+   Note what is **not** in that list: `REGISTRATION_OPEN` and `SHOW_DEMO_NOTICE`.
+   Leave them unset. With `APP_ENV=production` the defaults are already the safe
+   ones — registration closed, demo banner shown — and a setting you never typed is
+   a setting you cannot mistype.
+
+4. **Run the migrations.** Railpack only runs migrations automatically for Laravel,
+   so ours are a manual step. Open a shell on the service and run:
+
+   ```
+   php vendor/robmorgan/phinx/bin/phinx migrate -e production
+   ```
+
+5. **Run the seed script**, so the demo has creatures in it:
+
+   ```
+   php vendor/robmorgan/phinx/bin/phinx seed:run -e production
+   ```
+
+   It refuses to run if `DEMO_ACCOUNT_PASSWORD` is not set, and it is safe to run
+   twice.
+
+6. **Check the site.** Visit the URL Railway gives you and confirm:
+   - the padlock is showing (Railway provides SSL automatically),
+   - the "development demo" banner is at the top of every page,
+   - there is no "sign up" link anywhere, and `/register` shows the closed page,
+   - you can log in as a seeded account (`mira`) and pet a creature.
+
+7. **Find out the backup situation and write it down here.** Check whether Railway
+   backs this database up automatically, how often, and how a restore works. For a
+   demo with no real data this is low-stakes — but it should be *known* rather than
+   assumed, and the answer belongs in this guide rather than in somebody's memory.
+
+### Two things to watch on the first deploy
+
+- **If every page except the home page returns 404**, the server is not sending all
+  requests to `public/index.php`. Felkyo is a front-controller app: one file handles
+  every address. The fix is a `Caddyfile` in the project root telling FrankenPHP to
+  fall back to `index.php`. It is not included here because it may well not be
+  needed — add it only if you see that symptom.
+- **Sessions are stored as files**, which is fine for one instance. If the service is
+  ever scaled to run several copies, people would be logged out at random as their
+  requests land on different copies. That is a real change to make deliberately
+  (sessions would move into the database), not something to discover live.
 
 ---
 
-## 4. Deploying an update (increment D.3 — not done yet)
+## 4. Deploying an update (increment D.3 — after the first deploy)
 
-Once the pipeline exists, updating the live site is: commit your change, push it,
-and the platform rebuilds and redeploys on its own. The exact steps get written
-here after the first real deploy, so that what is written is what actually
-happened rather than what was expected to happen.
+Once the pipeline exists, updating the live site is:
+
+1. Commit your change on your machine.
+2. Push it.
+3. Railway notices the push, rebuilds, and swaps the site over.
+
+**Before pushing, run the tests** (`C:\xampp\php\php.exe vendor/bin/phpunit`). There
+is no CI checking for you, so the test suite is only protecting you if you actually
+run it.
+
+**If you added a migration**, run it against production afterwards, the same way as
+in step 4 above. Code deploys automatically; database structure does not.
+
+This section gets rewritten with what actually happened after the first real deploy.
 
 ---
 
