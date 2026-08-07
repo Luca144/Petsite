@@ -26,12 +26,9 @@ The full paths on this machine are:
 You need these installed once. On this machine they are already present:
 
 - **XAMPP** (provides PHP 8.2 and MariaDB). Download: <https://www.apachefriends.org/>
-- **Git** and **Git LFS**. Git LFS stores our large art files efficiently.
-  Install it once per machine with:
-
-  ```powershell
-  git lfs install
-  ```
+- **Git**. Git LFS is **not** needed to run the site: all of the artwork the
+  website serves is stored as ordinary files in Git. (LFS stays configured for
+  `.psd` artist source files only — see `.gitattributes` for the reasoning.)
 
 You do **not** need to install Composer separately — a local copy
 (`composer.phar`) already lives in the project folder.

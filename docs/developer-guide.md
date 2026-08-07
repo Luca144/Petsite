@@ -296,7 +296,10 @@ one, so its existence is not revealed.
 
 **Images:** shown with `<img class="… pixelated">` so pixel-art stays crisp when
 scaled up (CLAUDE.md section 8); GIFs loop on their own. The sprite art is stored
-via **Git LFS** (see `.gitattributes`).
+as ordinary files in Git — **not** in Git LFS. `.gitattributes` explains why at
+length; the short version is that the art is about 1 MB in total, and Railway does
+not fetch LFS files when it builds, so putting art back into LFS would silently
+break every image on the live site.
 
 **New pieces:**
 
