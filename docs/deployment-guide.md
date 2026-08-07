@@ -225,6 +225,38 @@ of the site. Set it before the first deploy.
    demo with no real data this is low-stakes — but it should be *known* rather than
    assumed, and the answer belongs in this guide rather than in somebody's memory.
 
+### PHP extensions must be declared, or the site 500s with a blank page
+
+The first real deploy failed with this in the logs:
+
+```
+PHP Fatal error: Uncaught PDOException: could not find driver
+```
+
+That is **not** a wrong password or a wrong host. It means PHP had no MySQL driver
+at all — the connection was never even attempted. Railpack builds a lean PHP and
+only includes the extensions you ask for.
+
+The fix is in `composer.json`, not in a Railway setting:
+
+```json
+"ext-pdo": "*",
+"ext-pdo_mysql": "*",
+"ext-mbstring": "*",
+```
+
+Railpack reads those and installs them. **Declaring it here rather than in a
+platform variable is deliberate:** it is a genuine requirement of this application,
+it travels with the code to any host, and the next person finds it in the project
+instead of having to know which dashboard to look in.
+
+Note that `ext-pdo` alone was already listed and was not enough — that gives you
+PDO, but not the MySQL *driver*. `ext-mbstring` was missing too (the validators use
+`mb_strlen`), which would have been the very next crash.
+
+If you ever need an extension that Railpack does not pick up from `composer.json`,
+the fallback is the `RAILPACK_PHP_EXTENSIONS` variable, comma-separated.
+
 ### Two things to watch on the first deploy
 
 - **If every page except the home page returns 404**, the server is not sending all
