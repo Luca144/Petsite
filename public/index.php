@@ -207,7 +207,7 @@ $creatureController = new CreatureController(
     $templates, $session, $creatureRepository, $creatureProfileBuilder, $guestbookPanel
 );
 $guestbookController = new GuestbookController(
-    $session, $csrf, $creatureRepository, $guestbookService, $rateLimiter,
+    $session, $csrf, $creatureRepository, $guestbookService, $guestbookRepository, $rateLimiter,
     $config['security']['rate_limit_guestbook']
 );
 $petController = new PetController(
@@ -287,6 +287,8 @@ $router->post('/creature/{id}/pet', [$petController, 'pet']);
 $router->post('/creature/{id}/bio', [$bioController, 'update']);
 // Signing a creature's guestbook (any logged-in visitor, one entry each).
 $router->post('/creature/{id}/guestbook', [$guestbookController, 'sign']);
+// Removing a guestbook entry — only the creature's OWNER may do this.
+$router->post('/creature/{id}/guestbook/{entryId}/delete', [$guestbookController, 'delete']);
 
 // ---- Dispatch and send ----
 // Any unexpected error is logged and turned into a plain 500 page, so we never

@@ -51,6 +51,37 @@
     margin-top: var(--space-1);
 }
 
+/*
+ * The owner's "Remove" button on an entry. It is deliberately quiet — a small
+ * outlined pill rather than a solid button — because removing somebody's message
+ * should feel like a considered action, not the obvious thing to click. It still
+ * meets the 44px touch-target rule, and it inherits the global :focus-visible
+ * outline like every other control.
+ */
+.guestbook-entry__remove {
+    margin-top: var(--space-2);
+}
+
+.guestbook-entry__remove button {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+    background: transparent;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-pill);
+    padding: var(--space-2) var(--space-3);
+    min-height: 44px;
+    cursor: pointer;
+    transition: color 0.16s, border-color 0.16s, background 0.16s;
+}
+
+.guestbook-entry__remove button:hover {
+    color: var(--plum);
+    border-color: var(--purple);
+    background: var(--panel);
+}
+
 /* ---- The chooser ---- */
 
 /* A fieldset's default browser frame does not suit the design, so it is removed.

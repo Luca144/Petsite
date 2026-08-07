@@ -61,6 +61,7 @@ final class GuestbookControllerTest extends DatabaseTestCase
             $this->csrf,
             $creatures,
             $service,
+            $this->entries,
             new RateLimiter(new RateLimitRepository($this->connection)),
             ['max_attempts' => 20, 'window_seconds' => 3600]
         );

@@ -6,6 +6,7 @@ namespace Felkyo\Http\Controllers;
 
 use Felkyo\Auth\Session;
 use Felkyo\Creatures\CreatureRepository;
+use Felkyo\Guestbook\GuestbookRepository;
 use Felkyo\Guestbook\GuestbookService;
 use Felkyo\Http\Csrf;
 use Felkyo\Http\Request;
@@ -38,6 +39,7 @@ final class GuestbookController
         private Csrf $csrf,
         private CreatureRepository $creatures,
         private GuestbookService $guestbook,
+        private GuestbookRepository $guestbookEntries,
         private RateLimiter $rateLimiter,
         private array $rateLimit,
     ) {
@@ -84,6 +86,64 @@ final class GuestbookController
 
         $result = $this->guestbook->sign($userId, $creature, $request->input('message_key'));
         $this->session->flash($result->message());
+
+        return Response::redirect($creaturePath);
+    }
+
+    /**
+     * Remove an entry from a creature's guestbook. Only the CREATURE'S OWNER may
+     * do this — it is their page, and this is how they keep control of what appears
+     * on it.
+     *
+     * Note whose permission this is: the creature's owner, NOT the person who wrote
+     * the entry. That is the opposite of the bio rule, and it is deliberate — the
+     * guestbook belongs to the creature, not to the visitors who signed it.
+     *
+     * @param array<string, string> $parameters Captured route parameters.
+     */
+    public function delete(Request $request, array $parameters): Response
+    {
+        $creatureId = (int) ($parameters['id'] ?? 0);
+        $entryId = (int) ($parameters['entryId'] ?? 0);
+        $creaturePath = '/creature/' . $creatureId;
+
+        $userId = $this->session->get('user_id');
+        if (!is_int($userId)) {
+            return Response::redirect('/login');
+        }
+
+        if (!$this->csrf->isValid($request->input('_csrf_token'))) {
+            return Response::redirect($creaturePath);
+        }
+
+        $creature = $this->creatures->findById($creatureId);
+        if ($creature === null) {
+            return Response::redirect('/');
+        }
+
+        // The one rule that matters here. Anyone else is refused, whether they wrote
+        // the entry or not.
+        if ($creature->ownerId !== $userId) {
+            $this->session->flash('Only ' . $creature->name . '\'s owner can remove guestbook messages.');
+            return Response::redirect($creaturePath);
+        }
+
+        // Deletions share the guestbook's rate-limit settings but count under their
+        // own action key, so a burst of deleting can never use up somebody's
+        // allowance for signing.
+        if (!$this->rateLimiter->isAllowed('guestbook_delete', $request->clientIp(), $this->rateLimit['max_attempts'], $this->rateLimit['window_seconds'])) {
+            $this->session->flash('You are removing messages a little too fast — please slow down.');
+            return Response::redirect($creaturePath);
+        }
+        $this->rateLimiter->record('guestbook_delete', $request->clientIp());
+
+        $wasRemoved = $this->guestbookEntries->deleteFromCreature($entryId, $creatureId);
+
+        $this->session->flash(
+            $wasRemoved
+                ? 'That guestbook message was removed.'
+                : 'That guestbook message is no longer there.'
+        );
 
         return Response::redirect($creaturePath);
     }

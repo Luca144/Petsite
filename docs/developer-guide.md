@@ -714,9 +714,45 @@ Edit `gameplay.guestbook.messages` in `config/config.php`. That is the whole job
 no code, no migration. Write plain text, not HTML entities: the templates escape
 everything on output, so `&rsquo;` would appear literally on the page.
 
-**Currently allowed:** the creature's own owner may sign their creature's guestbook.
-Nothing stops it, matching how petting works (you may pet your own creature). If
-that should be forbidden, it is a one-line ownership check in `GuestbookController`.
+**Deliberately allowed:** the creature's own owner may sign their creature's
+guestbook, matching how petting works (you may pet your own creature). This was
+confirmed as intended, not an oversight.
+
+### Removing an entry — note whose permission it is
+
+A creature's **owner** can remove any entry from their guestbook. Read that
+carefully, because it is the opposite of the bio rule and it catches people out:
+
+> The person allowed to delete is the **creature's owner** — *not* the person who
+> wrote the entry.
+
+The guestbook belongs to the creature, not to the visitors who signed it. An author
+cannot delete their own message; they can change it once a day instead. Both halves
+are pinned down by tests in `GuestbookDeletionTest`, so nobody "corrects" the rule
+into the more familiar-looking one later.
+
+**After a removal, that person may sign again.** This is intended behaviour, and it
+comes for free: the row is deleted outright rather than marked as deleted, which
+frees the unique `(creature_id, author_user_id)` pair. No "deleted" column, no
+special case — but there *is* a test for it, because it is a promise rather than an
+accident.
+
+**One detail in the SQL worth copying.** `deleteFromCreature()` names the creature
+in the `DELETE` as well as the entry id, even though the controller has already
+checked ownership:
+
+```sql
+DELETE FROM guestbook_entries WHERE id = :id AND creature_id = :creature_id
+```
+
+That second condition means even a wrong entry id — a stale page, a mistyped
+address, somebody experimenting — can only ever touch an entry in *that* creature's
+guestbook. Two locks on one door is cheap; the cost of the alternative is a visitor
+deleting a stranger's message.
+
+Deletions are rate-limited under their own action key (`guestbook_delete`) while
+sharing the guestbook's limit *settings*, so a burst of deleting can never use up
+somebody's allowance for signing.
 
 ---
 

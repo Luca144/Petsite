@@ -153,4 +153,38 @@ final class GuestbookRepository
 
         return (int) $statement->fetchColumn() > 0;
     }
+
+    /**
+     * Remove one entry from one creature's guestbook.
+     *
+     * WHY THE CREATURE ID IS PART OF THE CONDITION: the caller has already checked
+     * that this visitor owns this creature. Naming the creature in the DELETE as
+     * well means that even if the wrong entry id arrives — a stale page, a mistyped
+     * address, someone experimenting — the statement can only ever touch an entry
+     * in THAT creature's guestbook. It cannot reach into somebody else's. Two locks
+     * on one door is cheap here, and the cost of the alternative is a visitor
+     * deleting a stranger's entry.
+     *
+     * Returns true if a row was actually removed, so the caller can tell the
+     * difference between "deleted" and "there was nothing there".
+     *
+     * Note that this removes the row outright rather than marking it deleted. That
+     * frees the unique (creature_id, author_user_id) pair, which is exactly what
+     * makes the agreed behaviour work: once an entry is deleted, that person may
+     * sign the guestbook again.
+     */
+    public function deleteFromCreature(int $entryId, int $creatureId): bool
+    {
+        $statement = $this->connection->prepare(
+            'DELETE FROM guestbook_entries
+              WHERE id = :id
+                AND creature_id = :creature_id'
+        );
+        $statement->execute([
+            ':id' => $entryId,
+            ':creature_id' => $creatureId,
+        ]);
+
+        return $statement->rowCount() > 0;
+    }
 }

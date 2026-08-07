@@ -156,6 +156,52 @@ final class CreatureControllerTest extends DatabaseTestCase
         );
     }
 
+    /**
+     * The "Remove" button on a guestbook entry belongs to the creature's OWNER
+     * alone. A visitor — even the one who wrote the entry — must not be offered it.
+     * (The controller refuses the action regardless; this is about not showing a
+     * control that would only lead to a refusal.)
+     */
+    public function testOnlyTheOwnerIsShownTheRemoveButtonOnGuestbookEntries(): void
+    {
+        $this->addGuestbookEntry();
+
+        // A stranger looking at the page.
+        $_SESSION['user_id'] = $this->makeStranger();
+        $this->assertStringNotContainsString(
+            'guestbook-entry__remove',
+            $this->get('/creature/' . $this->publicCreatureId)->body()
+        );
+
+        // The owner looking at the same page.
+        $_SESSION['user_id'] = $this->ownerId;
+        $this->assertStringContainsString(
+            'guestbook-entry__remove',
+            $this->get('/creature/' . $this->publicCreatureId)->body()
+        );
+    }
+
+    /** Put one guestbook entry on the public creature, signed by a new visitor. */
+    private function addGuestbookEntry(): void
+    {
+        $statement = $this->connection->prepare(
+            'INSERT INTO guestbook_entries (creature_id, author_user_id, message_key)
+             VALUES (?, ?, ?)'
+        );
+        $statement->execute([$this->publicCreatureId, $this->makeStranger(), 'lovely-creature']);
+    }
+
+    /** A second user who owns nothing here. Created once, then reused. */
+    private function makeStranger(): int
+    {
+        $users = new UserRepository($this->connection);
+        $existing = $users->findByUsername('stranger');
+
+        return $existing !== null
+            ? $existing->id
+            : $users->create('stranger', 'stranger@example.com', 'hash')->id;
+    }
+
     public function testAnUnknownCreatureGivesA404(): void
     {
         $response = $this->get('/creature/999999');

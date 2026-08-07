@@ -123,4 +123,5 @@ $createdLabel = $creature->createdAt !== null
     'creature' => $creature,
     'guestbook' => $guestbook,
     'canSign' => $canSignGuestbook,
+    'isOwner' => !empty($isOwner),
 ]) ?>

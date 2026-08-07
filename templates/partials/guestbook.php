@@ -18,6 +18,7 @@
  *   $guestbook (array) — ['entries' => GuestbookEntry[], 'messages' => GuestbookMessages,
  *                         'chosenKey' => string|null], built by GuestbookPanel
  *   $canSign   (bool)  — whether this visitor may sign (i.e. is logged in)
+ *   $isOwner   (bool)  — whether this visitor owns the creature (may remove entries)
  */
 $messages = $guestbook['messages'];
 $entries = $guestbook['entries'];
@@ -47,6 +48,22 @@ $chosenKey = $guestbook['chosenKey'];
                             &middot; <?= $this->e(date('j M Y', (int) strtotime($entry->createdAt))) ?>
                         <?php endif; ?>
                     </p>
+
+                    <?php if ($isOwner): ?>
+                        <!-- Only the creature's OWNER sees this. Removing an entry is
+                             a state change, so it is a POST form with a CSRF token,
+                             not a link. The aria-label names whose message it removes,
+                             because a list of buttons all reading "Remove" tells a
+                             screen-reader user nothing about which one they are on. -->
+                        <form method="post" class="guestbook-entry__remove"
+                              action="/creature/<?= $this->e((string) $creature->id) ?>/guestbook/<?= $this->e((string) $entry->id) ?>/delete">
+                            <?= $this->csrf_field() ?>
+                            <button type="submit"
+                                    aria-label="Remove the message from <?= $this->e($entry->authorUsername) ?>">
+                                Remove
+                            </button>
+                        </form>
+                    <?php endif; ?>
                 </li>
             <?php endforeach; ?>
         </ul>
