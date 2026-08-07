@@ -20,8 +20,10 @@ use Phinx\Seed\AbstractSeed;
  * On the live server, use "-e production". Set DEMO_ACCOUNT_PASSWORD first (see
  * below) or it will stop and tell you to.
  *
- * SAFE TO RUN TWICE: it checks whether the demo accounts already exist and does
- * nothing if they do, so a second run cannot create duplicates.
+ * SAFE TO RUN TWICE, AND USEFUL TWICE: if the demo accounts already exist it does
+ * not duplicate them — it updates their password to the current
+ * DEMO_ACCOUNT_PASSWORD and says so. That is what makes changing the demo password
+ * a single command rather than a puzzle.
  *
  * ABOUT THE PASSWORD: every demo account shares one password, read from the
  * DEMO_ACCOUNT_PASSWORD environment variable. It is deliberately NOT written in
@@ -75,22 +77,75 @@ final class DemoContent extends AbstractSeed
             );
         }
 
+        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+
+        // Running this again on a database that already has the demo world must not
+        // duplicate it. But it must not do NOTHING either: the most likely reason
+        // somebody runs it a second time is that they changed
+        // DEMO_ACCOUNT_PASSWORD and want the demo accounts to use the new one.
+        //
+        // An earlier version returned here silently, which meant changing the
+        // password appeared to work and then did not — the accounts kept the
+        // password they were first created with, and nobody could log in. So the
+        // second run now updates the password and SAYS what it did.
         if ($this->demoAccountsAlreadyExist()) {
+            $this->refreshDemoPasswords($passwordHash);
+            $this->say('Demo accounts already existed. Their password is now the current '
+                . 'DEMO_ACCOUNT_PASSWORD. Creatures and activity were left untouched.');
+
             return;
         }
 
-        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
         $speciesIds = $this->speciesIdsBySlug();
+        $creatureCount = 0;
 
         foreach (self::DEMO_PLAYERS as $player) {
             $userId = $this->insertUser($player, $passwordHash);
 
             foreach ($player['creatures'] as $creature) {
                 $this->insertCreature($userId, $speciesIds[$creature['species']], $creature);
+                $creatureCount++;
             }
         }
 
         $this->addSomeActivity();
+
+        $this->say(sprintf(
+            'Created %d demo players and %d creatures. Log in as "%s" with DEMO_ACCOUNT_PASSWORD.',
+            count(self::DEMO_PLAYERS),
+            $creatureCount,
+            self::DEMO_PLAYERS[0]['username']
+        ));
+    }
+
+    /**
+     * Set every demo account's password to the current one.
+     *
+     * The hash is quoted rather than pasted in, because a bcrypt hash is full of
+     * "$" characters and would otherwise be a good way to break the statement.
+     */
+    private function refreshDemoPasswords(string $passwordHash): void
+    {
+        $usernames = [];
+        foreach (self::DEMO_PLAYERS as $player) {
+            $usernames[] = $this->quote($player['username']);
+        }
+
+        $this->execute(
+            'UPDATE users SET password_hash = ' . $this->quote($passwordHash)
+            . ' WHERE username IN (' . implode(', ', $usernames) . ')'
+        );
+    }
+
+    /**
+     * Tell the person running the seeder what happened.
+     *
+     * A script that finishes in silence is indistinguishable from one that did
+     * nothing, which is exactly the confusion this seeder caused once already.
+     */
+    private function say(string $message): void
+    {
+        $this->getOutput()->writeln(' == ' . $message);
     }
 
     /**
@@ -100,7 +155,7 @@ final class DemoContent extends AbstractSeed
     private function demoAccountsAlreadyExist(): bool
     {
         $existing = $this->fetchRow(
-            "SELECT COUNT(*) AS total FROM users WHERE username = 'mira'"
+            "SELECT COUNT(*) AS total FROM users WHERE username = " . $this->quote(self::DEMO_PLAYERS[0]['username'])
         );
 
         return (int) $existing['total'] > 0;

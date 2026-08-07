@@ -75,7 +75,34 @@ $request = Request::fromGlobals();
 
 // ---- Shared tools ----
 $logger = new FileLogger(dirname(__DIR__) . '/logs/app.log');
-$pdo = Database::connect($config['database']);
+
+// Connecting to the database is the first thing that can fail for reasons outside
+// the code — wrong credentials, a database that is not running, or a PHP build
+// without the MySQL driver. Every one of those happened while first deploying this
+// site, and each produced a completely blank page, because the failure happened
+// before the error handling further down had been set up.
+//
+// So it gets its own guard. The visitor sees a short, human sentence; the actual
+// reason goes to the log (and therefore to the hosting platform's log stream),
+// where whoever is fixing it can read it. We deliberately do NOT show the
+// exception text to visitors: it names the database host and user.
+try {
+    $pdo = Database::connect($config['database']);
+} catch (\Throwable $error) {
+    $logger->error('Could not connect to the database: ' . $error->getMessage());
+
+    // A plain page, not the themed layout: the layout needs machinery (sessions,
+    // the CSRF helper) that may not be ready this early, and an error page that
+    // itself errors helps nobody.
+    http_response_code(503);
+    header('Content-Type: text/html; charset=utf-8');
+    echo '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">'
+        . '<title>Felkyo Creatures — back shortly</title></head><body>'
+        . '<h1>Felkyo is having a quiet moment</h1>'
+        . '<p>We can&rsquo;t reach the creatures right now. Please try again in a little while.</p>'
+        . '</body></html>';
+    exit;
+}
 
 // Sessions: the cookie is HTTPS-only in production, but not in local http dev
 // (where a Secure cookie would never be sent). Production MUST run over HTTPS.

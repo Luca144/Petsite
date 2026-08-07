@@ -4,9 +4,9 @@ This guide explains how Felkyo goes live, how to update it once it is live, and 
 just as importantly — **what this deployment is and is not**. It is written for
 someone who has not deployed a website before.
 
-> **Status:** the preparation in "Before you deploy" is finished and tested, and
-> the Railway steps in "Putting it on the internet" are written and ready to
-> follow — but they have not been run yet. Nothing is live.
+> **Status: Felkyo is live** at <https://felkyo-production.up.railway.app> as a
+> closed demo. Sections 3 and 4 describe what actually happened, including the
+> five things that went wrong on the way. Backups are the one item still open.
 
 ---
 
@@ -100,30 +100,26 @@ Run it from the project root:
 C:\xampp\php\php.exe vendor/robmorgan/phinx/bin/phinx seed:run -e development
 ```
 
-Use `-e production` on the live server. **Running it twice is safe** — it checks
-whether the demo accounts already exist and does nothing if they do.
+Use `-e production` on the live server. **Running it twice is safe, and useful:**
+if the demo accounts already exist it does not duplicate them, it sets their
+password to the current `DEMO_ACCOUNT_PASSWORD`. That is how you change the demo
+password. Either way it prints which of the two things it did.
 
 `tests/Integration/DemoSeedTest.php` runs the real script against the test database
 on every test run, so a typo in it is caught here rather than on the live server.
 
 ---
 
-## 3. Putting it on the internet (increment D.2)
+## 3. Putting it on the internet (increment D.2 — done)
 
-**Platform: Railway.** Chosen because it needs the least new knowledge for a first
-deployment — the database is a couple of clicks, deploys happen on push, and SSL is
-handled for you.
+**Felkyo is live at <https://felkyo-production.up.railway.app>.** This section is
+written from what actually happened, not from what was expected to happen — several
+of the steps below only exist because they went wrong first.
 
-> **These steps have not been run yet.** They are written from Railway's current
-> documentation so you have something to follow, but hosting platforms change their
-> interfaces often. If a screen does not look like it does here, trust the screen
-> and correct this guide afterwards — a deployment guide that says what *actually*
-> happened is worth far more than one that says what was expected.
+### The two prerequisites
 
-### Before anything else: two prerequisites
-
-**1. This will cost money — roughly £4/$5 a month.** Railway has no permanent free
-tier that can keep a website and a database running around the clock. What it has:
+**1. This costs money — roughly £4/$5 a month.** Railway has no permanent free tier
+that keeps a website and a database running around the clock.
 
 | | What you get |
 | --- | --- |
@@ -131,162 +127,172 @@ tier that can keep a website and a database running around the clock. What it ha
 | Free plan | $1 of credit per month — not enough for an always-on site plus a database. |
 | Hobby plan | $5/month, which includes $5 of usage. |
 
-So the honest expectation is: the trial covers the first month while you learn the
-pipeline, and after that it is about $5 a month for as long as the demo stays up.
-Usage above the included credit is billed on top, so **check the usage page after
-the first week** rather than assuming. If the demo is only meant to be shown to a
-few people, it is entirely reasonable to deploy it, take screenshots, and take it
-down again — nothing about this project requires it to run forever.
+The trial covers the first month while you learn the pipeline; after that it is
+about $5 a month for as long as the demo stays up. **Check the usage page after the
+first week** rather than assuming. And remember a demo does not have to run forever
+— deploying it, showing it, and taking it down again is a perfectly good outcome.
 
-**2. The code has to be on GitHub first.** Railway deploys *from a repository*, and
-at the time of writing this project only exists on one computer — `git remote -v`
-shows nothing. Creating the Railway project cannot work until the code is pushed.
+**2. The code has to be on GitHub.** Railway deploys *from a repository*. This
+project lives at <https://github.com/Luca144/Petsite>.
 
-Create an empty repository on GitHub (**do not** let it add a README, `.gitignore`
-or licence — the project already has those), then connect and push:
+Publishing it is safe, and that was checked rather than assumed: `.env` and
+`backups/` have never been committed and are gitignored, `.env.example` holds only
+empty placeholders, and no passwords or keys are written in any tracked file.
 
-```
-git remote add origin https://github.com/<your-username>/<repo-name>.git
-git push -u origin master
-```
+### Setting it up
 
-**Public or private is your choice, and both are safe here.** It has been checked:
-`.env` and the `backups/` folder have never been committed and are gitignored,
-`.env.example` contains only empty placeholders, and no passwords or keys are
-written anywhere in the tracked files. Nothing secret would become visible.
+1. **Sign up** at [railway.com](https://railway.com) with **Login with GitHub** —
+   Railway needs GitHub access anyway, so this is one step instead of two.
+2. **Create the project** from the GitHub repo. When Railway asks which
+   repositories its GitHub App may see, granting only this one is the tidier choice.
+3. **Add the database:** **+ Create → Database → MySQL**.
+4. **Generate the public address:** service → **Settings → Networking → Public
+   Networking → Generate Domain**.
 
-### What builds the app
+   Do not confuse this with **Private Networking**, which shows an address ending
+   in `.railway.internal`. That one only works *inside* Railway — it is how the app
+   reaches the database, and it is not reachable from the internet at all.
 
-Railway's builder is **Railpack**. It notices `composer.json`, installs the
-dependencies itself, and serves the site with **FrankenPHP**. You do not have to
-configure a web server.
-
-**The one setting that is not optional:**
-
-```
-RAILPACK_PHP_ROOT_DIR = /app/public
-```
-
-Railpack only defaults the document root to `public/` for Laravel projects; for
-everything else it serves from the project root. Without this variable, visitors
-would be served the *repository* — including `.env`-style files and `src/` — instead
-of the site. Set it before the first deploy.
-
-### Step by step
-
-1. **Create the project.** In Railway, create a new project and choose "Deploy from
-   GitHub repo", pointing at this repository. That connection is what makes future
-   pushes deploy automatically.
-2. **Add the database.** Add a MySQL (MariaDB-compatible) database to the same
-   project. Railway creates it and exposes its credentials as variables.
-3. **Set the environment variables** on the *app* service. Never in the code:
+5. **Set the variables** on the **app** service (not on the MySQL service — a
+   common wrong turn, and the reason the reference picker shows "no suggestions"):
 
    | Variable | Value |
    | --- | --- |
    | `RAILPACK_PHP_ROOT_DIR` | `/app/public` |
    | `APP_ENV` | `production` |
    | `APP_DEBUG` | `false` |
-   | `DB_HOST` | from the database service |
-   | `DB_PORT` | from the database service |
-   | `DB_NAME` | from the database service |
-   | `DB_USER` | from the database service |
-   | `DB_PASSWORD` | from the database service |
    | `DEMO_ACCOUNT_PASSWORD` | a long password you choose |
+   | `DB_HOST` | `${{MySQL.MYSQLHOST}}` |
+   | `DB_PORT` | `${{MySQL.MYSQLPORT}}` |
+   | `DB_NAME` | `${{MySQL.MYSQLDATABASE}}` |
+   | `DB_USER` | `${{MySQL.MYSQLUSER}}` |
+   | `DB_PASSWORD` | `${{MySQL.MYSQLPASSWORD}}` |
 
-   Note what is **not** in that list: `REGISTRATION_OPEN` and `SHOW_DEMO_NOTICE`.
-   Leave them unset. With `APP_ENV=production` the defaults are already the safe
-   ones — registration closed, demo banner shown — and a setting you never typed is
-   a setting you cannot mistype.
+   The `${{…}}` form is Railway's way of pointing one service at another's values,
+   so the credentials are never copied by hand.
 
-4. **Run the migrations.** Railpack only runs migrations automatically for Laravel,
-   so ours are a manual step. Open a shell on the service and run:
+   Leave `REGISTRATION_OPEN` and `SHOW_DEMO_NOTICE` **unset**. With
+   `APP_ENV=production` the defaults are already the safe ones — registration
+   closed, demo banner shown — and a variable you never type is one you cannot
+   mistype.
+
+6. **Deploy.** Variables alone change nothing until a build runs with them. If
+   pushing does not trigger a build, press **`Ctrl + K`** and choose **Deploy Latest
+   Commit**. (This is not in Settings, which is why it is easy to hunt for.)
+
+7. **Create the tables.** App service → **Console**:
 
    ```
    php vendor/robmorgan/phinx/bin/phinx migrate -e production
    ```
 
-5. **Run the seed script**, so the demo has creatures in it:
+8. **Fill the demo world:**
 
    ```
    php vendor/robmorgan/phinx/bin/phinx seed:run -e production
    ```
 
-   It refuses to run if `DEMO_ACCOUNT_PASSWORD` is not set, and it is safe to run
-   twice.
+9. **Check it.** Log in as `mira` with your `DEMO_ACCOUNT_PASSWORD`, confirm the
+   demo banner is on every page, that there is no "sign up" link, and that
+   `/register` shows the closed page.
 
-6. **Check the site.** Visit the URL Railway gives you and confirm:
-   - the padlock is showing (Railway provides SSL automatically),
-   - the "development demo" banner is at the top of every page,
-   - there is no "sign up" link anywhere, and `/register` shows the closed page,
-   - you can log in as a seeded account (`mira`) and pet a creature.
+### The five things that went wrong the first time
 
-7. **Find out the backup situation and write it down here.** Check whether Railway
-   backs this database up automatically, how often, and how a restore works. For a
-   demo with no real data this is low-stakes — but it should be *known* rather than
-   assumed, and the answer belongs in this guide rather than in somebody's memory.
+Every one of these produced the same symptom — a blank HTTP 500 — from a completely
+different cause. If a deploy misbehaves, work through them in this order.
 
-### PHP extensions must be declared, or the site 500s with a blank page
+**1. The document root was wrong.** Railway's builder is **Railpack**, which only
+defaults the document root to `public/` for *Laravel* projects. For everything else
+it serves the repository root, so visitors got a file listing and the site never
+ran. `RAILPACK_PHP_ROOT_DIR=/app/public` is not optional.
 
-The first real deploy failed with this in the logs:
+*How to spot it:* `/composer.json` returns 200. It should return 404.
 
-```
-PHP Fatal error: Uncaught PDOException: could not find driver
-```
+**2. PHP had no MySQL driver.** The log said `PDOException: could not find driver` —
+not a wrong password, but no driver at all, so the connection was never attempted.
+Railpack builds a lean PHP and installs only what the project asks for.
 
-That is **not** a wrong password or a wrong host. It means PHP had no MySQL driver
-at all — the connection was never even attempted. Railpack builds a lean PHP and
-only includes the extensions you ask for.
+Fixed in `composer.json`, not in a Railway setting: `ext-pdo_mysql` and
+`ext-mbstring` were added. `ext-pdo` alone was already there and was not enough —
+that gives you PDO but not the MySQL *driver*.
 
-The fix is in `composer.json`, not in a Railway setting:
+**3. Images were in Git LFS.** Railway does not fetch LFS files. The build received
+small text pointers instead of the artwork, so every creature and the logo would
+have been broken — with a confusing cause, because the files look perfectly fine on
+a development machine. All site artwork is now ordinary Git content; see
+`.gitattributes` for the full reasoning.
 
-```json
-"ext-pdo": "*",
-"ext-pdo_mysql": "*",
-"ext-mbstring": "*",
-```
+**4. Pushing did not deploy.** The container kept running old code for a quarter of
+an hour after a push, so the same error repeated and looked like the fix had failed.
 
-Railpack reads those and installs them. **Declaring it here rather than in a
-platform variable is deliberate:** it is a genuine requirement of this application,
-it travels with the code to any host, and the next person finds it in the project
-instead of having to know which dashboard to look in.
+*How to spot it:* in the logs, look for `Starting Container`. If there is no new one
+after your push, nothing was rebuilt and you are still watching the old code.
 
-Note that `ext-pdo` alone was already listed and was not enough — that gives you
-PDO, but not the MySQL *driver*. `ext-mbstring` was missing too (the validators use
-`mb_strlen`), which would have been the very next crash.
+**5. The seed script skipped silently.** Changing `DEMO_ACCOUNT_PASSWORD` and
+re-running the seeder appeared to do nothing, because it found the demo accounts
+already existed and returned without a word. The accounts kept their original
+password and login kept failing. **This is fixed** — re-running now updates the
+password and reports what it did.
 
-If you ever need an extension that Railpack does not pick up from `composer.json`,
-the fallback is the `RAILPACK_PHP_EXTENSIONS` variable, comma-separated.
-
-### Two things to watch on the first deploy
+### Two things to watch
 
 - **If every page except the home page returns 404**, the server is not sending all
   requests to `public/index.php`. Felkyo is a front-controller app: one file handles
-  every address. The fix is a `Caddyfile` in the project root telling FrankenPHP to
-  fall back to `index.php`. It is not included here because it may well not be
-  needed — add it only if you see that symptom.
-- **Sessions are stored as files**, which is fine for one instance. If the service is
-  ever scaled to run several copies, people would be logged out at random as their
-  requests land on different copies. That is a real change to make deliberately
-  (sessions would move into the database), not something to discover live.
+  every address. The fix would be a `Caddyfile` in the project root telling
+  FrankenPHP to fall back to `index.php`. This did not turn out to be necessary.
+- **Sessions are stored as files**, which is fine for one instance. If the service
+  is ever scaled to several copies, people would be logged out at random as their
+  requests land on different ones. Moving sessions into the database is a deliberate
+  change to make first, not something to discover live.
+
+### Backups — still to be filled in
+
+The MySQL service has a **Backups** tab. **Open it, find out whether backups happen
+automatically, how often, and how a restore works, and write the answer here.** For
+a demo with no real data this is low-stakes, but it should be *known* rather than
+assumed — and the moment there is anything worth keeping, this becomes the most
+important paragraph in this guide.
 
 ---
 
-## 4. Deploying an update (increment D.3 — after the first deploy)
+## 4. Deploying an update (increment D.3)
 
-Once the pipeline exists, updating the live site is:
+**The normal case is three steps:**
 
-1. Commit your change on your machine.
-2. Push it.
-3. Railway notices the push, rebuilds, and swaps the site over.
+1. Run the tests: `C:\xampp\php\php.exe vendor/bin/phpunit`. There is no CI checking
+   for you, so the suite only protects you if you actually run it.
+2. Commit your change.
+3. Push it. Railway rebuilds and swaps the site over.
 
-**Before pushing, run the tests** (`C:\xampp\php\php.exe vendor/bin/phpunit`). There
-is no CI checking for you, so the test suite is only protecting you if you actually
-run it.
+**If the push does not trigger a build:** `Ctrl + K` → **Deploy Latest Commit**. Then
+confirm in **Deployments** that the top entry really shows your newest commit — a
+"Redeploy" on an older entry rebuilds the *old* code and changes nothing.
 
-**If you added a migration**, run it against production afterwards, the same way as
-in step 4 above. Code deploys automatically; database structure does not.
+**If you added a migration**, run it against production afterwards:
 
-This section gets rewritten with what actually happened after the first real deploy.
+```
+php vendor/robmorgan/phinx/bin/phinx migrate -e production
+```
+
+Code deploys automatically; database structure does not.
+
+### Changing the demo password
+
+Two steps, in this order:
+
+1. Change `DEMO_ACCOUNT_PASSWORD` in the app service's variables.
+2. App service → Console:
+   `php vendor/robmorgan/phinx/bin/phinx seed:run -e production`
+
+The second step is what actually changes the accounts — step 1 on its own only
+changes what *future* seeding would use. The seeder now prints which of the two
+things it did, so you can see it worked.
+
+### Turning registration on or off
+
+Set `REGISTRATION_OPEN` to `true` or `false` in the app service's variables and let
+it redeploy. No code change, no migration. **But read section 5 before switching it
+on.**
 
 ---
 
