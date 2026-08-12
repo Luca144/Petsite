@@ -1,0 +1,167 @@
+/*
+ * site-nav.css — the site's chrome: the navigation, the creature's greeting, and
+ * the small strip in the footer saying who you are.
+ *
+ * WHAT THIS FILE IS: everything that frames a page rather than being part of one.
+ * It was split out of layout.css when that file passed the 400-line limit in
+ * CLAUDE.md section 3 — and it splits cleanly, because "how you get around" is a
+ * genuinely different concern from "how a page is laid out".
+ *
+ * Every colour and spacing value comes from theme.css.
+ */
+/* ---------------------------------------------------------------------------
+   THE NAVIGATION
+   Grouped, and the groups are LABELLED. An earlier version separated them by
+   spacing alone, which looked tidy on a wide screen and fell apart on a narrow
+   one: the groups wrap, the gaps carrying the meaning wrap away with them, and
+   you are left with a row of buttons in no evident order. A word above each
+   group survives any amount of wrapping — and answers "why is it sorted like
+   this?", which is a fair question that spacing cannot answer.
+   No dropdowns anywhere (CLAUDE.md section 8).
+   --------------------------------------------------------------------------- */
+
+.site-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: center;
+    gap: var(--space-4) var(--space-6);
+    margin-top: var(--space-6);
+}
+
+.site-nav__set {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+/* The group name. Quiet on purpose — it is a signpost, not a heading, and it
+   should never compete with the links underneath it. */
+.site-nav__set-label {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+}
+
+.site-nav__group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+/* Home sits on its own, aligned with the links rather than the labels, because
+   it has no group above it. */
+.site-nav__home {
+    align-self: flex-end;
+}
+
+.site-nav a,
+.site-you button {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+    color: var(--plum);
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-pill);
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    transition: transform 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.site-nav a:hover,
+.site-you button:hover {
+    background: var(--gold-lit);
+    color: var(--plum);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px -8px rgba(201, 162, 39, 0.7);
+}
+
+.site-nav a:focus-visible,
+.site-you button:focus-visible {
+    outline: 3px solid var(--purple);
+    outline-offset: 3px;
+}
+
+/* The page you are on: filled, AND underlined. An earlier version added a dot
+   with ::before, which made the pill wider than its neighbours and opened a
+   visible gap in the row. An inset underline changes no dimensions at all, and
+   an underline is a shape rather than a colour — so the rule about never
+   signalling with colour alone is still kept. */
+.site-nav a[aria-current="page"] {
+    background: var(--purple);
+    color: var(--parchment);
+    border-color: var(--purple);
+    box-shadow: inset 0 -3px 0 var(--gold-lit);
+}
+
+/* ---------------------------------------------------------------------------
+   WHO YOU ARE — now in the footer
+   Your purse, your name and the way out. It sat in the header among the
+   navigation, where the purse looked like a button that did nothing when
+   pressed, and log out — the most final control on the site — sat beside the
+   ones you press all day.
+   --------------------------------------------------------------------------- */
+
+.site-you {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    margin: 0 0 var(--space-4);
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    color: var(--ink-soft);
+}
+
+.site-you__purse {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    color: var(--plum);
+    font-weight: 700;
+}
+
+/* Gold as decoration only. The number stays plum, because gold on parchment
+   fails contrast badly (CLAUDE.md section 8). */
+.site-you__purse span[aria-hidden] {
+    color: var(--gold);
+}
+
+.site-you__form {
+    margin: 0;
+    display: inline-flex;
+}
+
+/* Deliberately the quietest control on the page. */
+.site-you button {
+    font-size: 0.7rem;
+    font-weight: 400;
+    min-height: 36px;
+    padding: var(--space-2) var(--space-3);
+    background: transparent;
+    border-color: transparent;
+    color: var(--ink-soft);
+    cursor: pointer;
+}
+
+.site-you button:hover {
+    background: var(--panel);
+    border-color: var(--border);
+    color: var(--plum);
+    transform: none;
+    box-shadow: none;
+}

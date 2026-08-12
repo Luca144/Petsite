@@ -26,7 +26,7 @@
  * Two changes fix that, and neither needs a dropdown (CLAUDE.md
  * section 8 forbids them, rightly):
  *
- * 1. WHO YOU ARE is not navigation. Your name, your gems and log out
+ * 1. WHO YOU ARE is not navigation. Your name, your purse and log out
  *    have moved out of the nav into their own quiet strip below it.
  *    They are status, not destinations.
  *
@@ -83,21 +83,30 @@ $isCurrent = static function (string $href) use ($currentPath): bool {
 ?>
 
 <nav class="site-nav" aria-label="Main">
-    <a class="site-nav__home<?= ($currentPath ?? '') === '/' ? ' is-current' : '' ?>"
-       href="/"<?= ($currentPath ?? '') === '/' ? ' aria-current="page"' : '' ?>>
-        <span aria-hidden="true">&#127968;</span> home
-    </a>
+    <a class="site-nav__home"
+       href="/"<?= ($currentPath ?? '') === '/' ? ' aria-current="page"' : '' ?>>home</a>
 
     <?php foreach ($navGroups as $groupName => $links): ?>
-        <ul class="site-nav__group" aria-label="<?= $this->e($groupName) ?>">
-            <?php foreach ($links as [$href, $label]): ?>
-                <li>
-                    <a href="<?= $this->e($href) ?>"<?= $isCurrent($href) ? ' aria-current="page"' : '' ?>>
-                        <?= $this->e($label) ?>
-                    </a>
-                </li>
-            <?php endforeach; ?>
-        </ul>
+        <?php /* The group name is SHOWN, not only announced to screen readers.
+                 Spacing alone was not enough: the groups wrap on a narrow screen
+                 and the gaps carrying the meaning wrap away with them, leaving a
+                 row of buttons in no obvious order. A word above each group
+                 survives any amount of wrapping, and answers the fair question
+                 "why are they sorted like this?" without anything to click. */ ?>
+        <div class="site-nav__set">
+            <p class="site-nav__set-label" id="nav-<?= $this->e(strtolower($groupName)) ?>">
+                <?= $this->e($groupName) ?>
+            </p>
+            <ul class="site-nav__group" aria-labelledby="nav-<?= $this->e(strtolower($groupName)) ?>">
+                <?php foreach ($links as [$href, $label]): ?>
+                    <li>
+                        <a href="<?= $this->e($href) ?>"<?= $isCurrent($href) ? ' aria-current="page"' : '' ?>>
+                            <?= $this->e($label) ?>
+                        </a>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
     <?php endforeach; ?>
 
     <?php if (empty($currentUser)): ?>
@@ -113,19 +122,3 @@ $isCurrent = static function (string $href) use ($currentPath): bool {
         </ul>
     <?php endif; ?>
 </nav>
-
-<?php if (!empty($currentUser)): ?>
-    <?php /* Status, not navigation — so it looks different from the
-             links above rather than competing with them. */ ?>
-    <div class="site-you">
-        <span class="site-you__greeting">hi, <?= $this->e($currentUser->username) ?></span>
-        <span class="site-you__purse">
-            <span aria-hidden="true">&#9670;</span>
-            <?= $this->e((string) $currentUser->currencyBalance) ?> <?= $this->e($currencyName ?? 'coins') ?>
-        </span>
-        <form method="post" action="/logout" class="site-you__form">
-            <?= $this->csrf_field() ?>
-            <button type="submit">log out</button>
-        </form>
-    </div>
-<?php endif; ?>

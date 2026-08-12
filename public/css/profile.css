@@ -218,3 +218,100 @@
     }
 }
 
+
+/* ---------------------------------------------------------------------------
+   THE SPOTLIGHT CREATURE
+   The first creature on a page — the favourite, if one is chosen — shown large
+   and alone above the rest.
+
+   Choosing a favourite used to earn a small star on a card exactly the same size
+   as every other card, which is not what "show this one off" means to anybody.
+   Bigger, first, with room around it and its own line of text is what it means.
+   --------------------------------------------------------------------------- */
+
+.spotlight {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+    padding: var(--space-6) var(--space-4);
+    text-align: center;
+    text-decoration: none;
+    color: var(--ink);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--panel);
+    transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+/* When it is a chosen favourite it gets the warm lamplight behind it. When it is
+   simply the newest creature, it stays plain — the spotlight is still useful as a
+   "here is who lives here" but it should not pretend to be a choice nobody made. */
+.spotlight--favourite {
+    border-color: var(--gold);
+    background:
+        radial-gradient(120% 80% at 50% 0%, rgba(232, 201, 90, 0.32), transparent 72%),
+        var(--panel);
+    box-shadow: 0 0 0 1px rgba(201, 162, 39, 0.35), var(--shadow-panel);
+}
+
+.spotlight:hover,
+.spotlight:focus-visible {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-raised);
+}
+
+.spotlight:focus-visible {
+    outline: 3px solid var(--purple);
+    outline-offset: 4px;
+}
+
+.spotlight__img {
+    width: 180px;
+    height: 180px;
+    object-fit: contain;
+}
+
+.spotlight__text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+/* A deep plum chip with gold text — 7.8:1, and the same treatment as the star on
+   a creature card, so the two read as the same idea.
+   The first version of this rule put gold text straight onto the panel, which
+   measures 1.66:1 and is exactly the combination CLAUDE.md section 8 bans by
+   name. It looked lovely and would have been unreadable for a lot of people. */
+.spotlight__label {
+    align-self: center;
+    padding: 2px var(--space-3);
+    border-radius: var(--radius-pill);
+    background: var(--plum);
+    color: var(--gold-lit);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.spotlight__name {
+    font-family: var(--font-display);
+    font-size: 1.7rem;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.spotlight__meta {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .spotlight:hover,
+    .spotlight:focus-visible {
+        transform: none;
+    }
+}

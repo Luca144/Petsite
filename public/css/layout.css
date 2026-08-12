@@ -194,147 +194,6 @@
 }
 
 /* ---- Navigation (pill buttons; never a dropdown — CLAUDE.md section 8) ---- */
-/* ---------------------------------------------------------------------------
-   THE NAVIGATION
-   It is grouped rather than a single row of identical pills. See the long note
-   in templates/layout.php for why; in short, nine destinations in a line is a
-   list you have to read, and three groups of three is something you take in.
-   --------------------------------------------------------------------------- */
-
-.site-nav {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    /* The gap BETWEEN groups is deliberately much larger than the gap between
-       links inside one. That single difference is what makes the grouping
-       readable without a single line or label. */
-    gap: var(--space-2) var(--space-6);
-    margin-top: var(--space-4);
-}
-
-.site-nav__group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
-
-/* Home sits slightly apart from the groups: it is where everything starts, not
-   one destination among several. */
-.site-nav__home {
-    font-weight: 800;
-}
-
-.site-nav a,
-.site-you button {
-    font-family: var(--font-mono);
-    font-size: 0.82rem;
-    font-weight: 700;
-    text-decoration: none;
-    color: var(--plum);
-    background: var(--panel);
-    border: 1.5px solid var(--border);
-    padding: var(--space-3) var(--space-4);
-    border-radius: var(--radius-pill);
-    min-height: 44px; /* comfortable touch target */
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    transition: transform 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
-}
-
-.site-nav a:hover,
-.site-you button:hover {
-    background: var(--gold-lit);
-    color: var(--plum);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 18px -8px rgba(201, 162, 39, 0.7);
-}
-
-.site-nav a:focus-visible,
-.site-you button:focus-visible {
-    outline: 3px solid var(--purple);
-    outline-offset: 3px;
-}
-
-/* The page you are on. Marked by a filled background AND a small dot, never by
-   colour alone — and it already carries aria-current for screen readers. */
-.site-nav a[aria-current="page"] {
-    background: var(--purple);
-    color: var(--parchment);
-    border-color: var(--purple);
-}
-
-.site-nav a[aria-current="page"]::before {
-    content: "\2022";
-    color: var(--gold-lit);
-}
-
-/* ---------------------------------------------------------------------------
-   WHO YOU ARE
-   Your name, your purse and the way out. This is status, not navigation, so it
-   sits below the links and looks quieter than them — it should never compete
-   with the places you can go.
-   --------------------------------------------------------------------------- */
-
-.site-you {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-3);
-    margin-top: var(--space-3);
-    font-family: var(--font-mono);
-    font-size: 0.76rem;
-    color: var(--ink-soft);
-}
-
-.site-you__purse {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-    padding: var(--space-1) var(--space-3);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-pill);
-    /* Gold as decoration only — the number itself stays readable plum, because
-       gold on parchment fails contrast (CLAUDE.md section 8). */
-    color: var(--plum);
-    font-weight: 700;
-}
-
-.site-you__purse span[aria-hidden] {
-    color: var(--gold);
-}
-
-.site-you__form {
-    margin: 0;
-    display: inline-flex;
-}
-
-/* Log out is deliberately the quietest control on the page. It is not a
-   destination and nobody should hit it by accident reaching for something else. */
-.site-you button {
-    font-size: 0.72rem;
-    font-weight: 400;
-    min-height: 36px;
-    padding: var(--space-2) var(--space-3);
-    background: transparent;
-    border-color: transparent;
-    color: var(--ink-soft);
-    cursor: pointer;
-}
-
-.site-you button:hover {
-    background: var(--panel);
-    border-color: var(--border);
-    color: var(--plum);
-    transform: none;
-    box-shadow: none;
-}
-
 
 /* ---- Decorative divider with a central sparkle ---- */
 .rule {
@@ -383,4 +242,29 @@
     .site-header__sub {
         display: none;
     }
+}
+
+/* A creature speaking, at the top of the page. It replaces the fixed tagline
+   once you are logged in — see CreatureGreeting for why the site greeting you by
+   your own name was the wrong voice for this place. */
+.site-header__voice {
+    max-width: 42ch;
+    margin: var(--space-2) auto 0;
+    font-family: var(--font-display);
+    font-size: 1.02rem;
+    font-style: italic;
+    line-height: 1.4;
+    color: var(--parchment);
+    text-wrap: balance;
+}
+
+.site-header__voice-mark {
+    color: var(--gold-lit);
+    font-size: 1.4em;
+    line-height: 0;
+    vertical-align: -0.15em;
+}
+
+.site-footer__line {
+    display: block;
 }

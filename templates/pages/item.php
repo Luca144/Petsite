@@ -60,7 +60,7 @@ $this->layout('layout', ['title' => $item->name . ' — Felkyo Creatures']);
         <form method="post" action="/inventory/<?= $this->e((string) $item->id) ?>/sell">
             <?= $this->csrf_field() ?>
             <button class="btn" type="submit">
-                Sell one for <?= $this->e((string) $item->sellValue) ?> gems
+                Sell one for <?= $this->e((string) $item->sellValue) ?> <?= $this->e($currencyName ?? 'coins') ?>
             </button>
         </form>
     <?php else: ?>

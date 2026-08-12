@@ -42,6 +42,7 @@ use Felkyo\Http\AssetUrl;
          creature page. Small enough that loading them together is simplest. -->
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/theme.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/layout.css') ?>">
+    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/site-nav.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/components.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/creature.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/explore.css') ?>">
@@ -102,7 +103,17 @@ use Felkyo\Http\AssetUrl;
                      would hear "Creatures" twice. On wide screens the banner art already
                      contains the word, so the stylesheet hides this line there. -->
                 <div class="site-header__sub" aria-hidden="true">Creatures</div>
-                <p class="site-header__tagline">come in &mdash; the kettle&rsquo;s on</p>
+                <?php if (empty($currentUser)): ?>
+                    <?php /* The welcome is for somebody who has not arrived yet. Once
+                             you are in, a creature saying something is the same space
+                             doing better work — see CreatureGreeting. */ ?>
+                    <p class="site-header__tagline">come in &mdash; the kettle&rsquo;s on</p>
+                <?php elseif (!empty($spotlightLine)): ?>
+                    <p class="site-header__voice">
+                        <span class="site-header__voice-mark" aria-hidden="true">&ldquo;</span>
+                        <?= $this->e($spotlightLine) ?>
+                    </p>
+                <?php endif; ?>
 
                 <?= $this->insert('partials/site-nav', [
                     'currentUser' => $currentUser ?? null,
@@ -120,9 +131,36 @@ use Felkyo\Http\AssetUrl;
             </main>
 
             <footer class="site-footer">
-                Felkyo Creatures &middot; made with
-                <span class="heart" aria-hidden="true">&hearts;</span> &middot;
-                a warm little corner of the web
+                <?php if (!empty($currentUser)): ?>
+                    <?php /* Your purse and the way out. Both moved down here from the
+                             header, for different reasons.
+
+                             Log out is not a destination, and putting it among the
+                             places you can go meant the most final control on the site
+                             sat next to the ones you press all day.
+
+                             The purse was odd up there too: it looked like a button
+                             and did nothing when pressed. Down here it reads as what
+                             it is — a note about you, not somewhere to go. */ ?>
+                    <p class="site-you">
+                        <span class="site-you__purse">
+                            <span aria-hidden="true">&#9670;</span>
+                            <?= $this->e((string) $currentUser->currencyBalance) ?>
+                            <?= $this->e($currencyName ?? 'coins') ?>
+                        </span>
+                        <span class="site-you__name">signed in as <?= $this->e($currentUser->username) ?></span>
+                        <form method="post" action="/logout" class="site-you__form">
+                            <?= $this->csrf_field() ?>
+                            <button type="submit">log out</button>
+                        </form>
+                    </p>
+                <?php endif; ?>
+
+                <span class="site-footer__line">
+                    Felkyo Creatures &middot; made with
+                    <span class="heart" aria-hidden="true">&hearts;</span> &middot;
+                    a warm little corner of the web
+                </span>
             </footer>
         </div>
     </div>

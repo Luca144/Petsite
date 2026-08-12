@@ -28,6 +28,7 @@ use Felkyo\Core\FileLogger;
 use Felkyo\Creatures\AdoptionService;
 use Felkyo\Creatures\ContentFilter;
 use Felkyo\Creatures\CreatureBioService;
+use Felkyo\Creatures\CreatureGreeting;
 use Felkyo\Creatures\CreatureProfileBuilder;
 use Felkyo\Creatures\CreatureRepository;
 use Felkyo\Creatures\GrowthCalculator;
@@ -234,9 +235,24 @@ if (is_int($currentUserId)) {
     $currentUser = $userRepository->findById($currentUserId);
 }
 
+// One of the player's creatures says something at the top of every page. The
+// spotlight creature is the one they chose to show off, or their newest if they
+// have not chosen — which makes the "featured" setting do something visible
+// everywhere rather than only reordering a grid.
+$spotlightCreature = null;
+$spotlightLine = null;
+
+if ($currentUser !== null) {
+    $spotlightCreature = $creatureRepository->findForProfile($currentUser->id, 1)[0] ?? null;
+    $spotlightLine = (new CreatureGreeting($config['gameplay']['creature_greetings']))
+        ->lineFor($spotlightCreature, date('Y-m-d'));
+}
+
 // Share these with every template (used by the shared layout's navigation).
 $templates->addData([
     'currentUser' => $currentUser,
+    'spotlightCreature' => $spotlightCreature,
+    'spotlightLine' => $spotlightLine,
     'currentPath' => $request->path(),
     // The label for the currency (e.g. "coins"), shown next to the balance.
     'currencyName' => $config['gameplay']['currency']['name'],
@@ -295,7 +311,7 @@ $shopController = new ShopController(
 );
 $itemController = new ItemController(
     $templates, $session, $csrf, $inventoryRepository,
-    new ItemDisposalService($pdo, $userRepository, $inventoryRepository),
+    new ItemDisposalService($pdo, $userRepository, $inventoryRepository, $config['gameplay']['currency']['name']),
     $rateLimiter,
     $config['security']['rate_limit_item_disposal']
 );

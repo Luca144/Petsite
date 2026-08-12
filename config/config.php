@@ -328,6 +328,35 @@ return [
         // The single in-game currency. A creature's OWNER earns this each time
         // someone ELSE pets their creature (the petting cooldown limits how often,
         // so it can't be farmed). "name" is only the label shown to players.
+        // What one of your creatures says at the top of the page.
+        //
+        // THIS IS THE SITE'S VOICE more than any other text on it, so it is the
+        // first thing worth rewriting. "{name}" becomes the creature's own name.
+        //
+        // The header used to say "hi, [player]" on every page forever, which is
+        // the voice of a form rather than of a place — the player already knows
+        // their name. A creature talking does real work in the same space: it
+        // says the creatures are there while you are not looking at them.
+        //
+        // One line is chosen per creature per DAY, so it stays put as you click
+        // around and changes tomorrow. Keep them short, warm and never needy —
+        // nothing here should read as a chore or a guilt trip (build plan 2,
+        // principle (d): keep the loop kind).
+        'creature_greetings' => [
+            '{name} is dozing in a patch of sun.',
+            '{name} looks pleased you came back.',
+            '{name} has been watching the window all morning.',
+            '{name} found something shiny and is being secretive about it.',
+            '{name} has made a nest out of your things. Sorry.',
+            '{name} is pretending not to have missed you.',
+            '{name} yawns, stretches, and settles again.',
+            '{name} would like it known that the kettle is on.',
+            '{name} has been practising looking dignified.',
+            '{name} is up to something in the other room.',
+            '{name} kept your seat warm.',
+            '{name} says it is a good day for wandering.',
+        ],
+
         'currency' => [
             'name' => 'coins',
             'per_pet' => 5,

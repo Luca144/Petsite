@@ -58,6 +58,11 @@ final class ItemDisposalService
         private PDO $connection,
         private UserRepository $users,
         private InventoryRepository $inventory,
+        // What the currency is called. From config, because the name is content —
+        // and because it was hardcoded as "gems" here while the rest of the site
+        // said "coins", which is exactly the kind of small wrongness that makes a
+        // place feel unfinished.
+        private string $currencyName = 'coins',
     ) {
     }
 
@@ -102,7 +107,7 @@ final class ItemDisposalService
         }
 
         return DisposalResult::sold(
-            'You sold ' . $stack->item->name . ' for ' . $earned . ' gems.',
+            'You sold ' . $stack->item->name . ' for ' . $earned . ' ' . $this->currencyName . '.',
             $earned
         );
     }

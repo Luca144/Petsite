@@ -80,7 +80,51 @@ $this->layout('layout', ['title' => $profile->username . ' — Felkyo Creatures'
 <section class="profile-creatures">
     <h3 class="panel-label">Creatures</h3>
 
-    <?php if (empty($summaries)): ?>
+    <?php
+    /*
+     * THE SPOTLIGHT. The first creature — the favourite, if one is chosen — is
+     * shown large and on its own, above the rest.
+     *
+     * Choosing a favourite used to earn a small badge on a card the same size as
+     * every other card, which is not what "show this one off" means to anybody.
+     * A spotlight is: bigger, first, with room around it and its own line of text.
+     */
+    $spotlight = $summaries[0] ?? null;
+    $others = array_slice($summaries, 1);
+    ?>
+
+    <?php if ($spotlight !== null): ?>
+        <?php $star = $spotlight['creature']; ?>
+        <a class="spotlight<?= $star->isFeatured() ? ' spotlight--favourite' : '' ?>"
+           href="/creature/<?= $this->e((string) $star->id) ?>">
+            <img class="spotlight__img pixelated"
+                 src="/assets/creatures/<?= $this->e(rawurlencode($spotlight['species']?->slug ?? '')) ?>/<?= $this->e(rawurlencode($spotlight['stage'])) ?>.gif"
+                 alt="<?= $this->e($star->name) ?>"
+                 width="180" height="180">
+
+            <span class="spotlight__text">
+                <?php if ($star->isFeatured()): ?>
+                    <span class="spotlight__label">
+                        <span aria-hidden="true">&#9733;</span> <?= $isOwner ? 'your favourite' : 'their favourite' ?>
+                    </span>
+                <?php endif; ?>
+                <span class="spotlight__name"><?= $this->e($star->name) ?></span>
+                <span class="spotlight__meta">
+                    <?= $this->e($spotlight['species']?->name ?? 'Unknown') ?>
+                    &middot; level <?= $this->e((string) $spotlight['level']) ?>
+                    <?php /* Happiness, not times-petted: the count needs its own query
+                             per creature, and a profile showing a dozen of them would
+                             quietly become a dozen extra queries. Happiness is already
+                             on the creature. */ ?>
+                    &middot; happiness <?= $this->e((string) $star->happiness) ?>
+                </span>
+            </span>
+        </a>
+    <?php endif; ?>
+
+    <?php if (empty($others) && $spotlight !== null): ?>
+        <?php /* Nothing to add — the spotlight is the whole collection. */ ?>
+    <?php elseif (empty($summaries)): ?>
         <p class="empty-state">
             <?php if ($isOwner): ?>
                 None of your creatures are on show here yet.
@@ -91,7 +135,7 @@ $this->layout('layout', ['title' => $profile->username . ' — Felkyo Creatures'
         </p>
     <?php else: ?>
         <div class="creature-grid">
-            <?php foreach ($summaries as $summary): ?>
+            <?php foreach ($others as $summary): ?>
                 <?= $this->insert('partials/creature-card', ['summary' => $summary]) ?>
             <?php endforeach; ?>
         </div>
