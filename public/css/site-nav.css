@@ -25,8 +25,12 @@
     flex-wrap: wrap;
     align-items: flex-start;
     justify-content: center;
-    gap: var(--space-4) var(--space-6);
-    margin-top: var(--space-6);
+    /* Tight on purpose. Together with the header this chrome repeats on every
+       single page, so every saved pixel here is saved on every visit. The wider
+       breathing room returns on desktop (media query below), where vertical
+       space is not the scarce thing. */
+    gap: var(--space-3) var(--space-4);
+    margin-top: var(--space-4);
 }
 
 .site-nav__set {
@@ -58,21 +62,28 @@
 }
 
 /* Home sits on its own, aligned with the links rather than the labels, because
-   it has no group above it. */
-.site-nav__home {
+   it has no group above it. The same goes for any group without a label above
+   it (the guest's "log in / sign up" pair): bottom-aligning them lines their
+   pills up with the pills of the labelled groups, instead of floating them at
+   label height. */
+.site-nav__home,
+.site-nav > .site-nav__group {
     align-self: flex-end;
 }
 
 .site-nav a,
 .site-you button {
     font-family: var(--font-mono);
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     font-weight: 700;
     text-decoration: none;
     color: var(--plum);
     background: var(--panel);
     border: 1.5px solid var(--border);
-    padding: var(--space-3) var(--space-4);
+    /* Slimmer padding than a content button, but min-height keeps every pill at
+       the full 44px touch target (CLAUDE.md section 8) — the padding shapes the
+       pill, the min-height guarantees the tap. */
+    padding: var(--space-2) var(--space-3);
     border-radius: var(--radius-pill);
     min-height: 44px;
     display: inline-flex;
@@ -105,6 +116,19 @@
     color: var(--parchment);
     border-color: var(--purple);
     box-shadow: inset 0 -3px 0 var(--gold-lit);
+}
+
+/* Desktop refinements: the roomier spacing returns where a tall header costs
+   nothing, and the pills get their fuller padding back. */
+@media (min-width: 640px) {
+    .site-nav {
+        gap: var(--space-4) var(--space-6);
+        margin-top: var(--space-6);
+    }
+
+    .site-nav a {
+        padding: var(--space-3) var(--space-4);
+    }
 }
 
 /* ---------------------------------------------------------------------------

@@ -166,7 +166,14 @@
    ever displayed at their own size or smaller, and forcing pixelated on a
    shrinking image makes it look ragged instead of crisp. */
 .site-header__logo {
-    max-width: 100%;
+    /* On a phone this is the 256px square badge, and at full size it filled two
+       thirds of the screen's height with header before any page content appeared
+       — on EVERY page. Capped a little smaller it stays the warm welcome it is
+       meant to be without pushing the actual page below the fold. The desktop
+       banner is unaffected: the media query below lifts the cap where the wide
+       art takes over. */
+    max-width: 208px;
+    width: 100%;
     height: auto;
     border-radius: var(--radius-md);
     /* A soft gold glow seats the art on the parchment, echoing the page frame. */
@@ -242,6 +249,12 @@
     .site-header__sub {
         display: none;
     }
+
+    /* The wide banner may use the full content width — the phone-size cap above
+       is only for the square badge. */
+    .site-header__logo {
+        max-width: 100%;
+    }
 }
 
 /* A creature speaking, at the top of the page. It replaces the fixed tagline
@@ -254,7 +267,11 @@
     font-size: 1.02rem;
     font-style: italic;
     line-height: 1.4;
-    color: var(--parchment);
+    /* Purple, like the guest tagline this line replaces. An earlier version used
+       parchment here — parchment text on the parchment header, which made the
+       creature's line invisible. The colour must stay readable on parchment:
+       purple or plum only (gold fails contrast, CLAUDE.md section 8). */
+    color: var(--purple);
     text-wrap: balance;
 }
 
