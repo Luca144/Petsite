@@ -1051,3 +1051,82 @@ side: Rowan tries to sell Mira's things, and is refused.
 
 `docs/adding-items.md` — how to add an item and how to add a category, for a
 reader who has never programmed. The first of the "how to add one" documents.
+
+---
+
+## Increment M1.3 — Profiles, avatars, and making a page your own
+
+Players stop being accounts and become somewhere you can visit.
+
+### The avatar is a key, not a filename
+
+`users.avatar_key` holds a short word like `default`, and `AvatarSet` is the only
+thing that can turn one into a picture. If the column held a filename instead,
+somebody could put `../../../.env` in it, or the address of their own server —
+and then every visitor to their page would quietly fetch a file of their choosing,
+handing them the IP address of everyone who looked. An allow-list closes both, and
+costs one small class.
+
+**Players never upload an avatar** (build plan M1.3). Uploaded pictures mean
+moderating pictures, which is far harder than moderating text and is the easiest
+route for something genuinely harmful onto this site. Recipe in
+`docs/adding-avatars.md`.
+
+### The profile page is the same page for everybody
+
+The owner sees exactly what a stranger sees, plus an edit link and a quiet note
+about hidden creatures. The build plan asks that players be shown clearly what
+others can see, and the honest way to do that is for the page to *be* the page.
+
+`Profile` is a separate value object from `User`, holding only what is public —
+no email, no password hash, no balance. That is the protection: a template handed
+a whole `User` would be one typo away from putting a private column on a public
+page, and the typo would look perfectly reasonable in review. **The type is the
+guard.** `ProfileRepository` never selects those columns either, so there are two
+layers and neither relies on remembering.
+
+### A private creature can never be exposed by featuring it
+
+The public/private filter lives in `findForProfile()` — at the point of display,
+not at the point of saving the choice. So a player who features a creature and
+later makes it private does not have to remember to un-feature it; it simply stops
+appearing. Their choice is still remembered in the edit form, so nothing is
+silently thrown away.
+
+Featuring somebody else's creature is closed twice: `ProfileService` keeps only
+ids the player owns, and `ProfileRepository::replaceFeatured()` names the owner in
+its `UPDATE` as well. Ids that are not theirs are dropped **silently** rather than
+refused — a refusal would confirm that a guessed number belongs to somebody.
+
+### There is no way to say whose profile to edit
+
+Every method takes the acting player from the session. No route, no parameter and
+no form field anywhere in `ProfileController` says whose page is being changed.
+`testThereIsNoWayToSayWhoseProfileToEdit` submits `user_id`, `id` and `username`
+all naming somebody else, and proves none of them does anything.
+
+### No dropdowns, and the tiles are real form controls
+
+Avatars and featured creatures are grids of tappable tiles — but underneath each
+one is an ordinary radio button or checkbox, moved out of sight with `opacity` and
+`position`, never with `display:none` (which would take it away from screen
+readers and the keyboard too, defeating the point). Tab, arrow keys, space and
+voice control all behave exactly as expected.
+
+Chosen tiles are marked by a gold border **and** a thicker edge **and** the
+checkbox state a screen reader reads out — never by colour alone.
+
+### The about text, honestly
+
+This is the first free text a player can put in front of another player. Today it
+carries a length cap and the existing word filter, which is exactly the protection
+the creature bio already has, and no more. **M1.4 is the increment that fixes this
+properly** — links, lookalike characters, impersonation, reporting. The comment at
+the top of `ProfileService` says so plainly rather than implying the field is safe.
+
+### Tests
+
+`ProfileServiceTest` (17) and `ProfileControllerTest` (10). The ones worth knowing
+about: an avatar that is a file path is refused; a private creature never appears
+even when featured; a profile never carries the email address; and Rowan cannot
+edit Mira's page however he labels the request.

@@ -1,0 +1,219 @@
+/*
+ * profile.css — a player's page, and the form for changing it.
+ *
+ * WHAT THIS FILE IS: the styles for someone's own corner of Felkyo. Colours,
+ * spacing and rounding all come from theme.css; nothing here invents a value.
+ *
+ * A NOTE ON THE CHOICE TILES. The avatar and creature pickers look like tappable
+ * cards, but underneath each one is an ordinary radio button or checkbox. The
+ * real control is hidden from sight and NOT from screen readers or the keyboard,
+ * so tabbing, arrow keys, space and voice control all behave exactly as a player
+ * expects. No dropdowns anywhere (CLAUDE.md section 8).
+ */
+
+/* ---- The page itself ---- */
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--border);
+}
+
+.profile-header__avatar {
+    width: 96px;
+    height: 96px;
+    flex: 0 0 auto;
+    border-radius: var(--radius-md);
+    border: 2px solid var(--border);
+    background: var(--panel);
+    object-fit: contain;
+}
+
+.profile-header__name {
+    margin: 0;
+    font-family: var(--font-display);
+}
+
+.profile-header__joined {
+    margin: var(--space-1) 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+}
+
+/* The owner's reminder that this is the public view. Quiet, and not mistakable
+   for something a visitor is being told. */
+.profile-owner-note,
+.profile-hidden-note {
+    margin-top: var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-md);
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+}
+
+.profile-about,
+.profile-creatures {
+    margin-top: var(--space-6);
+}
+
+.profile-about__text {
+    /* A comfortable reading measure, and long words break rather than escaping
+       the panel — a name with no spaces should never widen the page. */
+    max-width: 60ch;
+    overflow-wrap: break-word;
+}
+
+.creature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+}
+
+/* ---- The edit form ---- */
+
+.profile-edit__intro {
+    margin-bottom: var(--space-6);
+    color: var(--ink-soft);
+}
+
+.profile-form__section {
+    margin: 0 0 var(--space-8);
+    padding: 0;
+    border: 0;
+}
+
+.profile-form__label {
+    display: block;
+    margin-bottom: var(--space-2);
+}
+
+.profile-form__textarea {
+    width: 100%;
+    padding: var(--space-3);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--parchment);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    resize: vertical;
+}
+
+.profile-form__textarea:focus-visible {
+    outline: 3px solid var(--purple);
+    outline-offset: 2px;
+}
+
+.profile-form__help,
+.profile-form__note {
+    margin-top: var(--space-2);
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+}
+
+/* ---- Choice tiles (avatars and creatures) ---- */
+
+.avatar-grid,
+.feature-grid {
+    display: grid;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+}
+
+.avatar-grid {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+}
+
+.feature-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+.avatar-choice,
+.feature-choice {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    /* Well past the 44px minimum: these are the main thing being tapped on this
+       screen, and a mis-tap here changes how somebody's page looks. */
+    min-height: 88px;
+    padding: var(--space-3);
+    text-align: center;
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+/* The real radio/checkbox. Moved out of sight but NOT removed — display:none or
+   visibility:hidden would take it away from screen readers and the keyboard too,
+   which is the whole thing we are trying to keep. */
+.avatar-choice__input,
+.feature-choice__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.avatar-choice:hover,
+.feature-choice:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-raised);
+}
+
+/* Keyboard focus lands on the hidden input, so the visible ring is drawn on the
+   tile around it. Without this rule a keyboard user could not see where they are. */
+.avatar-choice__input:focus-visible + .avatar-choice__img,
+.avatar-choice:has(.avatar-choice__input:focus-visible),
+.feature-choice:has(.feature-choice__input:focus-visible) {
+    outline: 3px solid var(--purple);
+    outline-offset: 3px;
+}
+
+/* Chosen tiles are marked by a gold border AND a filled background AND, for
+   creatures, the checkbox state a screen reader reads out. Never colour alone. */
+.avatar-choice:has(.avatar-choice__input:checked),
+.feature-choice:has(.feature-choice__input:checked) {
+    border-color: var(--gold);
+    border-width: 3px;
+    box-shadow: var(--glow-gold);
+}
+
+.avatar-choice__img {
+    width: 72px;
+    height: 72px;
+    object-fit: contain;
+}
+
+.avatar-choice__name,
+.feature-choice__name {
+    font-size: 0.82rem;
+    line-height: 1.25;
+}
+
+.feature-choice__name {
+    font-family: var(--font-display);
+    font-weight: 700;
+}
+
+.feature-choice__private {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    color: var(--ink-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .avatar-choice:hover,
+    .feature-choice:hover {
+        transform: none;
+    }
+}

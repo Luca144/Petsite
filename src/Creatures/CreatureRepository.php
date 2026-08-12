@@ -155,4 +155,84 @@ final class CreatureRepository
             ':id' => $creatureId,
         ]);
     }
+
+    /**
+     * The creatures to show on a player's profile — PUBLIC ones only.
+     *
+     * WHY PUBLIC ONLY, EVEN FOR THE OWNER LOOKING AT THEIR OWN PAGE: a profile is
+     * the page other people see, so showing the owner something different from
+     * what a visitor sees would defeat the point. The build plan asks that a
+     * player be shown clearly what others can see, and the plainest way to do that
+     * is for the page to BE what others see. The owner is told separately how many
+     * of their creatures are hidden, so nothing feels lost.
+     *
+     * This is also the reason featuring a creature cannot expose a private one:
+     * the filter is here, at the point of display, rather than in the code that
+     * saves the choice. A creature made private later stops appearing on the page
+     * with nobody having to remember to un-feature it.
+     *
+     * ORDER: featured ones first in the order the owner chose, then everything
+     * else newest-first. So a page always has something on it — a player who has
+     * never touched the featured setting still gets a sensible page.
+     *
+     * @return Creature[]
+     */
+    public function findForProfile(int $ownerId, int $limit): array
+    {
+        $limit = max(1, $limit);
+
+        $statement = $this->connection->prepare(
+            'SELECT ' . self::COLUMNS . ' FROM creatures
+              WHERE owner_id = :owner_id AND is_public = 1
+              ORDER BY featured_order IS NULL, featured_order ASC, created_at DESC, id DESC
+              LIMIT ' . $limit
+        );
+        $statement->execute([':owner_id' => $ownerId]);
+
+        return array_map(
+            static fn (array $row): Creature => Creature::fromRow($row),
+            $statement->fetchAll()
+        );
+    }
+
+    /**
+     * How many of this player's creatures are hidden from their public page.
+     * Used to tell the owner plainly, rather than leaving them wondering where a
+     * creature went.
+     */
+    public function countPrivateForOwner(int $ownerId): int
+    {
+        $statement = $this->connection->prepare(
+            'SELECT COUNT(*) FROM creatures WHERE owner_id = :owner_id AND is_public = 0'
+        );
+        $statement->execute([':owner_id' => $ownerId]);
+
+        return (int) $statement->fetchColumn();
+    }
+
+    /**
+     * Which of this player's creatures are currently featured, in their chosen
+     * order. Used to show the edit form what is already ticked.
+     *
+     * Deliberately not filtered by is_public: this is the owner looking at their
+     * own settings, and a private creature they had featured should still show as
+     * ticked rather than silently losing its place. It simply does not appear on
+     * the public page — the filter for that lives in findForProfile().
+     *
+     * @return array<int, int>
+     */
+    public function findFeaturedIds(int $ownerId): array
+    {
+        $statement = $this->connection->prepare(
+            'SELECT id FROM creatures
+              WHERE owner_id = :owner_id AND featured_order IS NOT NULL
+              ORDER BY featured_order ASC'
+        );
+        $statement->execute([':owner_id' => $ownerId]);
+
+        return array_map(
+            static fn (array $row): int => (int) $row['id'],
+            $statement->fetchAll()
+        );
+    }
 }

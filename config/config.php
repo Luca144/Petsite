@@ -185,6 +185,12 @@ return [
                                      // against being paid twice — that lives in the
                                      // database (InventoryRepository::removeOne).
         ],
+        'rate_limit_profile' => [
+            'max_attempts' => 20,     // at most 20 profile saves...
+            'window_seconds' => 3600, // ...per hour, per IP. A profile is edited
+                                      // occasionally, not repeatedly, so a low
+                                      // ceiling costs an honest player nothing.
+        ],
         'rate_limit_bio' => [
             'max_attempts' => 20,     // at most 20 bio edits...
             'window_seconds' => 3600, // ...per hour, per IP (anti-abuse)
@@ -357,6 +363,35 @@ return [
     // Owner can expand it. It is intentionally NOT profanity here; add what you need.
     'moderation' => [
         'blocked_words' => ['spam', 'scam', 'viagra'],
+    ],
+
+    // The avatars a player may choose. CONTENT, not code: adding one is a new
+    // entry here plus a picture in public/assets/avatars/ — and from M2.4, a
+    // panel screen. See docs/adding-avatars.md.
+    //
+    // Players NEVER upload an avatar. Accepting uploaded pictures would mean
+    // moderating pictures, which is far harder than moderating text, needs
+    // somebody awake to do it, and is the easiest route for something genuinely
+    // harmful onto a site with children on it. A chosen set removes the problem
+    // instead of managing it.
+    //
+    // The "name" is not decoration — it is what a screen reader announces and what
+    // a player reads beside the picture when choosing. A grid of unlabelled
+    // pictures is unusable without sight, so every avatar has one.
+    //
+    // Only one exists so far, which is fine: the mechanism is what M1.3 delivers,
+    // and the artist adds faces as she draws them without anybody touching code.
+    'avatars' => [
+        'default' => ['name' => 'The wandering visitor', 'file' => 'default.png'],
+    ],
+
+    // How much a player may write about themselves on their profile. Kept short
+    // on purpose: a profile is a greeting, not a page of prose, and every extra
+    // character is more room for something that has to be read by a human if it
+    // is ever reported. M1.4 hardens this field further.
+    'profile' => [
+        'max_about_length' => 300,
+        'max_featured_creatures' => 6,
     ],
 
 ];

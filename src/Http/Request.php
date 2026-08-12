@@ -79,4 +79,37 @@ final class Request
         // "name[]" fields) so callers always get a plain string.
         return is_string($value) ? $value : $default;
     }
+
+    /**
+     * Read a submitted list of values, e.g. from checkboxes named "featured[]".
+     *
+     * WHY THIS IS SEPARATE FROM input(): that method promises a string, and a
+     * promise like that is worth keeping — callers rely on it and never have to
+     * wonder what type they hold. A field that is genuinely a list gets its own
+     * method rather than making every other caller defensive.
+     *
+     * Everything comes back as strings, and nested arrays are dropped. A browser
+     * can send almost any shape here (the field name is just text in the form),
+     * so this flattens whatever arrived into the one shape callers expect. What
+     * the values MEAN is still the caller's job to check.
+     *
+     * @return array<int, string>
+     */
+    public function inputList(string $key): array
+    {
+        $value = $this->postData[$key] ?? null;
+
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $flat = [];
+        foreach ($value as $entry) {
+            if (is_string($entry) || is_int($entry)) {
+                $flat[] = (string) $entry;
+            }
+        }
+
+        return $flat;
+    }
 }

@@ -56,6 +56,7 @@ use Felkyo\Http\Controllers\GuestbookController;
 use Felkyo\Http\Controllers\HomeController;
 use Felkyo\Http\Controllers\InventoryController;
 use Felkyo\Http\Controllers\ItemController;
+use Felkyo\Http\Controllers\ProfileController;
 use Felkyo\Http\Controllers\LoginController;
 use Felkyo\Http\Controllers\LogoutController;
 use Felkyo\Http\Controllers\PetController;
@@ -67,6 +68,9 @@ use Felkyo\Http\Response;
 use Felkyo\Http\Router;
 use Felkyo\Security\RateLimiter;
 use Felkyo\Security\RateLimitRepository;
+use Felkyo\Users\AvatarSet;
+use Felkyo\Users\ProfileRepository;
+use Felkyo\Users\ProfileService;
 use Felkyo\Users\UserRepository;
 use Felkyo\Users\UserValidator;
 use League\Plates\Engine;
@@ -273,6 +277,24 @@ $itemController = new ItemController(
     $config['security']['rate_limit_item_disposal']
 );
 
+// A player's page. The avatar set and the profile limits are content/config, so
+// adding an avatar or changing how much someone may write needs no code change.
+$avatarSet = new AvatarSet($config['avatars']);
+$profileRepository = new ProfileRepository($pdo);
+$profileController = new ProfileController(
+    $templates, $session, $csrf, $profileRepository,
+    new ProfileService(
+        $profileRepository,
+        $creatureRepository,
+        $avatarSet,
+        new ContentFilter($config['moderation']['blocked_words']),
+        $config['profile']
+    ),
+    $creatureRepository, $creatureProfileBuilder, $avatarSet, $rateLimiter,
+    $config['profile'],
+    $config['security']['rate_limit_profile']
+);
+
 // ---- Routes ----
 $router = new Router();
 
@@ -319,6 +341,14 @@ $router->get('/inventory', [$inventoryController, 'show']);
 $router->get('/inventory/{id}', [$itemController, 'show']);
 $router->post('/inventory/{id}/sell', [$itemController, 'sell']);
 $router->post('/inventory/{id}/discard', [$itemController, 'discard']);
+
+// A player's page. The edit routes come BEFORE the {username} one is reached in
+// practice because they are different paths entirely — /profile/... is always the
+// logged-in player's own, and /player/{username} is anybody's. Keeping the two
+// apart means no route ever has to work out "is this me?" from the URL.
+$router->get('/player/{username}', [$profileController, 'show']);
+$router->get('/profile/edit', [$profileController, 'edit']);
+$router->post('/profile', [$profileController, 'save']);
 
 // A single creature's page. {id} is captured from the URL, e.g. /creature/42.
 $router->get('/creature/{id}', [$creatureController, 'show']);

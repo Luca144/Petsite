@@ -43,6 +43,7 @@
     <link rel="stylesheet" href="/css/explore.css">
     <link rel="stylesheet" href="/css/economy.css">
     <link rel="stylesheet" href="/css/item-detail.css">
+    <link rel="stylesheet" href="/css/profile.css">
     <link rel="stylesheet" href="/css/guestbook.css">
 </head>
 <body>
@@ -114,6 +115,7 @@
                         <a href="/explore"<?= str_starts_with($currentPath ?? '', '/explore') ? ' aria-current="page"' : '' ?>>explore</a>
                         <a href="/shop"<?= str_starts_with($currentPath ?? '', '/shop') ? ' aria-current="page"' : '' ?>>shop</a>
                         <a href="/inventory"<?= ($currentPath ?? '') === '/inventory' ? ' aria-current="page"' : '' ?>>things</a>
+                        <a href="/player/<?= $this->e(rawurlencode($currentUser->username)) ?>"<?= str_starts_with($currentPath ?? '', '/player/') || str_starts_with($currentPath ?? '', '/profile') ? ' aria-current="page"' : '' ?>>my page</a>
                         <span class="site-nav__user">hi, <?= $this->e($currentUser->username) ?></span>
                         <span class="site-nav__coins">
                             <span aria-hidden="true">&#9670;</span>
