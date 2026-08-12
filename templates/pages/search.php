@@ -31,7 +31,7 @@ $this->layout('layout', ['title' => 'Find a player — Felkyo Creatures']);
                maxlength="30"
                autocomplete="off"
                aria-describedby="search-help">
-        <button class="btn" type="submit">Search</button>
+        <button class="btn btn--primary" type="submit">Search</button>
     </div>
     <p class="profile-form__help" id="search-help">
         Type the start of their name &mdash; at least <?= $this->e((string) $minimumLength) ?> letters.

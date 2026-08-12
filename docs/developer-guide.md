@@ -155,7 +155,7 @@ CLAUDE.md exactly.
 | --- | --- |
 | `theme.css` | The design **tokens** — every colour, font, spacing, radius and shadow as a CSS custom property (`--name`). The single place to retune the look. Also the reset, base typography, focus styles, and the global reduced-motion rule. |
 | `layout.css` | The shared page **structure** — skip link, the parchment frame, masthead/wordmark, nav pills, divider, footer, ambient sparkles. |
-| `components.css` | The reusable **components** — buttons (`.btn`, `.btn--primary`, `.btn--secondary`), cards (`.card`, `.card--dark`), tiles (`.tile-grid`, `.tile`), form fields (`.field*`), and badges. |
+| `components.css` | The reusable **components** — buttons (`.btn`, `.btn--primary`, `.btn--secondary`), cards (`.card`, `.card--dark`), tiles (`.tile-grid`, `.tile`), form fields (`.field*`), and badges. The bare `.btn` base already carries the quiet secondary look, so a button whose variant class is forgotten still renders themed instead of browser-default white — but still name the variant you mean. |
 
 **The golden rules this increment sets (follow them on every later page):**
 

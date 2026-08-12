@@ -142,7 +142,12 @@ use Felkyo\Http\AssetUrl;
                              The purse was odd up there too: it looked like a button
                              and did nothing when pressed. Down here it reads as what
                              it is — a note about you, not somewhere to go. */ ?>
-                    <p class="site-you">
+                    <?php /* A <div>, not a <p>: this strip contains the log-out
+                             <form>, and a form is not allowed inside a paragraph.
+                             Browsers "fix" that by closing the paragraph early,
+                             which silently pushed the form outside .site-you and
+                             stripped the button of all its styling. */ ?>
+                    <div class="site-you">
                         <span class="site-you__purse">
                             <span aria-hidden="true">&#9670;</span>
                             <?= $this->e((string) $currentUser->currencyBalance) ?>
@@ -153,7 +158,7 @@ use Felkyo\Http\AssetUrl;
                             <?= $this->csrf_field() ?>
                             <button type="submit">log out</button>
                         </form>
-                    </p>
+                    </div>
                 <?php endif; ?>
 
                 <span class="site-footer__line">

@@ -59,7 +59,7 @@ $this->layout('layout', ['title' => $item->name . ' — Felkyo Creatures']);
     <?php if ($stack->isSellable()): ?>
         <form method="post" action="/inventory/<?= $this->e((string) $item->id) ?>/sell">
             <?= $this->csrf_field() ?>
-            <button class="btn" type="submit">
+            <button class="btn btn--primary" type="submit">
                 Sell one for <?= $this->e((string) $item->sellValue) ?> <?= $this->e($currencyName ?? 'coins') ?>
             </button>
         </form>
