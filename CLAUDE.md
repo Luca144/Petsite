@@ -98,6 +98,28 @@ These are baked into the project conventions. Breaking any of them is a bug, not
 - **Rate limits apply to every state-changing public endpoint.** Login, registration, password reset, commenting, petting, renaming. Use the rate limiter service.
 - **Secrets come from `.env`. Never hardcoded. Never committed.** If you need to reference a new secret, add it to `.env.example` with a placeholder value and document what it's for.
 
+**Security is part of thinking, not a later phase.**
+
+Before the rules, the reason. The accounts on this site belong to real people, and a meaningful share of them will be children. A security failure here is not an embarrassing bug — it is somebody's account taken, somebody's creatures gone, or a stranger reaching a child through a gap you left. The people running this site are two hobbyists with day jobs; they cannot watch it around the clock, so the code has to hold on its own overnight. **Care about this the way you would if the person on the other end were someone you knew.** A missing feature disappoints someone. A security hole hurts them.
+
+Practically, that means: treat every request as hostile until proven otherwise, never trust anything the browser sends, rate-limit anything repeatable, and prefer the boring safe option over the clever one every single time. If you are ever unsure whether something is safe, it is not — stop and raise it.
+
+Whenever an increment touches user data, authentication, permissions, money, uploads, or anything a player can type, the mandatory written plan must answer three questions *before any code is written*:
+
+1. **Who is allowed to do this, and how is that enforced?** Name the check and where it lives. "The UI doesn't show the button" is not an answer — assume the request arrives directly.
+2. **What is the worst thing a malicious user could do with this endpoint?** Consider: acting on someone else's data by changing an ID, submitting values outside the allowed range, replaying or racing the request to duplicate a reward, and pasting hostile content into any free-text field.
+3. **What does the test suite prove about the above?** Every permission boundary and every limit gets an explicit test that it *refuses* the bad case — not only that it allows the good one.
+
+If any of the three can't be answered, the increment isn't planned yet. Stop and think further rather than starting and patching afterwards.
+
+**Threats specific to this site, to keep in mind by name:**
+- **Alt-account farming.** Clicking another player's creature rewards both sides. Someone will make second accounts to click their own creatures. Design the reward so this is unattractive (per-actor limits, per-creature-per-day caps, no reward from an account that shares obvious signals with the owner) and say in the plan how you have limited it.
+- **Currency and item duplication.** Any action that grants, spends, or moves something must be safe against the same request arriving twice at once. Use database transactions; never read-then-write across two steps without protection.
+- **Uploads.** Admin file upload is the highest-value target on the site. Validate real file content, never trust the name or declared type, store under a generated name, and serve from somewhere nothing can execute.
+- **The admin surface.** Anyone who reaches an admin route owns everything. Authorise on every request, log every action, and never add a route that runs arbitrary input.
+- **Enumeration.** Search, profiles, and IDs must not let someone script their way to a list of all players.
+- **Free-text fields.** Names and bios are the only place a player can put chosen words in front of another player. They carry the safety weight the removed messaging would have had.
+
 ---
 
 ## 7. Testing — part of the definition of done
@@ -147,6 +169,24 @@ The aesthetic is **cosy autumn hygge — like coming home to a warm, lamplit roo
 - **Space Mono** — small data, labels, and captions (the old-web "computery" texture). Never below ~0.7rem and never the only carrier of essential information.
 
 **Background treatment:** the page field is the deep plum (a warm lamplit-evening gradient with a soft gold glow), with parchment panels floating on it. This is the agreed direction — warm, enveloping, cosy-at-night, not a flat light page.
+
+### The golden rules — what makes this site good to use
+
+These sit above the detailed rules below. When a decision is unclear, decide by these.
+
+1. **If it needs explaining, it isn't designed yet.** Someone should look at a screen and know what to do without instructions.
+2. **One thumb, one hand, small screen.** Design the phone version first and make it genuinely pleasant, not merely possible.
+3. **Never a dead end.** Every refusal names what to do instead and links there. "You need a rod — Sunny sells one" beats "You can't fish here."
+4. **Say what happened.** Every action gets a visible, plain-language confirmation. Silence makes people click twice.
+5. **Plain words, not clever ones.** "You need 2 more onions", not "Insufficient reagents". Write like a kind person, not a system.
+6. **Nothing important lives in hover, colour, or motion alone.** Each of those excludes someone.
+7. **Everything reachable by keyboard**, with focus always visible.
+8. **Readable at 200% zoom** without sideways scrolling or overlapping text.
+9. **Nothing is lost by accident.** Destructive actions confirm; wherever it's affordable, they're reversible.
+10. **Never punish absence, never demand speed.** No mechanic penalises being away, and nothing requires fast reactions or precise clicking.
+11. **When in doubt, gentler.** Between the demanding option and the kind one, this site always picks the kind one.
+
+A screen that satisfies every technical rule below but fails these is not finished.
 
 ### Accessibility — required, not optional
 

@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git lfs *)",
+      "Bash(php --version)",
+      "Bash(composer --version)",
+      "Read(//c/xampp/mysql/bin/**)",
+      "Bash(git reset *)",
+      "Bash(git config *)",
+      "Bash(echo \"identity: $\\(git config user.name\\) <$\\(git config user.email\\)>\")",
+      "Bash(\"C:/xampp/php/php.exe\" vendor/phpunit/phpunit/phpunit --colors=never)",
+      "Bash(mkdir -p seeds)",
+      "Bash(:)",
+      "Bash(git -C \"c:/Users/KatharinaOlkis/Documents/PythonProjects/Petpage\" log --oneline -20)"
+    ]
+  }
+}
