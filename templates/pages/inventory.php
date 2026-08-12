@@ -29,7 +29,7 @@ $this->layout('layout', ['title' => 'Your things — Felkyo Creatures']);
         <h3 class="inventory-type">
             <?php /* The heading carries the icon too, so a section is recognisable
                      while scrolling without reading every word. */ ?>
-            <svg class="item-card__icon" aria-hidden="true" focusable="false">
+            <svg class="category-icon" aria-hidden="true" focusable="false">
                 <use href="#icon-<?= $this->e($category->iconKey) ?>"></use>
             </svg>
             <?= $this->e($category->name) ?>

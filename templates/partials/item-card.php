@@ -53,7 +53,7 @@ $hasArtwork = is_file($artworkFile);
         <span class="item-card__name"><?= $this->e($item->name) ?></span>
 
         <span class="item-card__category">
-            <svg class="item-card__icon" aria-hidden="true" focusable="false">
+            <svg class="category-icon" aria-hidden="true" focusable="false">
                 <use href="#icon-<?= $this->e($category->iconKey) ?>"></use>
             </svg>
             <?= $this->e($category->name) ?>

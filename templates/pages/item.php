@@ -42,7 +42,7 @@ $this->layout('layout', ['title' => $item->name . ' — Felkyo Creatures']);
     <h2 class="item-detail__name"><?= $this->e($item->name) ?></h2>
 
     <p class="item-detail__category">
-        <svg class="item-card__icon" aria-hidden="true" focusable="false">
+        <svg class="category-icon" aria-hidden="true" focusable="false">
             <use href="#icon-<?= $this->e($category->iconKey) ?>"></use>
         </svg>
         <?= $this->e($category->name) ?>

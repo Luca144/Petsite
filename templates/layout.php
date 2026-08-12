@@ -15,6 +15,10 @@
  * Plates escapes values passed in via $this->e(...), so any user-provided text
  * that reaches the layout cannot break the page or inject scripts.
  */
+
+// The versioned stylesheet addresses below come from this. See the class for
+// why a changed stylesheet needs a changed address.
+use Felkyo\Http\AssetUrl;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -36,16 +40,16 @@
 
     <!-- Our styles, split by concern: tokens/base, layout, components, and the
          creature page. Small enough that loading them together is simplest. -->
-    <link rel="stylesheet" href="/css/theme.css">
-    <link rel="stylesheet" href="/css/layout.css">
-    <link rel="stylesheet" href="/css/components.css">
-    <link rel="stylesheet" href="/css/creature.css">
-    <link rel="stylesheet" href="/css/explore.css">
-    <link rel="stylesheet" href="/css/economy.css">
-    <link rel="stylesheet" href="/css/item-detail.css">
-    <link rel="stylesheet" href="/css/profile.css">
-    <link rel="stylesheet" href="/css/social.css">
-    <link rel="stylesheet" href="/css/guestbook.css">
+    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/theme.css') ?>">
+    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/layout.css') ?>">
+    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/components.css') ?>">
+    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/creature.css') ?>">
+    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/explore.css') ?>">
+    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/economy.css') ?>">
+    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/item-detail.css') ?>">
+    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/profile.css') ?>">
+    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/social.css') ?>">
+    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/guestbook.css') ?>">
 </head>
 <body>
     <!-- Keyboard users can jump straight to the content with this link. -->

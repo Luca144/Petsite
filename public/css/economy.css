@@ -188,7 +188,7 @@
     color: var(--ink-soft);
 }
 
-.item-card__icon {
+.category-icon {
     width: 13px;
     height: 13px;
     flex: 0 0 auto;
