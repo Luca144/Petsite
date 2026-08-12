@@ -864,3 +864,79 @@ Three details worth copying if you write another seeder:
   creature is left without an owner or species. A seed script is run once, on the
   live server, at the worst possible moment to discover a typo — so it is tested
   here instead.
+
+---
+
+## Increment M1.1 — The owned-thing model
+
+The first increment of build plan 2, and the schema decision the rest of that plan
+rests on. **The full reasoning lives in `docs/owned-things.md`** — this section is
+the short version of what changed in the code.
+
+### The decision
+
+Players will own four kinds of thing: items, creatures, plants and fish. They come
+in **two shapes**, not four. Items are *counted* — one honey treat is as good as
+another, so we store "this player has three". Creatures, plants and fish are
+*individual* — each is named and has its own history, so each gets its own row.
+
+Each individual kind gets **its own table**. Creatures already had one; fish and
+plants get theirs at M10 and M12, following the recipe in `docs/owned-things.md`.
+A single everything-table and a shared-core-plus-details design were both
+considered and turned down; the doc says why, at length, because the next person
+to have the idea deserves the reasoning rather than a "no".
+
+### What actually changed here
+
+Deliberately little, because the decision is most of the increment.
+
+- **`items` gained `sell_value`** — what a player gets back for selling one, kept
+  strictly apart from `price`, which is what a shop charges. If an item could ever
+  sell for more than it costs, buying and selling in a loop would mint unlimited
+  currency. Two named columns make that rule testable; one column doing both jobs
+  would have hidden it. `sell_value = 0` means "not sellable", which is different
+  from "sells for nothing" — it lets the site explain itself instead of offering a
+  button that takes something and gives back zero.
+- **`OwnedItemStack`** replaced the loose `['item' => ..., 'quantity' => ...]`
+  array the inventory used to hand around. A named type says what a thing *is*; an
+  array only says what shape it is. It is also where "can this be sold?" now lives.
+- **`CreatureRepository::updateBio()` now names the owner in its `WHERE` clause**
+  and takes the id of the person doing the editing. The controller's permission
+  check was correct and stays — this is a second layer underneath it.
+
+### The rule worth remembering
+
+**Every method that reads or changes something a player owns takes the acting
+player's id and puts it in the `WHERE` clause.** Never fetch by id and check the
+owner in PHP afterwards.
+
+Both work when written carefully; they differ in what happens when they are not. A
+check in PHP is a line somebody can delete during a tidy-up, and a missing `if` is
+invisible because there is nothing there to see. An owner named in the query fails
+loudly-by-doing-nothing instead. Every form on this site carries an id, and editing
+one by hand takes seconds — so the check belongs where forgetting is impossible.
+
+### Tests
+
+- `OwnedThingOwnershipTest` — new, and written entirely from the stranger's side:
+  Rowan tries to read and change Mira's things, and is refused each time. It calls
+  the repository **directly**, going around the controller on purpose, because that
+  is a rehearsal of the day somebody refactors the layers above and drops a check.
+- `ItemSellValueTest` — walks every item every shop actually offers and fails by
+  name if one sells for more than it costs. This is a test of *content*, not code:
+  the realistic way the rule gets broken is a generous number typed into the panel
+  one evening (M2.4), so it guards real data rather than an invented example.
+- `OwnedItemStackTest` — what "sellable" means, including the empty-pile case
+  (someone left the inventory open in a tab and sold their last treat elsewhere).
+- `SchemaTest` — also gained `guestbook_entries`, which was missing from a list
+  that claims to be exhaustive.
+
+### One thing that was planned and then dropped
+
+A shared `OwnedThing` interface, so one screen could render any owned thing, was in
+the plan and did not survive contact with the code: a `Creature` cannot supply its
+own picture path (that is built from the species slug and life stage, which live
+elsewhere), so the shared type could not carry the thing a shared screen most
+needs — and nothing yet renders two kinds through one path. It is recorded in
+`docs/owned-things.md` §6 rather than quietly forgotten. If M1.2's item card and a
+later creature card genuinely converge, extract it then, from two real cases.

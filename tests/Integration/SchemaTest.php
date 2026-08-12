@@ -52,6 +52,7 @@ final class SchemaTest extends TestCase
             'shops',
             'shop_items',
             'rate_limit_hits',
+            'guestbook_entries',
         ];
 
         foreach ($expectedTables as $tableName) {

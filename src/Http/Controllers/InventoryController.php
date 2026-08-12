@@ -35,10 +35,12 @@ final class InventoryController
             return Response::redirect('/login');
         }
 
-        // Group the owned items by their type, e.g. "sticker" => [ ... ].
+        // Group the owned piles by their item type, e.g. "sticker" => [ ... ].
+        // Because items carry their own type, a brand-new kind of item appears as
+        // a new group on the page without anybody touching this code.
         $groups = [];
-        foreach ($this->inventory->findForUser($userId) as $entry) {
-            $groups[$entry['item']->type][] = $entry;
+        foreach ($this->inventory->findForUser($userId) as $stack) {
+            $groups[$stack->item->type][] = $stack;
         }
 
         return Response::html($this->templates->render('pages/inventory', [

@@ -42,13 +42,13 @@ final class InventoryRepositoryTest extends DatabaseTestCase
         $this->inventory->addItem($this->userId, $this->firstItemId);
         $owned = $this->inventory->findForUser($this->userId);
         $this->assertCount(1, $owned);
-        $this->assertSame(1, $owned[0]['quantity']);
+        $this->assertSame(1, $owned[0]->quantity);
 
         // Adding the same item again raises the quantity rather than adding a row.
         $this->inventory->addItem($this->userId, $this->firstItemId);
         $owned = $this->inventory->findForUser($this->userId);
         $this->assertCount(1, $owned);
-        $this->assertSame(2, $owned[0]['quantity']);
+        $this->assertSame(2, $owned[0]->quantity);
     }
 
     public function testFindForUserReturnsEachDistinctItemOwned(): void

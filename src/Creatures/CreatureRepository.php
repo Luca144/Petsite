@@ -110,16 +110,29 @@ final class CreatureRepository
     }
 
     /**
-     * Save a creature's bio (its owner-written description). The caller is
-     * responsible for checking that the person doing this owns the creature, and
-     * for validating the text — this method just stores it.
+     * Save a creature's bio (its owner-written description).
+     *
+     * NOTE THE OWNER IN THE WHERE CLAUSE. It is there on purpose, and it is not
+     * redundant with the check the controller already does. This is the rule the
+     * owned-thing model sets for everything a player owns (docs/owned-things.md):
+     * the query itself says who is allowed, so that if the check further up were
+     * ever removed, moved, or forgotten during a rewrite, this statement would
+     * simply match no rows and change nothing. A permission check you can delete
+     * by accident is not really a permission check.
+     *
+     * Pass the id of the person DOING the edit — not the creature's stored owner
+     * id, which would make the condition always true and the protection fake.
      */
-    public function updateBio(int $creatureId, string $bio): void
+    public function updateBio(int $creatureId, int $editorUserId, string $bio): void
     {
         $statement = $this->connection->prepare(
-            'UPDATE creatures SET bio = :bio WHERE id = :id'
+            'UPDATE creatures SET bio = :bio WHERE id = :id AND owner_id = :editor_user_id'
         );
-        $statement->execute([':bio' => $bio, ':id' => $creatureId]);
+        $statement->execute([
+            ':bio' => $bio,
+            ':id' => $creatureId,
+            ':editor_user_id' => $editorUserId,
+        ]);
     }
 
     /**

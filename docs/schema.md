@@ -126,10 +126,15 @@ Defines what an item *is*. Ownership and sale are separate tables.
 | `name` | varchar(60), NOT NULL | Display name. |
 | `description` | text, NULL | Optional. |
 | `price` | int unsigned, NOT NULL, default 0 | Cost in the in-game currency. |
+| `sell_value` | int unsigned, NOT NULL, default 0 | What a player gets back for selling one. **Must never exceed `price` for an item a shop offers** — otherwise buy-and-sell is a money loop. 0 means "not sellable" (M1.1). |
 | `type` | varchar(30), NOT NULL | Grouping label for the inventory page (B.8). |
 | `created_at` | timestamp, NOT NULL | |
 
 Indexes: unique `slug`, and `type` (for grouping).
+
+**The two numbers.** `price` is what a shop charges; `sell_value` is what a player
+gets back. They are separate on purpose — see `docs/owned-things.md`, rule 3, and
+the test that guards them in `tests/Integration/ItemSellValueTest.php`.
 
 ### `inventory` — which items each user owns
 A join table between users and items, with a quantity.

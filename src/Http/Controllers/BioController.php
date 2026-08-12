@@ -72,7 +72,7 @@ final class BioController
         }
         $this->rateLimiter->record('bio', $request->clientIp());
 
-        $result = $this->bioService->updateBio($creature, $request->input('bio'));
+        $result = $this->bioService->updateBio($creature, $userId, $request->input('bio'));
         $this->session->flash($result->message());
 
         return Response::redirect($creaturePath);

@@ -94,6 +94,6 @@ final class PurchaseServiceTest extends DatabaseTestCase
         $this->assertSame(100 - (2 * $this->itemPrice), $this->balance());
         $owned = $this->inventory->findForUser($this->userId);
         $this->assertCount(1, $owned);
-        $this->assertSame(2, $owned[0]['quantity']);
+        $this->assertSame(2, $owned[0]->quantity);
     }
 }

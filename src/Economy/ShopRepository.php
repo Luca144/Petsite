@@ -45,7 +45,7 @@ final class ShopRepository
     public function findItems(int $shopId): array
     {
         $statement = $this->connection->prepare(
-            'SELECT items.id, items.slug, items.name, items.description, items.price, items.type
+            'SELECT items.id, items.slug, items.name, items.description, items.price, items.sell_value, items.type
                FROM shop_items
                JOIN items ON items.id = shop_items.item_id
               WHERE shop_items.shop_id = :shop_id
@@ -67,7 +67,7 @@ final class ShopRepository
     public function findSoldItem(int $shopId, int $itemId): ?Item
     {
         $statement = $this->connection->prepare(
-            'SELECT items.id, items.slug, items.name, items.description, items.price, items.type
+            'SELECT items.id, items.slug, items.name, items.description, items.price, items.sell_value, items.type
                FROM shop_items
                JOIN items ON items.id = shop_items.item_id
               WHERE shop_items.shop_id = :shop_id AND shop_items.item_id = :item_id
