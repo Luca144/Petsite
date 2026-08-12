@@ -69,7 +69,7 @@ final class SearchController
             return Response::redirect('/login');
         }
 
-        $query = trim($request->input('q'));
+        $query = trim($request->query('q'));
 
         // An empty box is the first visit, not a failed search — so it gets an
         // invitation rather than "no results found".

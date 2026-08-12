@@ -25,12 +25,14 @@ final class Request
      * @param string $path       The URL path, e.g. "/login".
      * @param array  $postData   Submitted form values (name => value).
      * @param string $clientIp   The visitor's IP address (used for rate limiting).
+     * @param array  $queryData  Values from the "?name=value" part of the address.
      */
     public function __construct(
         private string $method,
         private string $path,
         private array $postData,
         private string $clientIp,
+        private array $queryData = [],
     ) {
     }
 
@@ -47,7 +49,7 @@ final class Request
 
         $clientIp = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
 
-        return new self($method, $path, $_POST, $clientIp);
+        return new self($method, $path, $_POST, $clientIp, $_GET);
     }
 
     public function method(): string
@@ -80,6 +82,29 @@ final class Request
         return is_string($value) ? $value : $default;
     }
 
+    /**
+     * Read one value from the "?name=value" part of the address.
+     *
+     * WHY THIS IS SEPARATE FROM input(): the two are genuinely different things,
+     * and keeping them apart is what makes a controller readable. input() is what
+     * somebody SUBMITTED — a form they filled in and posted. query() is part of
+     * the ADDRESS — shareable, bookmarkable, and in the browser's history.
+     *
+     * A search box belongs in the address, which is why searching produces a URL
+     * you can send to somebody. A password does not.
+     *
+     * THIS METHOD EXISTS BECAUSE ITS ABSENCE WAS A BUG. The search page read its
+     * query with input(), which only ever looks at posted values — so the box came
+     * back empty every time and search silently found nothing. Worse, the test
+     * passed, because it built a Request by hand and put the query in the posted
+     * values. It proved the controller worked given input it would never receive.
+     */
+    public function query(string $key, string $default = ''): string
+    {
+        $value = $this->queryData[$key] ?? $default;
+
+        return is_string($value) ? $value : $default;
+    }
     /**
      * Read a submitted list of values, e.g. from checkboxes named "featured[]".
      *

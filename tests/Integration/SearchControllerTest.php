@@ -65,12 +65,24 @@ final class SearchControllerTest extends DatabaseTestCase
     }
 
     /**
-     * The search page. GET parameters are not part of Request, so the query is
-     * passed the same way the controller reads it.
+     * The search page, with the query where a browser really puts it.
+     *
+     * NOTE THE LAST ARGUMENT. A search form uses GET, so "q" arrives in the
+     * ADDRESS, not in posted form values — which is the fifth argument here, not
+     * the third.
+     *
+     * This test originally passed the query as posted data and passed happily
+     * while search was completely broken on the real site: the box came back
+     * empty every time and nothing was ever found. It proved the controller
+     * worked given input it would never actually receive. If you change this
+     * helper, change it towards what a browser does, never towards what makes the
+     * test go green.
      */
     private function search(string $query): Response
     {
-        return $this->router->dispatch(new Request('GET', '/players', ['q' => $query], '127.0.0.1'));
+        return $this->router->dispatch(
+            new Request('GET', '/players', [], '127.0.0.1', ['q' => $query])
+        );
     }
 
     public function testSearchRequiresLogin(): void
@@ -209,6 +221,21 @@ final class SearchControllerTest extends DatabaseTestCase
         }
     }
 
+    public function testAQueryPostedAsFormDataIsIgnored(): void
+    {
+        // The other side of the bug this file learned from. A search box lives in
+        // the address; posted values are a different channel and are not the one
+        // this page reads. If somebody ever "helpfully" makes the controller
+        // accept both, this fails and asks them why.
+        $_SESSION['user_id'] = $this->searcherId;
+
+        $response = $this->router->dispatch(
+            new Request('GET', '/players', ['q' => 'mira'], '127.0.0.1')
+        );
+
+        $this->assertStringNotContainsString('class="search-result"', $response->body());
+    }
+
     public function testTooMuchSearchingIsSlowedDown(): void
     {
         $_SESSION['user_id'] = $this->searcherId;
@@ -226,9 +253,9 @@ final class SearchControllerTest extends DatabaseTestCase
         $router = new Router();
         $router->get('/players', [$limited, 'show']);
 
-        $router->dispatch(new Request('GET', '/players', ['q' => 'mi'], '127.0.0.1'));
-        $router->dispatch(new Request('GET', '/players', ['q' => 'mo'], '127.0.0.1'));
-        $third = $router->dispatch(new Request('GET', '/players', ['q' => 'ro'], '127.0.0.1'));
+        $router->dispatch(new Request('GET', '/players', [], '127.0.0.1', ['q' => 'mi']));
+        $router->dispatch(new Request('GET', '/players', [], '127.0.0.1', ['q' => 'mo']));
+        $third = $router->dispatch(new Request('GET', '/players', [], '127.0.0.1', ['q' => 'ro']));
 
         $this->assertStringContainsString('slow down', $third->body());
     }

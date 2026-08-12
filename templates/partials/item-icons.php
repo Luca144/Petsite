@@ -27,7 +27,7 @@
  * that key as a category's icon_key. Keep it inside the 24x24 box.
  */
 ?>
-<svg class="icon-sprite" aria-hidden="true" focusable="false" width="0" height="0" style="position:absolute">
+<svg class="icon-sprite" aria-hidden="true" focusable="false">
     <defs>
         <!-- Ingredient: a leaf, for things grown and gathered. -->
         <symbol id="icon-leaf" viewBox="0 0 24 24">

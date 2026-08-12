@@ -202,3 +202,15 @@
     font-weight: 700;
     color: var(--ink);
 }
+
+/* The inline SVG sprite that holds the category drawings. It defines symbols and
+   must never draw anything itself, so it is taken out of the layout entirely.
+   This lives in CSS rather than in a style attribute on the element so it cannot
+   be lost by an edit to the markup — if it ever were, eight large drawings would
+   appear at the top of the page. */
+.icon-sprite {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+}
