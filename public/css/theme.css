@@ -30,6 +30,31 @@
     --ink: var(--plum);     /* default text colour (an alias, reads nicely in rules) */
     --ink-soft: #5A4568;    /* softened ink for secondary/caption text on parchment */
 
+    /* ---- Item category tints (increment M1.2) ----
+       One tint per item category, so a player can tell at a glance what a thing
+       is. Colour is NEVER the only signal: every card also shows the category's
+       icon and its name in words, because roughly one man in twelve cannot rely
+       on the colour alone, and nobody should have to.
+
+       All eight are deliberately in the same brightness family as the parchment
+       they sit on, so a shelf of them reads as one warm set rather than a bag of
+       sweets. Each is checked against the ink colour above and clears WCAG AA
+       (4.5:1) with room to spare — the closest is "tool" at 7.3:1.
+
+       DO NOT hand-edit these to taste without re-running the check.
+       tests/Unit/CategoryContrastTest.php reads this very file and fails if any
+       tint drops below the threshold, so an unreadable colour cannot reach the
+       site. That guard is the small ancestor of the theme editor's live contrast
+       checking in M4.2. */
+    --category-ingredient: #C8D6B0; /* sage — grown and gathered things */
+    --category-dish: #F0C9A0;       /* warm apricot — cooked food */
+    --category-potion: #D6C3E4;     /* soft lilac — brewed things */
+    --category-material: #D8C6AE;   /* stone — claws, ore, feathers */
+    --category-seed: #E4D9A8;       /* wheat — things you plant */
+    --category-tool: #B9C6D4;       /* worn steel — unlocks an activity */
+    --category-sticker: #F0C0C6;    /* rose — decoration */
+    --category-badge: #E9D28C;      /* pale gold — earned markers */
+
     /* ---- Typography ---- */
     /* Each stack lists real fallback fonts so the site still looks intentional
        if the web fonts fail to load (e.g. offline). */
@@ -151,6 +176,30 @@ a:hover {
    scaled up, not blurred. This class is applied to those images. */
 .pixelated {
     image-rendering: pixelated;
+}
+
+/*
+ * Text that only screen readers should get.
+ *
+ * WHY THIS EXISTS: some things are perfectly clear to the eye but silent to a
+ * screen reader — "×3" beside an item, for instance, reads as "times three" or
+ * as nothing at all depending on the software. So the symbol is hidden from
+ * screen readers and a plain "3 owned" is placed beside it using this class.
+ *
+ * WHY NOT display:none — that would hide it from screen readers too, which is
+ * the opposite of the point. This keeps the text in the page and simply shrinks
+ * it out of sight.
+ */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    border: 0;
+    clip-path: inset(50%);
 }
 
 /*

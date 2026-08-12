@@ -42,6 +42,7 @@
     <link rel="stylesheet" href="/css/creature.css">
     <link rel="stylesheet" href="/css/explore.css">
     <link rel="stylesheet" href="/css/economy.css">
+    <link rel="stylesheet" href="/css/item-detail.css">
     <link rel="stylesheet" href="/css/guestbook.css">
 </head>
 <body>

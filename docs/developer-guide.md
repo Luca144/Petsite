@@ -940,3 +940,114 @@ elsewhere), so the shared type could not carry the thing a shared screen most
 needs — and nothing yet renders two kinds through one path. It is recorded in
 `docs/owned-things.md` §6 rather than quietly forgotten. If M1.2's item card and a
 later creature card genuinely converge, extract it then, from two real cases.
+
+---
+
+## Increment M1.2 — Item categories, the item card, selling and discarding
+
+Where the owned-thing model of M1.1 becomes something a player can see and use.
+
+### Categories replaced a free-text column
+
+An item's kind used to be a `type` column holding whatever string somebody typed
+— "sticker", "treat". That was fine for four items. It stops being fine when the
+kind has to carry a colour, an icon and a label, because one stray "Stickers" and
+an item quietly falls out of its own group with nothing to warn you.
+
+`item_categories` is now a real table with a foreign key, and `type` is gone —
+two answers to "what kind of thing is this?" would have drifted apart the first
+time somebody updated one and forgot the other.
+
+The eight categories — ingredient, dish, potion, material, seed, tool, sticker,
+badge — come from the artist's design document, not from invention.
+
+### The three signals
+
+Every category says what it is three times: a **tint**, an **icon**, and a
+**word**. Not belt-and-braces fussiness — it is the only arrangement that works
+for everybody. The tint is fastest to read and fails colour-blind players; the
+icon is recognisable at a glance but has to be learnt; the word never fails
+anyone. Together they cost one line of markup.
+
+`ItemCategory` makes the name a required part of a category, so there is no way
+to render a card that is colour-only even by accident.
+
+### Colours live in the theme, never in a component
+
+A category stores the **name of a theme token** (`--category-dish`), not a colour.
+The card sets `--card-tint` from it and the stylesheet uses that. No colour value
+is written in any template (CLAUDE.md section 8), so the themes of M4 will restyle
+every card at once.
+
+**`CategoryContrastTest` opens the real `theme.css`, reads every colour out of it,
+and fails if text could not be read on any category tint.** It reads the actual
+file rather than a copied list, because a copied list drifts and would eventually
+pass while the site was broken. This is the small ancestor of M4.2's live contrast
+checking, and it uses the same `ColourContrast` class, so there will be one
+definition of "readable" rather than two that disagree.
+
+There is also a test asserting that **gold on parchment still fails**. Nothing
+uses that pair; the test protects the *rule* by showing the number to anyone who
+suspects the ban is fussy.
+
+### Artwork appears by itself
+
+Item art is found by convention at `public/assets/items/{slug}.png`. The card and
+the item page check whether the file exists: if it does they show it, and if it
+does not they show the category's icon as a stand-in. Drop a drawing in and it
+appears — nothing to edit, nothing to remember, and nothing looks broken while the
+artist is still drawing.
+
+### Selling and discarding
+
+The security thinking is written out in full at the top of `ItemDisposalService`.
+The two things worth carrying in your head:
+
+**The item goes first, the money second.** It reads more naturally to pay the
+player and then take the item, and that order is wrong: if the removal then
+failed, they would have been paid for something they still own.
+
+**`InventoryRepository::removeOne()` is the whole defence against being paid
+twice.** The "do they still have one?" check is in the `WHERE` clause, not in PHP
+above it. Two requests arriving at the same instant — a double-tapped button on a
+slow phone does this, as does anybody deliberately trying — queue up inside the
+database. One matches a row, the other finds nothing, and only the first is paid.
+**Its return value is not a courtesy; ignoring it re-opens the hole.**
+
+Selling and discarding are separate routes rather than one route with a flag, so
+the difference between "get paid" and "lose it for nothing" is never a value the
+browser sends.
+
+### Small things that were deliberate
+
+- **Not owned and does not exist give the same answer.** Saying "that exists but
+  is not yours" would confirm what other players own, one guessed number at a time.
+- **Throwing something away asks first**, via a plain `<details>` panel — no
+  JavaScript, works by keyboard, announced properly by screen readers.
+- **An unsellable item explains itself** instead of hiding the button, because an
+  absent button reads as a bug.
+- **Selling your last one returns to the inventory**, not to an item page that
+  would immediately say "you don't own one of those".
+
+### The shop margin
+
+`gameplay.economy.maximum_sell_fraction_of_price` (80%) is the Product Owner's
+rule: a shop must always keep a margin, because the shopkeeper has to live off the
+difference too. The number is calibrated from the artist's own pricing — her most
+generous buy-back was 75%. `ItemSellValueTest` reads the ceiling from config so
+the rule and the number can never drift apart.
+
+The same rule is written to cover the NPC friendship discounts planned for M13,
+which would otherwise open the loop from the other direction. See
+`docs/owned-things.md` rule 3.
+
+### Tests
+
+`ItemDisposalServiceTest` (9), `ItemControllerTest` (8), `CategoryContrastTest`
+(3), plus additions to `ItemSellValueTest`. Most are written from the attacker's
+side: Rowan tries to sell Mira's things, and is refused.
+
+### The recipe
+
+`docs/adding-items.md` — how to add an item and how to add a category, for a
+reader who has never programmed. The first of the "how to add one" documents.

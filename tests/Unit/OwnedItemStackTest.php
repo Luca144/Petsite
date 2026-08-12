@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Felkyo\Tests\Unit;
 
 use Felkyo\Economy\Item;
+use Felkyo\Economy\ItemCategory;
 use Felkyo\Economy\OwnedItemStack;
 use PHPUnit\Framework\TestCase;
 
@@ -26,7 +27,9 @@ final class OwnedItemStackTest extends TestCase
      */
     private function item(int $price, int $sellValue): Item
     {
-        return new Item(1, 'honey-treat', 'Honey Treat', 'A sweet golden treat.', $price, $sellValue, 'treat');
+        $dishes = new ItemCategory(2, 'dish', 'Dish', '--category-dish', 'bowl', 2);
+
+        return new Item(1, 'honey-treat', 'Honey Treat', 'A sweet golden treat.', $price, $sellValue, $dishes);
     }
 
     public function testAnItemWithASellValueCanBeSold(): void

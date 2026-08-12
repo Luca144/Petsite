@@ -87,3 +87,118 @@
 .shop-item form {
     margin-top: auto;
 }
+
+/* ---- Item cards (increment M1.2) ----
+   One card per pile of things a player owns. The category's colour arrives as
+   --card-tint, set inline by the card partial from the category's theme token —
+   so no colour value is written in this file, and the themes of M4 restyle every
+   card at once. */
+
+.item-grid {
+    display: grid;
+    /* Two comfortable columns on a small phone, more as there is room. The cards
+       never become so narrow that a long item name has nowhere to go. */
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+}
+
+.item-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    /* Comfortably past the 44px minimum touch target, with room for a fingertip
+       either side — these sit in a grid and must not be easy to mis-tap. */
+    min-height: 76px;
+    padding: var(--space-3);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    /* The tint as a soft wash rather than a flat block: strongest behind the art,
+       fading into parchment under the words. It reads as lamplight falling across
+       the card instead of a coloured label stuck on it. */
+    background:
+        linear-gradient(135deg, var(--card-tint) 0%, var(--card-tint) 38%, var(--parchment) 100%);
+    color: var(--ink);
+    text-decoration: none;
+    transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+/* Hover and keyboard focus get the SAME lift, deliberately. A keyboard user
+   should feel the card respond exactly as a mouse user does, not receive a
+   lesser version of it. */
+.item-card:hover,
+.item-card:focus-visible {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-raised);
+    border-color: var(--gold);
+}
+
+/* The focus ring stays as well as the lift — the lift is a nicety, the ring is
+   how a keyboard user knows where they are. Never remove it. */
+.item-card:focus-visible {
+    outline: 3px solid var(--purple);
+    outline-offset: 3px;
+}
+
+.item-card__art {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 52px;
+    height: 52px;
+}
+
+.item-card__img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* The stand-in drawing shown until real artwork exists for an item. Softened so
+   it reads as "a picture is coming" rather than as a finished illustration. */
+.item-card__placeholder {
+    width: 34px;
+    height: 34px;
+    color: var(--ink);
+    opacity: 0.45;
+}
+
+.item-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0; /* lets a long name wrap instead of stretching the card */
+}
+
+.item-card__name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+/* The category, written out in words beside its icon. This is the signal that
+   works for everybody, so it is never hidden to save space. */
+.item-card__category {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+}
+
+.item-card__icon {
+    width: 13px;
+    height: 13px;
+    flex: 0 0 auto;
+}
+
+.item-card__qty {
+    margin-left: auto;
+    align-self: flex-start;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--ink);
+}

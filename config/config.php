@@ -177,6 +177,14 @@ return [
             'max_attempts' => 30,    // at most 30 purchases...
             'window_seconds' => 60,  // ...per minute, per IP (anti-abuse)
         ],
+        'rate_limit_item_disposal' => [
+            'max_attempts' => 30,    // at most 30 sells or discards...
+            'window_seconds' => 60,  // ...per minute, per IP. Matched to purchases
+                                     // because selling is the same shape of action.
+                                     // NOTE: this is anti-abuse, not the protection
+                                     // against being paid twice — that lives in the
+                                     // database (InventoryRepository::removeOne).
+        ],
         'rate_limit_bio' => [
             'max_attempts' => 20,     // at most 20 bio edits...
             'window_seconds' => 3600, // ...per hour, per IP (anti-abuse)
@@ -226,6 +234,30 @@ return [
         // it (e.g. to 60) if you want to try the flow repeatedly while developing.
         'adoption' => [
             'cooldown_seconds' => 86400,
+        ],
+
+
+        // The economy's safety rule, and the one number that enforces it.
+        //
+        // A shop must always sell a thing for MORE than it buys it back for. If
+        // that were ever the other way round, a player could buy an item, sell it
+        // straight back, and repeat until they were infinitely rich — currency
+        // made out of nothing, which is the duplication problem CLAUDE.md names.
+        //
+        // But "not a loss" is not enough: the shopkeeper has to live off the
+        // difference too. So we keep a real margin rather than a hair's breadth.
+        // 0.80 means a shop never pays more than 80% of what it charges.
+        //
+        // WHERE THIS NUMBER CAME FROM: the artist's own design document. Across
+        // every item she had already priced, the most generous buy-back was
+        // Pumpkin Soup at 75% (60g to buy, 45g back). 80% therefore leaves her
+        // room to be kind without any existing item breaking the rule.
+        //
+        // This same ceiling will also floor the NPC friendship discount when that
+        // arrives (M13): however much an NPC likes you, the price they charge can
+        // never fall to what they would pay you. One rule, both directions.
+        'economy' => [
+            'maximum_sell_fraction_of_price' => 0.80,
         ],
 
         // Exploration areas. Each area is CONTENT defined as data, so adding a

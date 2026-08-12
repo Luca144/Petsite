@@ -1,0 +1,129 @@
+/*
+ * item-detail.css — the page for one item a player owns.
+ *
+ * WHAT THIS FILE IS: styles for the single-item page and its two actions. It
+ * lives apart from economy.css because that file was already carrying the shop
+ * and the inventory grid, and CLAUDE.md caps a stylesheet at 400 lines for a
+ * reason — a file you have to scroll to understand is one nobody reads.
+ *
+ * Every colour comes from theme.css. The category's tint arrives as --card-tint,
+ * set inline by the page from the category's own theme token.
+ */
+
+.item-detail__back {
+    margin-bottom: var(--space-4);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+}
+
+.item-detail {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+    gap: var(--space-2);
+    padding: var(--space-6) var(--space-4);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    /* The tint pooling at the top and fading down, so the artwork sits in the
+       strongest colour and the words sit on near-parchment where they read best. */
+    background: linear-gradient(180deg, var(--card-tint) 0%, var(--parchment) 72%);
+}
+
+.item-detail__art {
+    display: grid;
+    place-items: center;
+    width: 128px;
+    height: 128px;
+}
+
+.item-detail__art img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.item-detail__placeholder {
+    width: 76px;
+    height: 76px;
+    color: var(--ink);
+    opacity: 0.4;
+}
+
+.item-detail__name {
+    margin: 0;
+    font-family: var(--font-display);
+}
+
+.item-detail__category {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: var(--ink-soft);
+}
+
+.item-detail__desc {
+    max-width: 42ch;
+    margin: var(--space-2) 0 0;
+}
+
+/* ---- The two things you can do with it ---- */
+
+.item-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    align-items: center;
+    margin-top: var(--space-6);
+}
+
+/* Shown instead of a sell button when nothing would buy this. Saying so is
+   kinder than an absent button, which reads as a bug. */
+.item-actions__note {
+    max-width: 40ch;
+    text-align: center;
+    color: var(--ink-soft);
+}
+
+/* Throwing something away asks first. A <details> panel does that with no
+   JavaScript, works by keyboard, and is announced properly by screen readers. */
+.item-discard {
+    width: 100%;
+    max-width: 32rem;
+    border-top: 1px solid var(--border);
+    padding-top: var(--space-4);
+}
+
+.item-discard__summary {
+    /* Comfortably tappable, and clearly a control rather than a heading. */
+    display: inline-block;
+    min-height: 44px;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    cursor: pointer;
+}
+
+.item-discard__summary:hover {
+    color: var(--ink);
+}
+
+.item-discard__summary:focus-visible {
+    outline: 3px solid var(--purple);
+    outline-offset: 2px;
+}
+
+.item-discard__panel {
+    display: grid;
+    gap: var(--space-3);
+    justify-items: center;
+    text-align: center;
+    margin-top: var(--space-3);
+    padding: var(--space-4);
+    border: 1.5px dashed var(--border);
+    border-radius: var(--radius-md);
+}

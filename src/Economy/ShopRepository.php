@@ -23,6 +23,29 @@ final class ShopRepository
     }
 
     /**
+     * The columns every query here needs in order to build a whole Item.
+     *
+     * WHY IT IS WRITTEN ONCE: an item is only complete with its category, so
+     * every query joins the two tables and needs the same twelve columns. Writing
+     * them out three times invites the day somebody adds a column to two of the
+     * three and spends an afternoon on the resulting "undefined array key".
+     *
+     * WHY THE CATEGORY COLUMNS ARE RENAMED: both tables have "id" and "name". In
+     * a joined row the second silently replaces the first, so without these
+     * prefixes every item would be called "Dish" and carry its category's id.
+     *
+     * Columns are still listed one by one — never SELECT * (CLAUDE.md section 5).
+     */
+    private const ITEM_COLUMNS =
+        'items.id, items.slug, items.name, items.description, items.price, items.sell_value,
+         item_categories.id AS category_id,
+         item_categories.slug AS category_slug,
+         item_categories.name AS category_name,
+         item_categories.colour_token AS category_colour_token,
+         item_categories.icon_key AS category_icon_key,
+         item_categories.sort_order AS category_sort_order';
+
+    /**
      * Find a shop by its slug (e.g. "general-store"), or null if there is none.
      */
     public function findBySlug(string $slug): ?Shop
@@ -45,9 +68,10 @@ final class ShopRepository
     public function findItems(int $shopId): array
     {
         $statement = $this->connection->prepare(
-            'SELECT items.id, items.slug, items.name, items.description, items.price, items.sell_value, items.type
+            'SELECT ' . self::ITEM_COLUMNS . '
                FROM shop_items
                JOIN items ON items.id = shop_items.item_id
+               JOIN item_categories ON item_categories.id = items.category_id
               WHERE shop_items.shop_id = :shop_id
               ORDER BY items.price'
         );
@@ -67,9 +91,10 @@ final class ShopRepository
     public function findSoldItem(int $shopId, int $itemId): ?Item
     {
         $statement = $this->connection->prepare(
-            'SELECT items.id, items.slug, items.name, items.description, items.price, items.sell_value, items.type
+            'SELECT ' . self::ITEM_COLUMNS . '
                FROM shop_items
                JOIN items ON items.id = shop_items.item_id
+               JOIN item_categories ON item_categories.id = items.category_id
               WHERE shop_items.shop_id = :shop_id AND shop_items.item_id = :item_id
               LIMIT 1'
         );

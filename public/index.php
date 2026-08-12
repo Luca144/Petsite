@@ -36,6 +36,7 @@ use Felkyo\Creatures\PettingService;
 use Felkyo\Creatures\SpeciesRepository;
 use Felkyo\Creatures\StarterCreatureService;
 use Felkyo\Economy\InventoryRepository;
+use Felkyo\Economy\ItemDisposalService;
 use Felkyo\Economy\PurchaseService;
 use Felkyo\Economy\ShopRepository;
 use Felkyo\Exploration\ExplorationRepository;
@@ -54,6 +55,7 @@ use Felkyo\Http\Controllers\ExplorationController;
 use Felkyo\Http\Controllers\GuestbookController;
 use Felkyo\Http\Controllers\HomeController;
 use Felkyo\Http\Controllers\InventoryController;
+use Felkyo\Http\Controllers\ItemController;
 use Felkyo\Http\Controllers\LoginController;
 use Felkyo\Http\Controllers\LogoutController;
 use Felkyo\Http\Controllers\PetController;
@@ -264,6 +266,12 @@ $shopController = new ShopController(
         'rate_limit' => $config['security']['rate_limit_purchase'],
     ]
 );
+$itemController = new ItemController(
+    $templates, $session, $csrf, $inventoryRepository,
+    new ItemDisposalService($pdo, $userRepository, $inventoryRepository),
+    $rateLimiter,
+    $config['security']['rate_limit_item_disposal']
+);
 
 // ---- Routes ----
 $router = new Router();
@@ -305,6 +313,12 @@ $router->post('/explore/{area}', [$explorationController, 'search']);
 $router->get('/shop', [$shopController, 'show']);
 $router->post('/shop/buy', [$shopController, 'buy']);
 $router->get('/inventory', [$inventoryController, 'show']);
+// One owned item, and the two ways to part with it. Selling and discarding are
+// separate routes rather than one route with a flag, so the difference between
+// "get paid" and "lose it for nothing" is never a value the browser sends.
+$router->get('/inventory/{id}', [$itemController, 'show']);
+$router->post('/inventory/{id}/sell', [$itemController, 'sell']);
+$router->post('/inventory/{id}/discard', [$itemController, 'discard']);
 
 // A single creature's page. {id} is captured from the URL, e.g. /creature/42.
 $router->get('/creature/{id}', [$creatureController, 'show']);

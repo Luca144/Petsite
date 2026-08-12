@@ -143,6 +143,35 @@ nobody notices is broken until the currency is worthless.
 fails by name if one breaks the rule. It is guarding against a typo in the panel
 far more than against a bug in the code.
 
+**How much margin, and where the number came from.** "Not a loss" is not enough —
+the shopkeeper has to live off the difference too, so a real margin is kept rather
+than a hair's breadth. The ceiling is `maximum_sell_fraction_of_price` in
+`config/config.php`, currently **80%**: a shop never pays more than four fifths of
+what it charges.
+
+That number is not invented. Across every item the artist had already priced in
+the design document, the most generous buy-back was Pumpkin Soup at 75% — 60g to
+buy, 45g back. So 80% leaves her room to be kind and breaks nothing she had
+already written.
+
+**This rule also covers a mechanic that does not exist yet.** The artist wants
+players to be able to befriend the NPCs, which will make their shops cheaper
+(M13). Friendship discounts open the same hole from the other direction: an item
+costing 100g and selling back for 70g is safe until a well-liked shopkeeper takes
+40% off, at which point it costs 60g and sells for 70g and the loop is open again.
+Nobody would design that — it falls out of two reasonable numbers meeting.
+
+So the rule is written to hold whatever the price becomes: **no discount may ever
+take a buy price to or below what the same shop pays for the thing.** If
+friendship would push it lower, it stops there. Sunny may like you very much; he
+still will not sell at a loss.
+
+Friendship is also expected to affect **buying only**, not selling. Two numbers
+moving toward each other is twice as many ways to get it wrong, and "things are
+cheaper for friends" reads more naturally than "friends pay you more" anyway. If
+that ever changes, the single rule above still protects the economy — it just has
+to be checked after both adjustments rather than one.
+
 ---
 
 ## 5. How to add a new kind of owned thing

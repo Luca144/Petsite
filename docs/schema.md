@@ -116,6 +116,25 @@ and when that window began, so the per-visit limit can be enforced and refreshed
 
 Index: `(user_id, area_slug)`.
 
+### `item_categories` — what kind of thing an item is (content)
+Added in M1.2. A category carries the three signals a player uses to recognise an
+item at a glance: a colour, an icon, and a word. All three, always — colour alone
+excludes colour-blind players, so the name is never optional.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | int unsigned | Primary key. |
+| `slug` | varchar(40), unique, NOT NULL | Machine name, e.g. `dish`. |
+| `name` | varchar(40), NOT NULL | What a player reads, e.g. "Dish". |
+| `colour_token` | varchar(60), NOT NULL | The **name** of a theme token, e.g. `--category-dish` — never a colour value, so the palette stays in `theme.css` (CLAUDE.md section 8). |
+| `icon_key` | varchar(40), NOT NULL | Which drawing in the inline SVG sprite to show. |
+| `sort_order` | int unsigned, NOT NULL, default 0 | The order categories appear in. Data, so reordering needs no code. |
+| `created_at` | timestamp, NOT NULL | |
+
+The eight seeded categories — ingredient, dish, potion, material, seed, tool,
+sticker, badge — are taken from the artist's design document, not invented.
+Adding a ninth is one row. See `docs/adding-items.md`.
+
 ### `items` — definitions of things that can be owned/sold (content)
 Defines what an item *is*. Ownership and sale are separate tables.
 
@@ -127,14 +146,17 @@ Defines what an item *is*. Ownership and sale are separate tables.
 | `description` | text, NULL | Optional. |
 | `price` | int unsigned, NOT NULL, default 0 | Cost in the in-game currency. |
 | `sell_value` | int unsigned, NOT NULL, default 0 | What a player gets back for selling one. **Must never exceed `price` for an item a shop offers** — otherwise buy-and-sell is a money loop. 0 means "not sellable" (M1.1). |
-| `type` | varchar(30), NOT NULL | Grouping label for the inventory page (B.8). |
+| `category_id` | int unsigned, NOT NULL, FK → `item_categories.id` (RESTRICT) | What kind of thing it is. Replaced the old free-text `type` column in M1.2, so there is one answer rather than whatever somebody happened to type. |
 | `created_at` | timestamp, NOT NULL | |
 
-Indexes: unique `slug`, and `type` (for grouping).
+Indexes: unique `slug`, plus the automatic index on the category foreign key.
 
 **The two numbers.** `price` is what a shop charges; `sell_value` is what a player
-gets back. They are separate on purpose — see `docs/owned-things.md`, rule 3, and
-the test that guards them in `tests/Integration/ItemSellValueTest.php`.
+gets back. They are separate on purpose, and a shop must always keep a margin
+between them — the ceiling lives in `config/config.php` under
+`gameplay.economy.maximum_sell_fraction_of_price`, currently 80%. Otherwise
+buying and selling in a loop would make currency out of nothing. See
+`docs/owned-things.md` rule 3, and `tests/Integration/ItemSellValueTest.php`.
 
 ### `inventory` — which items each user owns
 A join table between users and items, with a quantity.
