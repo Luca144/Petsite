@@ -1279,3 +1279,54 @@ scroll to understand is one nobody reads.
 ### Tests
 
 `SearchControllerTest` (13). Most of them are about what search refuses to tell you.
+
+---
+
+## The smoke test — and why it exists
+
+`php bin/smoke-test.php`
+
+**Run it before telling anybody a feature is ready.** It is on the finishing
+checklist in CLAUDE.md section 13, alongside the unit tests, and not as a
+formality.
+
+### What it does
+
+Starts the site, registers an account through the real signup form, walks every
+page, submits the real forms, and checks the pages **did their job** rather than
+merely rendering. It also checks the markup mistakes that are cheap to make and
+embarrassing to ship: images without alt text, repeated ids, skipped heading
+levels, and anything the application logged as an error.
+
+53 checks, about twenty seconds.
+
+### Why it exists
+
+The unit and integration tests call the code directly. That is fast and catches
+most things — but it cannot catch a mistake in how the code is **wired together**,
+because the test does the wiring, and it wires things the way the person writing
+it believed they worked.
+
+The player search read its query from posted form values. The search form is a GET
+form, so the query arrives in the address. **Search never worked once.** Its
+integration test passed every time, because the test built the request by hand and
+put the query where the controller expected it — proving the controller worked
+given input it could never receive.
+
+A green suite said the feature was fine. Opening the page would have shown the
+truth in four seconds.
+
+### Two things it enforces about itself
+
+- **It refuses to run against a production configuration.** It creates accounts
+  and clears rate-limit records — fine on a laptop, unacceptable on the live site.
+- **It clears the local address's rate-limit records first.** Registration is
+  capped at three accounts an hour per address, which is right for the real site
+  and stops the script running twice in a row.
+
+### When you change it
+
+Test the test. Break the thing on purpose, confirm the check goes red, then put it
+back. The first version of the search check passed even with the bug reintroduced,
+because the logged-in player's own name appears in the page header and the check
+was looking anywhere on the page rather than inside the results.

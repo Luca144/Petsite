@@ -133,6 +133,21 @@ A feature is not done until it has tests. "Works on my machine" is not done.
 - **Tests use fixtures or factories, not hardcoded IDs from seed data.** Tests must be independent and runnable in any order.
 - **If a bug is found, a test is written that would have caught it *before* the bug is fixed.** This prevents regressions.
 
+**A passing test is not proof the feature works.** Automated tests call the code
+directly, which means the test does the wiring — and it wires things the way the
+person writing it *believed* they worked. A test that hands a controller input it
+could never actually receive will pass forever while the feature is dead.
+
+This is not hypothetical. The player search read its query from posted form
+values while the form was a GET form; search never worked once, and its test was
+green the whole time.
+
+So: **before telling anyone a feature is ready, open it.** Run
+`php bin/smoke-test.php`, which drives the real site over HTTP — it registers an
+account through the real form, walks every page, submits the real forms and checks
+the pages actually did their job, not merely that they rendered. Never hand over a
+manual checklist for a page you have not loaded yourself.
+
 If you're writing code and can't figure out how to test it, that is a signal the code is badly structured. Stop and restructure, don't skip the test.
 
 ---
@@ -268,6 +283,7 @@ Before considering a task done, run through this checklist:
 - [ ] All new functions and methods have educational comments
 - [ ] No file exceeds its line limit (300 PHP class / 200 template / 250 JS / 400 CSS)
 - [ ] Tests are written for new code and they pass locally
+- [ ] `php bin/smoke-test.php` passes — the site was actually opened and used, not just unit-tested
 - [ ] CSRF tokens are present on new forms
 - [ ] User input is validated and output is escaped
 - [ ] No secrets hardcoded; `.env.example` updated if new config was added
