@@ -76,6 +76,9 @@ final class CreatureController
             'canPet' => $this->session->has('user_id'),
             // Only the owner sees the "edit bio" form.
             'isOwner' => $this->viewerOwns($creature->ownerId),
+            // Reporting needs somebody to report TO, so the control is offered
+            // only to a logged-in visitor (the owner gets the edit form instead).
+            'viewerIsLoggedIn' => is_int($this->session->get('user_id')),
             // The guestbook: its signatures, the choosable messages, and which one
             // this visitor already picked. Any logged-in visitor may sign.
             'guestbook' => $guestbook,

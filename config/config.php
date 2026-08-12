@@ -185,7 +185,16 @@ return [
                                      // against being paid twice — that lives in the
                                      // database (InventoryRepository::removeOne).
         ],
-        'rate_limit_profile' => [
+        'rate_limit_report' => [
+            'max_attempts' => 30,     // at most 30 reports...
+            'window_seconds' => 3600, // ...per hour, per IP. Deliberately generous:
+                                      // somebody genuinely upset may report several
+                                      // things at once, and being told to slow down
+                                      // at that moment would be its own small harm.
+                                      // The one-report-per-person-per-thing rule in
+                                      // the database is what stops the queue being
+                                      // buried, not this.
+        ],        'rate_limit_profile' => [
             'max_attempts' => 20,     // at most 20 profile saves...
             'window_seconds' => 3600, // ...per hour, per IP. A profile is edited
                                       // occasionally, not repeatedly, so a low

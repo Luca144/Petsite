@@ -24,6 +24,8 @@ final class Creature
         public readonly int $xp,
         public readonly int $happiness,
         public readonly ?string $bio,
+        // When a report hid this bio, or null if it is visible (M1.4).
+        public readonly ?string $bioHiddenAt,
         public readonly bool $isPublic,
         public readonly ?string $lastInteractedAt,
         public readonly ?string $createdAt,
@@ -40,9 +42,18 @@ final class Creature
             (int) $row['xp'],
             (int) $row['happiness'],
             $row['bio'] ?? null,
+            $row['bio_hidden_at'] ?? null,
             (bool) $row['is_public'],
             $row['last_interacted_at'] ?? null,
             $row['created_at'] ?? null,
         );
+    }
+
+    /**
+     * Is this bio hidden while somebody looks at a report about it?
+     */
+    public function isBioHidden(): bool
+    {
+        return $this->bioHiddenAt !== null;
     }
 }

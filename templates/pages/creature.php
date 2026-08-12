@@ -106,10 +106,19 @@ $createdLabel = $creature->createdAt !== null
 
 <h2 class="panel-label">About <?= $this->e($creature->name) ?></h2>
 <div class="card">
-    <?php if (!empty($creature->bio)): ?>
+    <?php if ($creature->isBioHidden()): ?>
+        <?php /* Reported and hidden until a human has looked (M1.4). A neutral
+                 placeholder rather than an empty space, worded so it accuses
+                 nobody — most reports turn out to be about nothing at all. */ ?>
+        <p class="under-review">This description is hidden while we take a look at it.</p>
+    <?php elseif (!empty($creature->bio)): ?>
         <p><?= $this->e($creature->bio) ?></p>
     <?php else: ?>
         <p class="empty-state"><?= $this->e($creature->name) ?> doesn&rsquo;t have a bio yet.</p>
+    <?php endif; ?>
+
+    <?php if (empty($isOwner) && !empty($viewerIsLoggedIn)): ?>
+        <?= $this->insert('partials/report-link', ['subject' => 'creature_bio', 'id' => $creature->id]) ?>
     <?php endif; ?>
 
     <?php if (!empty($isOwner)): ?>

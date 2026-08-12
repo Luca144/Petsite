@@ -27,6 +27,11 @@ final class Profile
         public readonly string $username,
         public readonly string $avatarKey,
         public readonly ?string $about,
+        // When a report hid this text, or null if it is visible. A timestamp
+        // rather than a flag, so the moderation queue can show how long it has
+        // been waiting — the number that tells two busy people whether this is
+        // working (M1.4).
+        public readonly ?string $aboutHiddenAt,
         public readonly ?string $createdAt,
     ) {
     }
@@ -38,6 +43,7 @@ final class Profile
             $row['username'],
             $row['avatar_key'],
             $row['about'] ?? null,
+            $row['about_hidden_at'] ?? null,
             $row['created_at'] ?? null,
         );
     }
@@ -51,5 +57,17 @@ final class Profile
     public function hasAbout(): bool
     {
         return $this->about !== null && trim($this->about) !== '';
+    }
+
+    /**
+     * Is the about text hidden while somebody looks at a report about it?
+     *
+     * The page shows a neutral placeholder rather than nothing at all, so the
+     * page does not silently lose a section and nobody is left wondering whether
+     * it broke.
+     */
+    public function isAboutHidden(): bool
+    {
+        return $this->aboutHiddenAt !== null;
     }
 }

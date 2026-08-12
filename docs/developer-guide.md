@@ -1130,3 +1130,90 @@ the top of `ProfileService` says so plainly rather than implying the field is sa
 about: an avatar that is a file path is refused; a private creature never appears
 even when featured; a profile never carries the email address; and Rowan cannot
 edit Mira's page however he labels the request.
+
+---
+
+## Increment M1.4 — Names, bios, and the guards on them
+
+The highest-priority safety increment in Part One. **The full reasoning is in
+`docs/free-text-safety.md`** — read that one first; this is the code tour.
+
+### One guard for all three fields
+
+There are exactly three places on this site where a player chooses their own
+words: an account name, a creature's name, and a bio or about text. All three go
+through `TextGuard`. Sharing it is the point — three separate sets of rules would
+mean three different sets of gaps, and the gap nobody remembered would be the one
+that mattered.
+
+`ProfileService`, `CreatureBioService` and `RegistrationService` all call it. The
+old `ContentFilter` is no longer used by any of them.
+
+### The link filter is the important one
+
+`ContactDetailDetector` is not about spam. A stranger on this site can do very
+little — no messaging, no private channel, no words of their own. Unless they can
+persuade somebody to *leave*, at which point none of it applies. A link is the one
+thing that leads somewhere none of this project's protections reach.
+
+### Two false positives found while building it, both instructive
+
+**"A gentle creature who loves naps."** was refused as advertising Snapchat —
+`lovesnaps` contains `snap` once the spaces come out. Fix: the fully-collapsed
+form is only matched against platform names of seven letters or more.
+
+**"see example.com"** was reported as an email address. The normaliser turns `@`
+into the letter it imitates (right, for catching `sc@m`), so *any* domain
+containing an "a" looked like `something@something.com`. Fix: email detection
+reads the original text, not the normalised form.
+
+Both are why `TextSafetyTest` tests the **innocent** sentences first. A filter that
+refuses ordinary writing gets switched off, and then protects nobody at all.
+
+### Three forms of the same text
+
+`TextNormaliser` produces three, and choosing the wrong one is how the bugs above
+happened:
+
+- `normalise()` — lowercase, lookalike digits mapped back, separators collapsed.
+- `withoutLetterSpacing()` — closes up runs of *single* letters only, so
+  `s c a m` becomes `scam` while `loves naps` stays two words. Note the negative
+  lookahead: without it the run swallowed the next word's first letter and
+  produced `scamartists`, in which `scam` is no longer a whole word.
+- `withoutSpacing()` — closes everything. Blunt; long platform names only.
+
+### Impersonation is stored, not computed
+
+`users.username_skeleton` holds the dull comparison form, indexed. Checking a new
+registration against every existing account would be fine with twelve accounts and
+hopeless with twelve thousand — **and a check that gets slower as the site grows is
+a check somebody eventually removes.**
+
+The folding order in `skeletonOf()` matters: lookalike alphabets are folded
+*before* accents, because the accent step drops characters it cannot convert, so a
+Cyrillic "а" would simply vanish and `mirа` would become `mir` — no longer
+resembling `mira` at all.
+
+### Reporting
+
+Fixed reasons, no free-text box — a "tell us more" field would be one player
+writing words another player reads, which is the one thing this design does not
+have. Reasons carry a priority and are offered most serious first.
+
+One report per person per thing, enforced by a unique index rather than by looking
+first: two taps arriving together would both pass a check-then-insert.
+
+**Bios hide when reported; names do not.** Hiding a name would break every page it
+appears on and would let anybody erase another player by reporting them. This is
+recorded on `ReportSubject::hidesUntilReviewed()`, beside the kinds it applies to,
+so adding a sixth kind forces somebody to answer the question.
+
+**A known risk, deliberately taken:** because reporting hides a bio, somebody can
+hide an innocent player's text out of spite. M2.7's queue **must** surface
+reporters whose reports are always dismissed — that is a requirement of that
+increment, not a nicety.
+
+### Tests
+
+`TextSafetyTest` (39, including data providers) and `ReportServiceTest` (13). The
+innocent-text cases are as load-bearing as the refusals.

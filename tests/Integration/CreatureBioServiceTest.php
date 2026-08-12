@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Felkyo\Tests\Integration;
 
-use Felkyo\Creatures\ContentFilter;
 use Felkyo\Creatures\Creature;
 use Felkyo\Creatures\CreatureBioService;
 use Felkyo\Creatures\CreatureRepository;
 use Felkyo\Creatures\SpeciesRepository;
 use Felkyo\Tests\DatabaseTestCase;
+use Felkyo\Tests\Support\Guards;
 use Felkyo\Users\UserRepository;
 
 /**
@@ -32,7 +32,7 @@ final class CreatureBioServiceTest extends DatabaseTestCase
         $this->creatures = new CreatureRepository($this->connection);
         $this->bioService = new CreatureBioService(
             $this->creatures,
-            new ContentFilter(['spam', 'scam']),
+            Guards::textGuard(['spam', 'scam']),
             500
         );
 

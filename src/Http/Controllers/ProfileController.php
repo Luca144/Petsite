@@ -79,6 +79,10 @@ final class ProfileController
             'avatarName' => $this->avatars->nameFor($profile->avatarKey),
             'summaries' => $this->creatureProfiles->summariesFor($creatures),
             'isOwner' => $isOwner,
+            // Reporting needs somebody to report TO, so it is offered only to a
+            // logged-in visitor, and never on your own page — where the answer
+            // to anything you dislike is to change it yourself.
+            'canReport' => is_int($viewerId) && !$isOwner,
             // Only the owner is told this, and only so their own page never feels
             // as though it has lost something. A visitor has no business knowing
             // how many creatures somebody keeps out of sight.

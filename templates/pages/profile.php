@@ -51,7 +51,13 @@ $this->layout('layout', ['title' => $profile->username . ' — Felkyo Creatures'
 <section class="profile-about">
     <h3 class="panel-label">About</h3>
 
-    <?php if ($profile->hasAbout()): ?>
+    <?php if ($profile->isAboutHidden()): ?>
+        <?php /* Reported and hidden until a human has looked. A neutral
+                 placeholder rather than nothing at all, so the page does not
+                 silently lose a section — and worded so it accuses nobody, since
+                 most reports turn out to be about nothing. */ ?>
+        <p class="under-review">This text is hidden while we take a look at it.</p>
+    <?php elseif ($profile->hasAbout()): ?>
         <?php /* Plates escapes this. nl2br is applied to the ESCAPED text, so the
                  only tags that can reach the page are the <br> we add ourselves —
                  never anything somebody typed. */ ?>
@@ -65,6 +71,9 @@ $this->layout('layout', ['title' => $profile->username . ' — Felkyo Creatures'
         <p class="empty-state">
             <?= $this->e($profile->username) ?> hasn&rsquo;t written anything here yet.
         </p>
+    <?php endif; ?>
+    <?php if ($canReport): ?>
+        <?= $this->insert('partials/report-link', ['subject' => 'profile_about', 'id' => $profile->id]) ?>
     <?php endif; ?>
 </section>
 

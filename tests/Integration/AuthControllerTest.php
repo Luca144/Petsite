@@ -20,6 +20,8 @@ use Felkyo\Http\Router;
 use Felkyo\Security\RateLimiter;
 use Felkyo\Security\RateLimitRepository;
 use Felkyo\Tests\DatabaseTestCase;
+use Felkyo\Safety\ImpersonationGuard;
+use Felkyo\Tests\Support\Guards;
 use Felkyo\Users\UserRepository;
 use Felkyo\Users\UserValidator;
 use League\Plates\Engine;
@@ -64,7 +66,10 @@ final class AuthControllerTest extends DatabaseTestCase
         $this->users = new UserRepository($this->connection);
         $hasher = new PasswordHasher();
         $validator = new UserValidator($security);
-        $this->registration = new RegistrationService($this->users, $validator, $hasher);
+        $this->registration = new RegistrationService(
+            $this->users, $validator, $hasher,
+            Guards::textGuard(), new ImpersonationGuard(), 30
+        );
         $authenticator = new Authenticator($this->users, $hasher);
         $rateLimiter = new RateLimiter(new RateLimitRepository($this->connection));
 

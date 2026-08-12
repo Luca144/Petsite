@@ -7,6 +7,8 @@ namespace Felkyo\Tests\Integration;
 use Felkyo\Auth\PasswordHasher;
 use Felkyo\Auth\RegistrationService;
 use Felkyo\Tests\DatabaseTestCase;
+use Felkyo\Safety\ImpersonationGuard;
+use Felkyo\Tests\Support\Guards;
 use Felkyo\Users\UserRepository;
 use Felkyo\Users\UserValidator;
 
@@ -31,7 +33,10 @@ final class RegistrationServiceTest extends DatabaseTestCase
         $this->hasher = new PasswordHasher();
         $validator = new UserValidator($config['security']);
 
-        $this->registration = new RegistrationService($this->users, $validator, $this->hasher);
+        $this->registration = new RegistrationService(
+            $this->users, $validator, $this->hasher,
+            Guards::textGuard(), new ImpersonationGuard(), 30
+        );
     }
 
     public function testAValidRegistrationCreatesTheUser(): void

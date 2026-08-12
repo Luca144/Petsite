@@ -79,14 +79,20 @@ final class UserRepository
      * created_at use their database defaults (0 and "now"). The password must
      * already be hashed by the caller — this class never sees a plain password.
      */
-    public function create(string $username, string $email, string $passwordHash): User
+    public function create(string $username, string $email, string $passwordHash, string $usernameSkeleton = ''): User
     {
         $statement = $this->connection->prepare(
-            'INSERT INTO users (username, email, password_hash)
-             VALUES (:username, :email, :password_hash)'
+            'INSERT INTO users (username, username_skeleton, email, password_hash)
+             VALUES (:username, :username_skeleton, :email, :password_hash)'
         );
         $statement->execute([
             ':username' => $username,
+            // The dull comparison form of the name, so a lookalike registration
+            // can be found with one indexed lookup instead of by reading every
+            // account (see the migration that added the column). It defaults to
+            // empty so older callers keep working; RegistrationService always
+            // supplies it, and that is the path real accounts take.
+            ':username_skeleton' => $usernameSkeleton,
             ':email' => $email,
             ':password_hash' => $passwordHash,
         ]);
@@ -198,5 +204,30 @@ final class UserRepository
         }
 
         return User::fromRow($row);
+    }
+
+    /**
+     * Is any account already using a name that READS like this one?
+     *
+     * Takes the skeleton (the dull comparison form from ImpersonationGuard), not
+     * the name itself — so "m1ra", "rnira" and "Mira" all arrive here as the same
+     * value and all find the same account.
+     *
+     * One indexed lookup, so this stays cheap however many accounts exist. That
+     * matters: a check that gets slower as the site grows is a check somebody
+     * eventually removes.
+     */
+    public function findByUsernameSkeleton(string $skeleton): ?User
+    {
+        if ($skeleton === '') {
+            return null;
+        }
+
+        $statement = $this->connection->prepare(
+            'SELECT ' . self::COLUMNS . ' FROM users WHERE username_skeleton = :skeleton LIMIT 1'
+        );
+        $statement->execute([':skeleton' => $skeleton]);
+
+        return $this->rowToUserOrNull($statement->fetch());
     }
 }

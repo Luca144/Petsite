@@ -40,7 +40,7 @@ final class ProfileRepository
     public function findByUsername(string $username): ?Profile
     {
         $statement = $this->connection->prepare(
-            'SELECT id, username, avatar_key, about, created_at
+            'SELECT id, username, avatar_key, about, about_hidden_at, created_at
                FROM users
               WHERE username = :username
               LIMIT 1'
@@ -58,7 +58,7 @@ final class ProfileRepository
     public function findById(int $userId): ?Profile
     {
         $statement = $this->connection->prepare(
-            'SELECT id, username, avatar_key, about, created_at
+            'SELECT id, username, avatar_key, about, about_hidden_at, created_at
                FROM users
               WHERE id = :id
               LIMIT 1'

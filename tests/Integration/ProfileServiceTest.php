@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Felkyo\Tests\Integration;
 
-use Felkyo\Creatures\ContentFilter;
 use Felkyo\Creatures\CreatureRepository;
 use Felkyo\Creatures\SpeciesRepository;
 use Felkyo\Tests\DatabaseTestCase;
+use Felkyo\Tests\Support\Guards;
 use Felkyo\Users\AvatarSet;
 use Felkyo\Users\ProfileRepository;
 use Felkyo\Users\ProfileService;
@@ -49,7 +49,7 @@ final class ProfileServiceTest extends DatabaseTestCase
                 'default' => ['name' => 'The wandering visitor', 'file' => 'default.png'],
                 'second' => ['name' => 'A second face', 'file' => 'second.png'],
             ]),
-            new ContentFilter(['spam', 'scam']),
+            Guards::textGuard(['spam', 'scam']),
             ['max_about_length' => 300, 'max_featured_creatures' => 3]
         );
 

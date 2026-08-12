@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Felkyo\Tests\Integration;
 
-use Felkyo\Creatures\ContentFilter;
 use Felkyo\Creatures\CreatureBioService;
 use Felkyo\Creatures\CreatureRepository;
 use Felkyo\Creatures\SpeciesRepository;
 use Felkyo\Economy\InventoryRepository;
 use Felkyo\Economy\ShopRepository;
 use Felkyo\Tests\DatabaseTestCase;
+use Felkyo\Tests\Support\Guards;
 use Felkyo\Users\UserRepository;
 
 /**
@@ -76,7 +76,7 @@ final class OwnedThingOwnershipTest extends DatabaseTestCase
 
     public function testTheServiceAlsoRefusesRowanAndSaysSoKindly(): void
     {
-        $bioService = new CreatureBioService($this->creatures, new ContentFilter([]), 500);
+        $bioService = new CreatureBioService($this->creatures, Guards::textGuard([]), 500);
 
         $result = $bioService->updateBio(
             $this->creatures->findById($this->mirasCreatureId),

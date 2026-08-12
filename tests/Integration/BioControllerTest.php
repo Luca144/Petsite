@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Felkyo\Tests\Integration;
 
 use Felkyo\Auth\Session;
-use Felkyo\Creatures\ContentFilter;
 use Felkyo\Creatures\CreatureBioService;
 use Felkyo\Creatures\CreatureRepository;
 use Felkyo\Creatures\SpeciesRepository;
@@ -16,6 +15,7 @@ use Felkyo\Http\Router;
 use Felkyo\Security\RateLimiter;
 use Felkyo\Security\RateLimitRepository;
 use Felkyo\Tests\DatabaseTestCase;
+use Felkyo\Tests\Support\Guards;
 use Felkyo\Users\UserRepository;
 
 /**
@@ -47,7 +47,7 @@ final class BioControllerTest extends DatabaseTestCase
 
         $bioService = new CreatureBioService(
             $this->creatures,
-            new ContentFilter($config['moderation']['blocked_words']),
+            Guards::textGuard($config['moderation']['blocked_words']),
             $config['gameplay']['bio_max_length']
         );
         $rateLimiter = new RateLimiter(new RateLimitRepository($this->connection));

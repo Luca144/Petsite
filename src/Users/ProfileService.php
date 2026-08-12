@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Felkyo\Users;
 
-use Felkyo\Creatures\ContentFilter;
 use Felkyo\Creatures\CreatureRepository;
+use Felkyo\Safety\TextGuard;
 
 /**
  * The rules for changing your own profile.
@@ -34,11 +34,11 @@ use Felkyo\Creatures\CreatureRepository;
  *      owner as well.
  *    - Put a private creature on a public page by featuring it. Closed at the
  *      point of display — the profile only ever shows creatures marked public.
- *    - Write something harmful, or endless, in the about text. Bounded here by a
- *      length cap and the word filter. Honestly: this is the WEAKEST of the four
- *      today, and M1.4 is the increment that fixes it properly — links, lookalike
- *      characters, impersonation and reporting. Until then the about text carries
- *      exactly the protection the creature bio already has, and no more.
+ *    - Write something harmful, or endless, in the about text. Checked by
+ *      TextGuard, shared with account names and creature bios: length, hidden
+ *      characters, contact details and blocked words. The link check is the one
+ *      that matters most — a link is the one thing that leads somewhere none of
+ *      this site's other protections reach.
  *    - Flood the page with featured creatures. Capped from config.
  *
  * 3. WHAT DOES THE TEST SUITE PROVE? tests/Integration/ProfileServiceTest proves
@@ -55,7 +55,7 @@ final class ProfileService
         private ProfileRepository $profiles,
         private CreatureRepository $creatures,
         private AvatarSet $avatars,
-        private ContentFilter $filter,
+        private TextGuard $textGuard,
         private array $limits,
     ) {
     }
@@ -71,22 +71,23 @@ final class ProfileService
             return ProfileResult::rejected('That is not one of the avatars you can choose.');
         }
 
-        $about = trim($about);
+        // The about text goes through the same guard as account names and creature
+        // bios (M1.4): length, hidden characters, contact details and blocked
+        // words. Sharing one guard across all three is the point — three separate
+        // sets of rules would mean three different sets of gaps.
+        $guarded = $this->textGuard->checkLongText($about, $this->limits['max_about_length']);
 
-        if (mb_strlen($about) > $this->limits['max_about_length']) {
-            return ProfileResult::rejected(
-                'Please keep your about text to ' . $this->limits['max_about_length'] . ' characters or fewer.'
-            );
+        if (!$guarded->isAccepted()) {
+            return ProfileResult::rejected($guarded->message());
         }
 
-        if ($this->filter->containsBlockedWord($about)) {
-            return ProfileResult::rejected('Please keep it friendly — some words in there are not allowed.');
-        }
-
+        // We save the guard's cleaned value, never the raw text.
+        //
         // An empty box means "I have not written anything", which is NULL, not an
         // empty string. Keeping the difference lets the page say something warm in
         // the empty case instead of rendering nothing at all.
-        $this->profiles->saveAppearance($userId, $avatarKey, $about === '' ? null : $about);
+        $cleaned = $guarded->value();
+        $this->profiles->saveAppearance($userId, $avatarKey, $cleaned === '' ? null : $cleaned);
 
         return ProfileResult::saved('Your page has been saved.');
     }

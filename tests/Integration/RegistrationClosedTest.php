@@ -18,6 +18,8 @@ use Felkyo\Http\Router;
 use Felkyo\Security\RateLimiter;
 use Felkyo\Security\RateLimitRepository;
 use Felkyo\Tests\DatabaseTestCase;
+use Felkyo\Safety\ImpersonationGuard;
+use Felkyo\Tests\Support\Guards;
 use Felkyo\Users\UserRepository;
 use Felkyo\Users\UserValidator;
 use League\Plates\Engine;
@@ -61,7 +63,10 @@ final class RegistrationClosedTest extends DatabaseTestCase
             $templates,
             new Csrf($session),
             $session,
-            new RegistrationService($users, new UserValidator($config['security']), $hasher),
+            new RegistrationService(
+                $users, new UserValidator($config['security']), $hasher,
+                Guards::textGuard(), new ImpersonationGuard(), 30
+            ),
             new StarterCreatureService(
                 new SpeciesRepository($this->connection),
                 new CreatureRepository($this->connection),

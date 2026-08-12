@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Felkyo\Tests\Integration;
 
 use Felkyo\Auth\Session;
-use Felkyo\Creatures\ContentFilter;
 use Felkyo\Creatures\CreatureProfileBuilder;
 use Felkyo\Creatures\CreatureRepository;
 use Felkyo\Creatures\GrowthCalculator;
@@ -19,6 +18,7 @@ use Felkyo\Http\Router;
 use Felkyo\Security\RateLimiter;
 use Felkyo\Security\RateLimitRepository;
 use Felkyo\Tests\DatabaseTestCase;
+use Felkyo\Tests\Support\Guards;
 use Felkyo\Users\AvatarSet;
 use Felkyo\Users\ProfileRepository;
 use Felkyo\Users\ProfileService;
@@ -67,7 +67,7 @@ final class ProfileControllerTest extends DatabaseTestCase
                 $this->profiles,
                 $this->creatures,
                 $avatars,
-                new ContentFilter(['spam']),
+                Guards::textGuard(['spam']),
                 $limits
             ),
             $this->creatures,

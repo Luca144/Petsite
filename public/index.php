@@ -36,6 +36,12 @@ use Felkyo\Creatures\PettingService;
 use Felkyo\Creatures\SpeciesRepository;
 use Felkyo\Creatures\StarterCreatureService;
 use Felkyo\Economy\InventoryRepository;
+use Felkyo\Safety\ContactDetailDetector;
+use Felkyo\Safety\ImpersonationGuard;
+use Felkyo\Safety\ReportRepository;
+use Felkyo\Safety\ReportService;
+use Felkyo\Safety\TextGuard;
+use Felkyo\Safety\WordBlocklist;
 use Felkyo\Economy\ItemDisposalService;
 use Felkyo\Economy\PurchaseService;
 use Felkyo\Economy\ShopRepository;
@@ -57,6 +63,7 @@ use Felkyo\Http\Controllers\HomeController;
 use Felkyo\Http\Controllers\InventoryController;
 use Felkyo\Http\Controllers\ItemController;
 use Felkyo\Http\Controllers\ProfileController;
+use Felkyo\Http\Controllers\ReportController;
 use Felkyo\Http\Controllers\LoginController;
 use Felkyo\Http\Controllers\LogoutController;
 use Felkyo\Http\Controllers\PetController;
@@ -140,7 +147,22 @@ $guestbookRepository = new GuestbookRepository($pdo);
 // ---- Services (own the business rules) ----
 $passwordHasher = new PasswordHasher();
 $userValidator = new UserValidator($config['security']);
-$registrationService = new RegistrationService($userRepository, $userValidator, $passwordHasher);
+// The safety layer for every piece of text a player can write. There are only
+// three such places on the whole site — an account name, a creature's name, and a
+// bio or about text — and they all go through this one guard so they cannot drift
+// into having three different sets of gaps. See docs/free-text-safety.md.
+$impersonationGuard = new ImpersonationGuard();
+$textGuard = new TextGuard(
+    new WordBlocklist($config['moderation']['blocked_words']),
+    new ContactDetailDetector(),
+    $impersonationGuard
+);
+
+$registrationService = new RegistrationService(
+    $userRepository, $userValidator, $passwordHasher,
+    $textGuard, $impersonationGuard,
+    $config['security']['username_max_length']
+);
 $authenticator = new Authenticator($userRepository, $passwordHasher);
 $rateLimiter = new RateLimiter($rateLimitRepository);
 $starterCreatureService = new StarterCreatureService(
@@ -173,7 +195,7 @@ $purchaseService = new PurchaseService(
 );
 $creatureBioService = new CreatureBioService(
     $creatureRepository,
-    new ContentFilter($config['moderation']['blocked_words']),
+    $textGuard,
     $config['gameplay']['bio_max_length']
 );
 // The guestbook. The catalogue of choosable messages is shared by the service
@@ -287,12 +309,22 @@ $profileController = new ProfileController(
         $profileRepository,
         $creatureRepository,
         $avatarSet,
-        new ContentFilter($config['moderation']['blocked_words']),
+        $textGuard,
         $config['profile']
     ),
     $creatureRepository, $creatureProfileBuilder, $avatarSet, $rateLimiter,
     $config['profile'],
     $config['security']['rate_limit_profile']
+);
+
+// Reporting. This is the safety mechanism the filters exist to support: every
+// filter beneath it only catches the obvious, and a person noticing catches the
+// rest. See docs/free-text-safety.md.
+$reportController = new ReportController(
+    $templates, $session, $csrf,
+    new ReportService(new ReportRepository($pdo), $creatureRepository, $profileRepository),
+    $rateLimiter,
+    $config['security']['rate_limit_report']
 );
 
 // ---- Routes ----
@@ -342,6 +374,10 @@ $router->get('/inventory/{id}', [$itemController, 'show']);
 $router->post('/inventory/{id}/sell', [$itemController, 'sell']);
 $router->post('/inventory/{id}/discard', [$itemController, 'discard']);
 
+// The report button. A page rather than a pop-up, so it works without JavaScript,
+// works with a screen reader, and cannot be lost to a mis-tap.
+$router->get('/report/{subject}/{id}', [$reportController, 'show']);
+$router->post('/report', [$reportController, 'submit']);
 // A player's page. The edit routes come BEFORE the {username} one is reached in
 // practice because they are different paths entirely — /profile/... is always the
 // logged-in player's own, and /player/{username} is anybody's. Keeping the two
