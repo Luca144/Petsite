@@ -104,46 +104,12 @@ use Felkyo\Http\AssetUrl;
                 <div class="site-header__sub" aria-hidden="true">Creatures</div>
                 <p class="site-header__tagline">come in &mdash; the kettle&rsquo;s on</p>
 
-                <nav class="site-nav" aria-label="Main">
-                    <!-- aria-current marks the page you are on for screen readers.
-                         $currentPath is provided by the front controller. -->
-                    <a href="/"<?= ($currentPath ?? '') === '/' ? ' aria-current="page"' : '' ?>>home</a>
-                    <!-- Browse is public, so it is shown to everyone. -->
-                    <a href="/browse"<?= ($currentPath ?? '') === '/browse' ? ' aria-current="page"' : '' ?>>browse</a>
-
-                    <?php if (!empty($currentUser)): ?>
-                        <!-- Logged in: links to the player's own pages, then greet
-                             them and offer log out. Logging out changes state, so it
-                             is a POST form with a CSRF token, not a plain link. -->
-                        <a href="/creatures"<?= ($currentPath ?? '') === '/creatures' ? ' aria-current="page"' : '' ?>>my creatures</a>
-                        <a href="/adopt"<?= ($currentPath ?? '') === '/adopt' ? ' aria-current="page"' : '' ?>>adopt</a>
-                        <a href="/explore"<?= str_starts_with($currentPath ?? '', '/explore') ? ' aria-current="page"' : '' ?>>explore</a>
-                        <a href="/shop"<?= str_starts_with($currentPath ?? '', '/shop') ? ' aria-current="page"' : '' ?>>shop</a>
-                        <a href="/inventory"<?= ($currentPath ?? '') === '/inventory' ? ' aria-current="page"' : '' ?>>things</a>
-                        <a href="/players"<?= ($currentPath ?? '') === '/players' ? ' aria-current="page"' : '' ?>>find people</a>
-                        <a href="/player/<?= $this->e(rawurlencode($currentUser->username)) ?>"<?= str_starts_with($currentPath ?? '', '/player/') || str_starts_with($currentPath ?? '', '/profile') ? ' aria-current="page"' : '' ?>>my page</a>
-                        <span class="site-nav__user">hi, <?= $this->e($currentUser->username) ?></span>
-                        <span class="site-nav__coins">
-                            <span aria-hidden="true">&#9670;</span>
-                            <?= $this->e((string) $currentUser->currencyBalance) ?> <?= $this->e($currencyName ?? 'coins') ?>
-                        </span>
-                        <form method="post" action="/logout" class="site-nav__form">
-                            <?= $this->csrf_field() ?>
-                            <button type="submit">log out</button>
-                        </form>
-                    <?php else: ?>
-                        <!-- Logged out: offer the ways in. The sign-up link only
-                             appears when registration is actually open — on the
-                             deployed demo it is closed, and offering a link that
-                             leads to "no thanks" would be unkind. The controller
-                             refuses the action too; hiding a link is never the
-                             protection, only the courtesy. -->
-                        <a href="/login"<?= ($currentPath ?? '') === '/login' ? ' aria-current="page"' : '' ?>>log in</a>
-                        <?php if (!empty($registrationOpen)): ?>
-                            <a href="/register"<?= ($currentPath ?? '') === '/register' ? ' aria-current="page"' : '' ?>>sign up</a>
-                        <?php endif; ?>
-                    <?php endif; ?>
-                </nav>
+                <?= $this->insert('partials/site-nav', [
+                    'currentUser' => $currentUser ?? null,
+                    'currentPath' => $currentPath ?? '',
+                    'currencyName' => $currencyName ?? 'coins',
+                    'registrationOpen' => $registrationOpen ?? false,
+                ]) ?>
             </header>
 
             <hr class="rule">

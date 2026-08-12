@@ -41,12 +41,25 @@ $createdLabel = $creature->createdAt !== null
 <?php endif; ?>
 
 <article class="creature">
-    <!-- After a pet, the --celebrate class makes a little heart float up (C.3). -->
+    <?php /* After a pet, --celebrate does three things at once: the creature gives a
+             happy wriggle, three hearts drift up at slightly different times, and the
+             two numbers underneath light up. One small heart was too quiet to notice —
+             petting is the thing players do most on this site and it should feel like
+             something happened. All of it is CSS and all of it is skipped entirely
+             under prefers-reduced-motion. */ ?>
     <div class="creature__portrait<?= !empty($justPetted) ? ' creature__portrait--celebrate' : '' ?>">
         <img class="creature__img pixelated"
              src="<?= $this->e($imagePath) ?>"
              alt="<?= $this->e($creature->name . ', a ' . $speciesName . ' (' . $stage . ')') ?>"
              width="240" height="240">
+
+        <?php if (!empty($justPetted)): ?>
+            <?php /* Purely decorative, so hidden from screen readers — the flash
+                     message above already says what happened, in words. */ ?>
+            <span class="creature__hearts" aria-hidden="true">
+                <span>&hearts;</span><span>&hearts;</span><span>&hearts;</span>
+            </span>
+        <?php endif; ?>
     </div>
 
     <div class="creature__info">
@@ -80,7 +93,7 @@ $createdLabel = $creature->createdAt !== null
                 <span class="creature-stat__label">stage</span>
             </div>
             <div class="creature-stat">
-                <span class="creature-stat__value"><?= $this->e((string) $creature->happiness) ?></span>
+                <span class="creature-stat__value<?= !empty($justPetted) ? ' creature-stat__value--just-changed' : '' ?>"><?= $this->e((string) $creature->happiness) ?></span>
                 <span class="creature-stat__label">happiness</span>
             </div>
             <div class="creature-stat">

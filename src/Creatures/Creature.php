@@ -27,6 +27,9 @@ final class Creature
         // When a report hid this bio, or null if it is visible (M1.4).
         public readonly ?string $bioHiddenAt,
         public readonly bool $isPublic,
+        // Where this creature sits among the ones its owner shows off, or null if
+        // it is not one of them (M1.3). Carried here so a card can mark it.
+        public readonly ?int $featuredOrder,
         public readonly ?string $lastInteractedAt,
         public readonly ?string $createdAt,
     ) {
@@ -44,6 +47,7 @@ final class Creature
             $row['bio'] ?? null,
             $row['bio_hidden_at'] ?? null,
             (bool) $row['is_public'],
+            isset($row['featured_order']) ? (int) $row['featured_order'] : null,
             $row['last_interacted_at'] ?? null,
             $row['created_at'] ?? null,
         );
@@ -55,5 +59,13 @@ final class Creature
     public function isBioHidden(): bool
     {
         return $this->bioHiddenAt !== null;
+    }
+
+    /**
+     * Is this one of the creatures its owner chose to show off?
+     */
+    public function isFeatured(): bool
+    {
+        return $this->featuredOrder !== null;
     }
 }

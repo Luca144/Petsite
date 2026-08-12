@@ -47,30 +47,84 @@
     box-shadow: 0 0 0 6px var(--parchment), 0 0 34px rgba(232, 201, 90, 0.65), var(--shadow-raised);
 }
 
-/* The pet "celebration": right after petting, a little heart floats up from the
-   portrait, once. The class is added by the server only just after a pet. */
-.creature__portrait--celebrate::after {
-    content: "\2665"; /* heart */
+/* ---------------------------------------------------------------------------
+   THE PET CELEBRATION
+   Petting is the thing players do most on this site, and it used to produce one
+   small heart that was easy to miss entirely — you clicked, the page reloaded,
+   and nothing seemed to happen. Three things now happen together:
+   the creature wriggles, three hearts drift up, and the numbers that changed
+   light up. Each is small; together they add up to "that did something".
+   Everything here is decoration and all of it is switched off for anyone who
+   asks for reduced motion.
+   --------------------------------------------------------------------------- */
+
+/* The creature gives a happy little wriggle — a squash and a lean, the way an
+   animal shifts when it is enjoying being fussed over. Deliberately gentle: this
+   plays every time somebody pets, so anything bouncier would wear thin fast. */
+.creature__portrait--celebrate .creature__img {
+    animation: creature-wriggle 700ms ease-in-out;
+    transform-origin: center bottom;
+}
+
+@keyframes creature-wriggle {
+    0%   { transform: scale(1, 1) rotate(0deg); }
+    25%  { transform: scale(1.06, 0.94) rotate(-2.5deg); }
+    50%  { transform: scale(0.97, 1.04) rotate(2deg); }
+    75%  { transform: scale(1.03, 0.98) rotate(-1deg); }
+    100% { transform: scale(1, 1) rotate(0deg); }
+}
+
+/* Three hearts, each starting a little later and drifting a little differently,
+   so it reads as a small flurry rather than one thing repeated. */
+.creature__hearts {
     position: absolute;
     left: 50%;
     top: 34%;
-    color: var(--gold-lit);
-    font-size: 1.8rem;
     pointer-events: none;
-    animation: heart-float 1.1s ease-out;
 }
+
+.creature__hearts span {
+    position: absolute;
+    color: var(--gold-lit);
+    font-size: 1.6rem;
+    opacity: 0;
+    animation: heart-float 1.4s ease-out forwards;
+}
+
+.creature__hearts span:nth-child(1) { animation-delay: 0ms;   --drift: -34px; }
+.creature__hearts span:nth-child(2) { animation-delay: 160ms; --drift: 16px;  font-size: 1.15rem; }
+.creature__hearts span:nth-child(3) { animation-delay: 300ms; --drift: -8px;  font-size: 1.35rem; }
 
 @keyframes heart-float {
-    0% { opacity: 0; transform: translate(-50%, 0) scale(0.6); }
-    30% { opacity: 1; }
-    100% { opacity: 0; transform: translate(-50%, -64px) scale(1.1); }
+    0%   { opacity: 0; transform: translate(-50%, 0) scale(0.5); }
+    20%  { opacity: 1; }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--drift)), -80px) scale(1.15); }
 }
 
-/* With reduced motion, skip the heart entirely (it is purely decorative) rather
-   than leave a static one sitting there. */
+/* The number that just went up gets a brief glow, so the eye is told where to
+   look. Without this the change is invisible — the number was already there and
+   it is simply one higher. */
+.creature-stat__value--just-changed {
+    animation: stat-lift 900ms ease-out;
+}
+
+@keyframes stat-lift {
+    0%   { transform: scale(1); color: var(--plum); }
+    30%  { transform: scale(1.35); color: var(--gold); text-shadow: 0 0 14px var(--gold-lit); }
+    100% { transform: scale(1); color: var(--plum); }
+}
+
+/* Reduced motion: no wriggle, no drifting, no pulsing. The flash message still
+   says what happened in words, so nothing is lost — which is the test for whether
+   an effect was decoration in the first place. */
 @media (prefers-reduced-motion: reduce) {
-    .creature__portrait--celebrate::after {
+    .creature__hearts {
         display: none;
+    }
+
+    .creature__portrait--celebrate .creature__img,
+    .creature-stat__value--just-changed {
+        animation: none;
     }
 }
 
@@ -192,4 +246,58 @@
     font-family: var(--font-mono);
     font-size: 0.68rem;
     color: var(--ink-soft);
+}
+
+/* ---------------------------------------------------------------------------
+   A FAVOURITE CREATURE
+   Choosing which creatures to show off used to change nothing but the order they
+   appeared in — which nobody notices, so the setting felt like it did nothing.
+   A favourite now looks like one, marked three ways over: a warmer card, a gold
+   star, and the word itself. Never the colour alone, and never only the star.
+   --------------------------------------------------------------------------- */
+
+.creature-card--featured {
+    border-color: var(--gold);
+    /* A soft gold light behind the card, as though it is the one under the lamp. */
+    background:
+        radial-gradient(120% 90% at 50% 0%, rgba(232, 201, 90, 0.28), transparent 70%),
+        var(--panel);
+    box-shadow: 0 0 0 1px rgba(201, 162, 39, 0.35), var(--shadow-raised);
+}
+
+.creature-card__favourite {
+    position: absolute;
+    top: var(--space-2);
+    right: var(--space-2);
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px var(--space-2);
+    border-radius: var(--radius-pill);
+    /* Deep plum behind gold text: the one place gold text is allowed, because on
+       parchment it fails contrast badly (CLAUDE.md section 8). */
+    background: var(--plum);
+    color: var(--gold-lit);
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+/* On a narrow card the word would crowd the name, so below 380px the star stands
+   alone — but the word stays in the page for screen readers rather than being
+   removed, because that is the signal that never fails anybody. */
+@media (max-width: 380px) {
+    .creature-card__favourite-word {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+    }
+}
+
+/* The card needs to be a positioning context for the badge to sit on. */
+.creature-card {
+    position: relative;
 }

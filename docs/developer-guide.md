@@ -1330,3 +1330,69 @@ Test the test. Break the thing on purpose, confirm the check goes red, then put 
 back. The first version of the search check passed even with the bug reintroduced,
 because the logged-in player's own name appears in the page header and the check
 was looking anywhere on the page rather than inside the results.
+
+---
+
+## The second magic pass — navigation, petting, favourites
+
+C.3 gave the site its first pass of craft, and it covered the pages that existed
+then. Everything M1 added was built correct and left plain. This closed that gap
+before the Product Owner saw it, and it came from three specific observations:
+*"the navigation is just a random collection of buttons"*, *"petting a creature
+doesn't really do much besides me clicking"*, and *"putting a creature as
+highlight doesn't make it special"*. All three were right.
+
+### The navigation was two different things pretending to be one
+
+It was eleven identical pills in a wrapped row: every destination, plus the
+player's name, their gems and the log-out button, all looking exactly alike. That
+is why it read as a heap rather than a way of getting somewhere.
+
+Two changes, neither needing a dropdown:
+
+**Who you are is not navigation.** Name, purse and log out moved into their own
+quieter strip below the links. They are status, not destinations.
+
+**Where you can go is grouped** — *Yours*, *Wander*, *Everyone*. Three small
+groups rather than nine in a line. The only thing separating them visually is
+that the gap *between* groups is much larger than the gap *inside* one; no lines,
+no labels, no headings. They are real `<ul>`s with `aria-label`s, so a screen
+reader gets the same grouping the spacing gives everyone else.
+
+Log out is now deliberately the quietest control on the page — transparent until
+hovered. It is not a destination and nobody should hit it reaching for something
+else.
+
+The whole thing lives in `partials/site-nav.php`, because the layout was pushing
+past its 200-line limit and the navigation reads better on its own anyway.
+
+### Petting now looks like it did something
+
+It already had one small heart, which was easy to miss entirely — you clicked, the
+page reloaded, and nothing appeared to change. Three things now happen together:
+
+- the creature **wriggles** — a squash and a lean, the way an animal shifts when
+  it is enjoying being fussed over
+- **three hearts** drift up, each starting slightly later and drifting differently,
+  so it reads as a flurry rather than one thing repeated
+- the **number that changed lights up**, because otherwise the change is invisible:
+  the number was already there and is simply one higher
+
+Deliberately gentle — this plays every time anybody pets anything, so bouncier
+would wear thin within a day. All CSS, all skipped under `prefers-reduced-motion`,
+and the flash message still says what happened in words, which is the test for
+whether an effect was decoration in the first place.
+
+### A favourite creature looks like one
+
+Featuring a creature used to change only the order they appeared in, which nobody
+notices — so the setting felt like it did nothing. A favourite now gets a warmer
+card with a soft gold light behind it, a gold star, and the word "favourite".
+
+Three signals again, for the same reason as the item categories: never the colour
+alone, and never only the star, because an icon has to be learnt. On a very narrow
+card the word is hidden visually but kept in the page, so screen readers still get
+the signal that never fails anybody.
+
+Gold text on deep plum is 7.8:1 — the one place gold text is allowed, since on
+parchment it fails badly.

@@ -18,7 +18,7 @@ use PDO;
  */
 final class CreatureRepository
 {
-    private const COLUMNS = 'id, owner_id, species_id, name, xp, happiness, bio, bio_hidden_at, is_public, last_interacted_at, created_at';
+    private const COLUMNS = 'id, owner_id, species_id, name, xp, happiness, bio, bio_hidden_at, is_public, featured_order, last_interacted_at, created_at';
 
     public function __construct(private PDO $connection)
     {
