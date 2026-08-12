@@ -49,21 +49,65 @@
     margin-top: var(--space-4);
 }
 
-/* One item for sale: name, description, price, and a Buy button. */
+/* Your purse, restated beside the stock — "can I afford this?" is asked here,
+   so the answer should not live a page-scroll away in the footer. */
+.shop-purse {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--plum);
+    margin-top: var(--space-2);
+}
+
+.shop-purse span[aria-hidden] {
+    color: var(--gold);
+}
+
+/* One item for sale: artwork, name, category, description, price, Buy button.
+   The category tint arrives as --card-tint from the template (same mechanism as
+   .item-card below) — a soft wash strongest behind the art, fading to parchment,
+   so the shop window and your own shelf speak the same visual language. */
 .shop-item {
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
-    background: var(--panel);
+    background:
+        linear-gradient(135deg, var(--card-tint, var(--panel)) 0%, var(--card-tint, var(--panel)) 30%, var(--parchment) 100%);
     border: 1.5px solid var(--border);
     border-radius: var(--radius-md);
     padding: var(--space-4);
+}
+
+.shop-item__art {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+}
+
+/* The stand-in drawing shown until real artwork exists (same treatment as the
+   inventory card's placeholder — softened, "a picture is coming"). */
+.shop-item__placeholder {
+    width: 34px;
+    height: 34px;
+    color: var(--ink);
+    opacity: 0.45;
 }
 
 .shop-item__name {
     font-family: var(--font-display);
     font-weight: 700;
     font-size: 1.1rem;
+}
+
+/* The category in words beside its icon — the signal that works for everybody. */
+.shop-item__category {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--ink-soft);
 }
 
 .shop-item__desc {

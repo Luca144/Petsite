@@ -193,7 +193,8 @@ $creatureProfileBuilder = new CreatureProfileBuilder(
     $speciesRepository, $userRepository, $growthCalculator, $pettingRepository
 );
 $purchaseService = new PurchaseService(
-    $pdo, $shopRepository, $userRepository, $inventoryRepository
+    $pdo, $shopRepository, $userRepository, $inventoryRepository,
+    $config['gameplay']['currency']['name']
 );
 $creatureBioService = new CreatureBioService(
     $creatureRepository,
@@ -263,7 +264,9 @@ $templates->addData([
 ]);
 
 // ---- Controllers ----
-$homeController = new HomeController($templates, $session, $creatureRepository, $config['app']['name']);
+$homeController = new HomeController(
+    $templates, $session, $creatureRepository, $creatureProfileBuilder, $config['app']['name']
+);
 $browseController = new BrowseController(
     $templates, $creatureRepository, $creatureProfileBuilder, $config['gameplay']['browse_recent_limit']
 );

@@ -72,6 +72,13 @@ final class PurchaseServiceTest extends DatabaseTestCase
         // Balance is untouched (and never negative) and nothing was granted.
         $this->assertSame($this->itemPrice - 1, $this->balance());
         $this->assertCount(0, $this->inventory->findForUser($this->userId));
+
+        // The refusal follows the golden rules: it states the exact gap in plain
+        // words ("you need 1 more coin", singular because the gap is one) and
+        // points at the one way coins are earned, so a new player with an empty
+        // purse is never left at a dead end.
+        $this->assertStringContainsString('You need 1 more coin ', $result->message());
+        $this->assertStringContainsString('pet your creatures', $result->message());
     }
 
     public function testBuyingAnItemThisShopDoesNotSellFails(): void

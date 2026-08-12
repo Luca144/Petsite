@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Felkyo\Http\Controllers;
 
 use Felkyo\Auth\Session;
+use Felkyo\Creatures\CreatureProfileBuilder;
 use Felkyo\Creatures\CreatureRepository;
 use Felkyo\Http\Request;
 use Felkyo\Http\Response;
@@ -25,6 +26,9 @@ final class HomeController
         private Engine $templates,
         private Session $session,
         private CreatureRepository $creatures,
+        // Builds the same creature summaries the collection page uses, so home
+        // shows real portrait cards rather than a bare list of names.
+        private CreatureProfileBuilder $profileBuilder,
         private string $appName,
     ) {
     }
@@ -32,15 +36,17 @@ final class HomeController
     public function show(Request $request): Response
     {
         // Load the visitor's own creatures if they are logged in; a guest has none.
-        $creatures = [];
+        // The summaries add each creature's species, level and stage — everything
+        // the shared creature-card partial needs to draw a proper portrait card.
+        $summaries = [];
         $userId = $this->session->get('user_id');
         if (is_int($userId)) {
-            $creatures = $this->creatures->findByOwner($userId);
+            $summaries = $this->profileBuilder->summariesFor($this->creatures->findByOwner($userId));
         }
 
         $html = $this->templates->render('pages/hello', [
             'appName' => $this->appName,
-            'creatures' => $creatures,
+            'summaries' => $summaries,
         ]);
 
         return Response::html($html);

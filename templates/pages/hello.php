@@ -10,13 +10,14 @@
  * (and by the 0.3 layout test, which passes only $appName — so everything here
  * copes with the logged-out case by default).
  *
- * Variables: $appName (string); $creatures (Creature[], may be absent/empty).
- * $currentUser is shared with every template by the front controller.
+ * Variables: $appName (string); $summaries (from CreatureProfileBuilder, may be
+ * absent/empty). $currentUser is shared with every template by the front
+ * controller.
  */
 $this->layout('layout', ['title' => 'Welcome to ' . $appName]);
 
 // Default so this template also renders for a plain guest (and in the layout test).
-$creatures = $creatures ?? [];
+$summaries = $summaries ?? [];
 ?>
 
 <?php if (!empty($currentUser)): ?>
@@ -29,15 +30,16 @@ $creatures = $creatures ?? [];
     <hr class="rule">
 
     <h2 class="panel-label">Your creatures</h2>
-    <?php if ($creatures === []): ?>
+    <?php if ($summaries === []): ?>
         <p class="empty-state">You don&rsquo;t have a creature yet.</p>
     <?php else: ?>
-        <div class="tile-grid">
-            <?php foreach ($creatures as $creature): ?>
-                <a class="tile" href="/creature/<?= $this->e((string) $creature->id) ?>">
-                    <span aria-hidden="true">&#127793;</span>
-                    <span><?= $this->e($creature->name) ?></span>
-                </a>
+        <?php /* The same portrait cards as the collection page, on purpose. An
+                 earlier version drew a bare name-tile with a seedling glyph here,
+                 which meant the first thing a new player saw of their creature
+                 was... not their creature. One card, one look, everywhere. */ ?>
+        <div class="creature-collection">
+            <?php foreach ($summaries as $summary): ?>
+                <?= $this->insert('partials/creature-card', ['summary' => $summary]) ?>
             <?php endforeach; ?>
         </div>
     <?php endif; ?>

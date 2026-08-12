@@ -30,6 +30,10 @@ final class PurchaseService
         private ShopRepository $shops,
         private UserRepository $users,
         private InventoryRepository $inventory,
+        // The currency's display name, from config — same convention as
+        // ItemDisposalService, so a renamed currency never leaves a stale word
+        // in a message.
+        private string $currencyName = 'coins',
     ) {
     }
 
@@ -47,10 +51,25 @@ final class PurchaseService
         $this->connection->beginTransaction();
         try {
             // Take the money only if the player can afford it. If not, nothing is
-            // changed and we tell them.
+            // changed and we tell them — and the message follows the golden rules:
+            // say the exact gap in plain words ("you need 3 more", not "insufficient
+            // funds"), and never leave a dead end — name the way coins actually
+            // arrive, because a brand-new player has zero and no way to know.
             if (!$this->users->deductCurrency($userId, $item->price)) {
                 $this->connection->rollBack();
-                return PurchaseResult::failed('You don\'t have enough to buy ' . $item->name . '.');
+
+                $balance = $this->users->findById($userId)?->currencyBalance ?? 0;
+                $shortBy = $item->price - $balance;
+
+                // "1 more coin", not "1 more coins": for the one-short case we
+                // trim a plural s off the configured name. A crude rule, but it
+                // covers any English currency name this site will plausibly use.
+                $currencyWord = $shortBy === 1 ? rtrim($this->currencyName, 's') : $this->currencyName;
+
+                return PurchaseResult::failed(
+                    'You need ' . $shortBy . ' more ' . $currencyWord . ' for the ' . $item->name
+                    . ' — ' . $this->currencyName . ' arrive when other players pet your creatures.'
+                );
             }
 
             // Give them the item, then commit both changes together.
