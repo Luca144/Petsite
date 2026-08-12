@@ -5,8 +5,10 @@ just as importantly — **what this deployment is and is not**. It is written fo
 someone who has not deployed a website before.
 
 > **Status: Felkyo is live** at <https://felkyo-production.up.railway.app> as a
-> closed demo. Sections 3 and 4 describe what actually happened, including the
-> five things that went wrong on the way. Backups are the one item still open.
+> closed demo, and Phase D is complete. Sections 3 and 4 describe what actually
+> happened, including the five things that went wrong on the way. The backup
+> situation is written up at the end of section 3 — **read it before M2**, which is
+> the milestone that starts putting irreplaceable work into the database.
 
 ---
 
@@ -245,13 +247,61 @@ password and reports what it did.
   requests land on different ones. Moving sessions into the database is a deliberate
   change to make first, not something to discover live.
 
-### Backups — still to be filled in
+### Backups — what Railway actually does
 
-The MySQL service has a **Backups** tab. **Open it, find out whether backups happen
-automatically, how often, and how a restore works, and write the answer here.** For
-a demo with no real data this is low-stakes, but it should be *known* rather than
-assumed — and the moment there is anything worth keeping, this becomes the most
-important paragraph in this guide.
+**The short version: Railway does not back your database up unless you tell it to.**
+Backups exist, but they are a *schedule you switch on per volume*, not something that
+happens quietly in the background because you are paying. Assuming otherwise is the
+expensive mistake here, so it is written down plainly.
+
+**Where it lives:** MySQL service → **Backups** tab. A backup is taken of the
+**volume** — the disk the database sits on — not of Felkyo specifically.
+
+**The three schedules Railway offers**, which can be combined on one volume:
+
+| Schedule | Taken | Kept for |
+| --- | --- | --- |
+| Daily | every 24 hours | 6 days |
+| Weekly | every 7 days | 1 month |
+| Monthly | every 30 days | 3 months |
+
+Backups are billed the same way volumes are — per gigabyte, on top of the usual cost.
+Felkyo's database is tiny, so this is pennies rather than a real decision.
+
+**How a restore works:** find the backup by its date stamp, press **Restore**, and
+Railway stages the change for you to confirm before it is applied.
+
+**Two things about restoring that are easy to be caught out by:**
+
+1. **Restoring deletes every backup newer than the one you restore.** So if you
+   restore to Tuesday to check something, Wednesday and Thursday are gone. If you are
+   ever unsure which backup you want, that uncertainty is the reason to take a manual
+   copy *first*.
+2. **Railway describes this feature as still under development.** That is their word,
+   not a criticism — but it means the safety net is newer than the thing it is
+   catching, and it should not be the only copy of anything irreplaceable.
+
+**What to switch on now:** turn **Daily** on. It costs almost nothing and it covers
+the ordinary disaster — a bad migration, a mistaken delete, a seed run against the
+wrong environment.
+
+**Why this stops being low-stakes sooner than it looks.** Today the live database
+holds seeded demo accounts, and losing it would cost one `seed:run`. That changes at
+**M2**, when the creator's panel starts holding uploaded artwork, per-stage blurbs,
+lore and hand-entered loot tables — work that exists nowhere else and represents
+weeks of one person's time. It is worth being clear-eyed about which loss actually
+ends a project: player accounts can be apologised for, but a year of somebody's
+artwork cannot be re-made from a backup that was never taken.
+
+**So, before M2 ships, do both of these:**
+
+- Confirm Daily backups are on, and confirm it by looking at the list of backups
+  rather than at the setting — a schedule that has never produced a file is a setting,
+  not a backup.
+- Work out how to take a **manual export** you hold yourself (a `mysqldump` from the
+  service console, downloaded and kept off Railway). One copy on the platform and one
+  copy off it is the whole of what "backed up" means. A copy that lives only inside
+  the same account that could be lost, suspended, or mis-clicked is one copy.
 
 ---
 
