@@ -67,7 +67,7 @@ final class ProfileServiceTest extends DatabaseTestCase
 
     public function testAnAvatarFromTheSetIsAccepted(): void
     {
-        $result = $this->service->saveAppearance($this->miraId, 'second', 'Hello!');
+        $result = $this->service->saveAppearance($this->miraId, 'second', 'Hello!', true);
 
         $this->assertTrue($result->isSuccessful());
         $this->assertSame('second', $this->profiles->findById($this->miraId)->avatarKey);
@@ -75,7 +75,7 @@ final class ProfileServiceTest extends DatabaseTestCase
 
     public function testAnAvatarThatIsNotInTheSetIsRefused(): void
     {
-        $result = $this->service->saveAppearance($this->miraId, 'invented-key', 'Hello!');
+        $result = $this->service->saveAppearance($this->miraId, 'invented-key', 'Hello!', true);
 
         $this->assertFalse($result->isSuccessful());
         $this->assertSame('default', $this->profiles->findById($this->miraId)->avatarKey);
@@ -86,7 +86,7 @@ final class ProfileServiceTest extends DatabaseTestCase
         // The reason the column holds a key and not a filename. If this were ever
         // accepted, the value would end up inside an <img src="...">.
         foreach (['../../../.env', '/etc/passwd', 'https://example.com/tracker.png', 'default.png'] as $attempt) {
-            $result = $this->service->saveAppearance($this->miraId, $attempt, '');
+            $result = $this->service->saveAppearance($this->miraId, $attempt, '', true);
 
             $this->assertFalse(
                 $result->isSuccessful(),
@@ -101,7 +101,7 @@ final class ProfileServiceTest extends DatabaseTestCase
 
     public function testAnAboutTextIsSavedAndTrimmed(): void
     {
-        $this->service->saveAppearance($this->miraId, 'default', '   Hello from Mira.   ');
+        $this->service->saveAppearance($this->miraId, 'default', '   Hello from Mira.   ', true);
 
         $this->assertSame('Hello from Mira.', $this->profiles->findById($this->miraId)->about);
     }
@@ -110,14 +110,14 @@ final class ProfileServiceTest extends DatabaseTestCase
     {
         // "Never written" and "written, then cleared" should look the same to the
         // page, so it can offer a warm empty state either way.
-        $this->service->saveAppearance($this->miraId, 'default', '    ');
+        $this->service->saveAppearance($this->miraId, 'default', '    ', true);
 
         $this->assertNull($this->profiles->findById($this->miraId)->about);
     }
 
     public function testAnOverLongAboutTextIsRefusedAndNothingIsSaved(): void
     {
-        $result = $this->service->saveAppearance($this->miraId, 'second', str_repeat('a', 301));
+        $result = $this->service->saveAppearance($this->miraId, 'second', str_repeat('a', 301), true);
 
         $this->assertFalse($result->isSuccessful());
         $profile = $this->profiles->findById($this->miraId);
@@ -129,7 +129,7 @@ final class ProfileServiceTest extends DatabaseTestCase
 
     public function testAnAboutTextWithABlockedWordIsRefused(): void
     {
-        $result = $this->service->saveAppearance($this->miraId, 'default', 'buy my spam here');
+        $result = $this->service->saveAppearance($this->miraId, 'default', 'buy my spam here', true);
 
         $this->assertFalse($result->isSuccessful());
         $this->assertNull($this->profiles->findById($this->miraId)->about);
@@ -142,7 +142,7 @@ final class ProfileServiceTest extends DatabaseTestCase
         // storage layer does not mangle it either.
         $awkward = "<script>alert('hi')</script> ' OR 1=1 --";
 
-        $this->service->saveAppearance($this->miraId, 'default', $awkward);
+        $this->service->saveAppearance($this->miraId, 'default', $awkward, true);
 
         $this->assertSame($awkward, $this->profiles->findById($this->miraId)->about);
     }

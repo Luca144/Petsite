@@ -1217,3 +1217,65 @@ increment, not a nicety.
 
 `TextSafetyTest` (39, including data providers) and `ReportServiceTest` (13). The
 innocent-text cases are as load-bearing as the refusals.
+
+---
+
+## Increment M1.5 — Finding a player
+
+### Why search is safe here, when it usually is not
+
+There is nothing harmful you can do with a player once you have found them on this
+site. No messaging, no private channel, no words of your own — the worst somebody
+can do with a found profile is send a card that everybody can see. **The danger in
+"finding people" is what comes after finding them, and on this site that door is
+already shut.**
+
+So the threat search actually has to answer is not contact. It is **enumeration**:
+somebody scripting their way to a list of everybody here, which is the first step
+of anything else.
+
+### Four separate answers to that one threat
+
+- **Prefix matching only.** `mi%`, never `%mi%`. A "contains" search would turn a
+  single common letter into a large slice of the playerbase; a prefix only answers
+  a question somebody already half knows the answer to.
+- **A minimum of two characters.** One letter is not a search, it is a way of
+  listing everybody whose name begins with "a".
+- **A small result cap** (20), so a wide prefix cannot be harvested in one request.
+- **Rate limiting**, so working through the alphabet is slow and visible.
+
+And **no endpoint anywhere returns players by recency or in bulk.** There is no
+"newest members" list on this site, deliberately: new accounts are the least
+familiar with how things work and the most likely to be young, so a list of recent
+arrivals is precisely the tool somebody would want for finding them.
+
+`testThereIsNoWayToAskForPlayersByRecency` walks `ProfileRepository`'s method names
+and fails on anything called `recent`, `newest` or `all`. That is a blunt test on
+purpose — this is a guarantee that would be easy to lose to a helpful addition.
+
+### Wildcards are escaped
+
+Without escaping, a search for `%` would match every name on the site: a search box
+that lists the playerbase in one keystroke. `addcslashes` handles `%`, `_` and the
+backslash itself.
+
+### The opt-out is an unlisted number, not a closed door
+
+`users.is_findable` (on by default) keeps a player out of search results. It does
+**not** hide their profile — somebody who already knows the name can still visit.
+Hiding the page as well would be a different feature with knock-on effects (their
+creatures vanishing from browse, their guestbook entries dangling), and it is not
+what was asked for. There is a test pinning this down so nobody later "fixes" it.
+
+An unticked checkbox sends nothing at all, so the controller reads absence as "not
+findable" — the safe direction for a privacy setting to fail in.
+
+### A note on stylesheets
+
+`profile.css` reached 385 lines, so the reporting and search styles moved to
+`social.css`. CLAUDE.md caps a stylesheet at 400 for a reason: one you have to
+scroll to understand is one nobody reads.
+
+### Tests
+
+`SearchControllerTest` (13). Most of them are about what search refuses to tell you.

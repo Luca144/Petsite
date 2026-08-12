@@ -40,7 +40,7 @@ final class ProfileRepository
     public function findByUsername(string $username): ?Profile
     {
         $statement = $this->connection->prepare(
-            'SELECT id, username, avatar_key, about, about_hidden_at, created_at
+            'SELECT id, username, avatar_key, about, about_hidden_at, is_findable, created_at
                FROM users
               WHERE username = :username
               LIMIT 1'
@@ -58,7 +58,7 @@ final class ProfileRepository
     public function findById(int $userId): ?Profile
     {
         $statement = $this->connection->prepare(
-            'SELECT id, username, avatar_key, about, about_hidden_at, created_at
+            'SELECT id, username, avatar_key, about, about_hidden_at, is_findable, created_at
                FROM users
               WHERE id = :id
               LIMIT 1'
@@ -77,14 +77,15 @@ final class ProfileRepository
      * session — so a request that names somebody else changes nothing at all,
      * whatever checks above it were forgotten.
      */
-    public function saveAppearance(int $userId, string $avatarKey, ?string $about): void
+    public function saveAppearance(int $userId, string $avatarKey, ?string $about, bool $isFindable): void
     {
         $statement = $this->connection->prepare(
-            'UPDATE users SET avatar_key = :avatar_key, about = :about WHERE id = :id'
+            'UPDATE users SET avatar_key = :avatar_key, about = :about, is_findable = :is_findable WHERE id = :id'
         );
         $statement->execute([
             ':avatar_key' => $avatarKey,
             ':about' => $about,
+            ':is_findable' => $isFindable ? 1 : 0,
             ':id' => $userId,
         ]);
     }
@@ -127,5 +128,59 @@ final class ProfileRepository
             ]);
             $position++;
         }
+    }
+
+    /**
+     * Find players whose name STARTS WITH what was typed.
+     *
+     * @return array<int, Profile>
+     *
+     * FOUR THINGS ABOUT THIS QUERY ARE DELIBERATE, and each closes a different way
+     * of turning a search box into a list of everybody on the site.
+     *
+     * 1. PREFIX MATCHING, NOT "CONTAINS". "mi%" finds Mira. "%mi%" would also find
+     *    Jasmine, Camilla and Tomiko — and, more to the point, searching for a
+     *    single common letter would return a large slice of the playerbase. A
+     *    prefix search only answers a question somebody already half knows the
+     *    answer to.
+     *
+     * 2. A MINIMUM LENGTH, enforced by the caller. One letter is not a search, it
+     *    is a way of listing everybody whose name begins with "a".
+     *
+     * 3. ORDERED BY NAME, NEVER BY WHEN THEY JOINED. There is no "newest members"
+     *    anywhere on this site, and this is one of the places that could quietly
+     *    become one. New accounts are the least familiar with how things work and
+     *    the most likely to be young, so a list of recent arrivals is precisely
+     *    the tool somebody would want for finding them. It is not offered.
+     *
+     * 4. UNFINDABLE PLAYERS ARE EXCLUDED IN THE QUERY, not filtered out
+     *    afterwards. Filtering afterwards means the row was fetched, which means
+     *    one careless change to a template could show it.
+     *
+     * The LIMIT is placed straight into the SQL rather than bound, because MySQL
+     * will not accept a parameter there under real prepared statements. It is our
+     * own integer, never anything a visitor sent.
+     */
+    public function searchByNamePrefix(string $prefix, int $limit): array
+    {
+        $limit = max(1, $limit);
+
+        // Escape the wildcards a player could type, so a search for "100%" looks
+        // for the characters "100%" rather than for "anything at all".
+        $escaped = addcslashes($prefix, chr(92) . '%_');
+
+        $statement = $this->connection->prepare(
+            'SELECT id, username, avatar_key, about, about_hidden_at, is_findable, created_at
+               FROM users
+              WHERE is_findable = 1 AND username LIKE :prefix
+              ORDER BY username
+              LIMIT ' . $limit
+        );
+        $statement->execute([':prefix' => $escaped . '%']);
+
+        return array_map(
+            static fn (array $row): Profile => Profile::fromRow($row),
+            $statement->fetchAll()
+        );
     }
 }

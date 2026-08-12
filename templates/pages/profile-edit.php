@@ -79,6 +79,26 @@ $this->layout('layout', ['title' => 'Change your page — Felkyo Creatures']);
     </fieldset>
 
     <fieldset class="profile-form__section">
+        <legend class="panel-label">Being found</legend>
+
+        <label class="findable-choice">
+            <input class="findable-choice__input"
+                   type="checkbox"
+                   name="is_findable"
+                   value="yes"
+                   <?= $profile->isFindable ? 'checked' : '' ?>>
+            <span>
+                <span class="findable-choice__title">Let other players find me by name</span>
+                <span class="findable-choice__note">
+                    If you turn this off you won&rsquo;t appear in searches. Your page
+                    still exists, and anyone who already knows your name can still
+                    visit &mdash; a bit like an unlisted phone number.
+                </span>
+            </span>
+        </label>
+    </fieldset>
+
+    <fieldset class="profile-form__section">
         <legend class="panel-label">Creatures to show off</legend>
 
         <?php if (empty($summaries)): ?>

@@ -32,6 +32,9 @@ final class Profile
         // been waiting — the number that tells two busy people whether this is
         // working (M1.4).
         public readonly ?string $aboutHiddenAt,
+        // Whether this player turns up in search. On by default; see the
+        // migration that added it for why it does not hide the page itself.
+        public readonly bool $isFindable,
         public readonly ?string $createdAt,
     ) {
     }
@@ -44,6 +47,7 @@ final class Profile
             $row['avatar_key'],
             $row['about'] ?? null,
             $row['about_hidden_at'] ?? null,
+            (bool) ($row['is_findable'] ?? true),
             $row['created_at'] ?? null,
         );
     }

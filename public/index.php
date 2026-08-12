@@ -64,6 +64,7 @@ use Felkyo\Http\Controllers\InventoryController;
 use Felkyo\Http\Controllers\ItemController;
 use Felkyo\Http\Controllers\ProfileController;
 use Felkyo\Http\Controllers\ReportController;
+use Felkyo\Http\Controllers\SearchController;
 use Felkyo\Http\Controllers\LoginController;
 use Felkyo\Http\Controllers\LogoutController;
 use Felkyo\Http\Controllers\PetController;
@@ -327,6 +328,16 @@ $reportController = new ReportController(
     $config['security']['rate_limit_report']
 );
 
+// Finding a player. Prefix matching only, a minimum length, a small result cap
+// and a rate limit — four separate answers to the same threat, which is somebody
+// scripting their way to a list of everybody here. There is deliberately no
+// "newest members" listing anywhere on this site.
+$searchController = new SearchController(
+    $templates, $session, $profileRepository, $avatarSet, $rateLimiter,
+    $config['search'],
+    $config['security']['rate_limit_search']
+);
+
 // ---- Routes ----
 $router = new Router();
 
@@ -373,6 +384,9 @@ $router->get('/inventory', [$inventoryController, 'show']);
 $router->get('/inventory/{id}', [$itemController, 'show']);
 $router->post('/inventory/{id}/sell', [$itemController, 'sell']);
 $router->post('/inventory/{id}/discard', [$itemController, 'discard']);
+
+// Finding a player by name.
+$router->get('/players', [$searchController, 'show']);
 
 // The report button. A page rather than a pop-up, so it works without JavaScript,
 // works with a screen reader, and cannot be lost to a mis-tap.

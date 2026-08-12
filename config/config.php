@@ -185,6 +185,13 @@ return [
                                      // against being paid twice — that lives in the
                                      // database (InventoryRepository::removeOne).
         ],
+        'rate_limit_search' => [
+            'max_attempts' => 60,     // at most 60 searches...
+            'window_seconds' => 3600, // ...per hour, per IP. Plenty for somebody
+                                      // looking for a friend, and slow going for
+                                      // anybody trying to work through the
+                                      // alphabet to list the playerbase.
+        ],
         'rate_limit_report' => [
             'max_attempts' => 30,     // at most 30 reports...
             'window_seconds' => 3600, // ...per hour, per IP. Deliberately generous:
@@ -398,6 +405,18 @@ return [
     // on purpose: a profile is a greeting, not a page of prose, and every extra
     // character is more room for something that has to be read by a human if it
     // is ever reported. M1.4 hardens this field further.
+    // Finding a player. Search is safe here because there is nothing harmful you
+    // can do with somebody once you have found them — no messaging, no private
+    // channel. What these numbers guard against is not contact but ENUMERATION:
+    // somebody scripting their way to a list of everybody on the site.
+    'search' => [
+        // One letter is not a search, it is a way of listing everybody whose name
+        // begins with "a".
+        'minimum_length' => 2,
+        // A small cap, so a wide prefix cannot be harvested in a single request.
+        'result_limit' => 20,
+    ],
+
     'profile' => [
         'max_about_length' => 300,
         'max_featured_creatures' => 6,

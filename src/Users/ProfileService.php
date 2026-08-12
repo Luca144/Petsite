@@ -61,9 +61,14 @@ final class ProfileService
     }
 
     /**
-     * Save a player's avatar and about text.
+     * Save a player's avatar, about text, and whether they can be found by
+     * search.
+     *
+     * The findable setting takes no validating — it is a yes or a no, and both
+     * are allowed. It travels with the rest so that one "Save" button saves the
+     * whole form, which is what a player expects from one screen.
      */
-    public function saveAppearance(int $userId, string $avatarKey, string $about): ProfileResult
+    public function saveAppearance(int $userId, string $avatarKey, string $about, bool $isFindable): ProfileResult
     {
         // The avatar must be one we offer. Not "does it look like a safe value" —
         // is it in the list. A list cannot be argued with.
@@ -87,7 +92,7 @@ final class ProfileService
         // empty string. Keeping the difference lets the page say something warm in
         // the empty case instead of rendering nothing at all.
         $cleaned = $guarded->value();
-        $this->profiles->saveAppearance($userId, $avatarKey, $cleaned === '' ? null : $cleaned);
+        $this->profiles->saveAppearance($userId, $avatarKey, $cleaned === '' ? null : $cleaned, $isFindable);
 
         return ProfileResult::saved('Your page has been saved.');
     }

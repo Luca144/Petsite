@@ -148,7 +148,11 @@ final class ProfileController
         $appearance = $this->profileService->saveAppearance(
             $userId,
             (string) $request->input('avatar_key'),
-            (string) $request->input('about')
+            (string) $request->input('about'),
+            // An unticked checkbox sends nothing at all, so "absent" means "not
+            // findable". That is the safe direction for a privacy setting to
+            // fail in: a lost tick makes somebody harder to find, never easier.
+            $request->input('is_findable') !== ''
         );
 
         // If the appearance was refused, stop and say why. Saving half a form and
