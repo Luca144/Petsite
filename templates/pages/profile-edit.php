@@ -123,6 +123,12 @@ $this->layout('layout', ['title' => 'Change your page — Felkyo Creatures']);
                                value="<?= $this->e((string) $creature->id) ?>"
                                <?= in_array($creature->id, $featuredIds, true) ? 'checked' : '' ?>>
                         <span class="feature-choice__name"><?= $this->e($creature->name) ?></span>
+                        <?php /* The word appears when the box is ticked (CSS shows
+                                 it via :has(:checked)). Sighted players get it in
+                                 words, not only as a gold border — never colour
+                                 alone. Screen readers already hear the checkbox
+                                 state itself, so this stays decorative for them. */ ?>
+                        <span class="feature-choice__chosen" aria-hidden="true">&#10003; chosen</span>
                         <?php if (!$creature->isPublic): ?>
                             <?php /* Said in words, not only by a colour or an icon —
                                      otherwise this is invisible to some players. */ ?>
@@ -135,7 +141,7 @@ $this->layout('layout', ['title' => 'Change your page — Felkyo Creatures']);
     </fieldset>
 
     <div class="button-row">
-        <button class="btn" type="submit">Save my page</button>
+        <button class="btn btn--primary" type="submit">Save my page</button>
         <a class="btn btn--secondary" href="/player/<?= $this->e(rawurlencode($profile->username)) ?>">
             View my page
         </a>

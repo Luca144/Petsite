@@ -188,6 +188,21 @@
     box-shadow: var(--glow-gold);
 }
 
+/* The word "chosen" on a ticked creature tile. Hidden until its checkbox is
+   ticked; the gold border says it fast, the word says it for everyone (the
+   border is a colour signal, and a colour signal alone excludes someone). */
+.feature-choice__chosen {
+    display: none;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: var(--purple);
+}
+
+.feature-choice:has(.feature-choice__input:checked) .feature-choice__chosen {
+    display: inline;
+}
+
 .avatar-choice__img {
     width: 72px;
     height: 72px;
