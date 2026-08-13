@@ -203,3 +203,39 @@ filtering.** Category + search covers the next milestones' volumes; each of the
 three left-outs is real complexity that should wait until a real list hurts.
 The finder's URL shape (?category=&q=) is what a bigger SQL-backed version
 would keep, so nothing built against it will need to change.
+
+---
+
+## 2026-08-13 (later the same day) — The finder filters without reloading
+
+**Decided.** The Product Owner tried the finder and named the cost of the
+GET-round-trip honestly: every pill click reloads the whole page, and the reload
+(frame animation and all) reads as a loading screen in the middle of play. So
+the finder gained the site's first JavaScript, `public/js/item-finder.js` —
+when the full list is already in the page, pills and the search box now filter
+the cards in place: no request, no reload, and the search filters as you type.
+
+This revisits the earlier "left out on purpose: live filtering" — left out then
+because nothing had shown it was needed; added now because playing with it did.
+That is the order these decisions are supposed to happen in.
+
+**What kept it honest:**
+
+- **It is an enhancement, not a requirement.** The pills stay real links and
+  the search a real GET form. With JavaScript off (or broken, or still
+  loading), everything works exactly as before — the server-side filtering and
+  its tests are untouched.
+- **The script only takes over when it can tell the truth.** The server marks
+  the page with `data-complete-list` only when the whole unfiltered list is in
+  the DOM. A bookmarked filtered URL renders only a slice, so there the links
+  navigate normally instead of pretending to filter.
+- **The address bar stays honest.** After each in-place change the URL is
+  updated to the same `?category=&q=` shape the server understands, so any
+  filtered view can still be bookmarked and shared.
+
+**Left out on purpose: doing the same for the Buy button.** Buying moves money,
+and the POST → redirect → confirmation flow is the boring safe pattern for
+that. Making purchases fire without a reload means CSRF, double-submit and
+failure handling in JavaScript — real complexity against a much smaller
+annoyance, since buying is a decision, not a browsing gesture. Raise it
+separately if the reload after Buy starts to hurt.

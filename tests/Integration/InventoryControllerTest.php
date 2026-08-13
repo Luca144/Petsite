@@ -83,6 +83,33 @@ final class InventoryControllerTest extends DatabaseTestCase
         $this->assertStringContainsString($this->itemName, $response->body());
     }
 
+    public function testThePageCarriesTheNoReloadFilteringContract(): void
+    {
+        // item-finder.js filters in place by reading data-category/data-name
+        // off every card, and only takes over when data-complete-list marks
+        // the page as holding the whole list. If any of these disappear from
+        // the markup, filtering silently falls back to full reloads — this
+        // test is what makes that a red bar instead of a quiet regression.
+        $_SESSION['user_id'] = $this->userId;
+        // Two categories, because the finder row only renders when there is a
+        // real choice to make — with one lone item there is nothing to filter.
+        $this->giveOneOfEachCategory();
+
+        $body = $this->get()->body();
+
+        $this->assertStringContainsString('data-category=', $body);
+        $this->assertStringContainsString('data-name=', $body);
+        $this->assertStringContainsString('/js/item-finder.js', $body);
+
+        // The unfiltered view holds everything, so in-place filtering may run…
+        $this->assertStringContainsString('data-complete-list', $body);
+        // …but a server-filtered view holds only a slice, so it must not.
+        $this->assertStringNotContainsString(
+            'data-complete-list',
+            $this->get(['category' => 'dish'])->body()
+        );
+    }
+
     public function testAnEmptyInventoryShowsAnEmptyState(): void
     {
         $_SESSION['user_id'] = $this->userId;

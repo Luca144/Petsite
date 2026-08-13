@@ -102,6 +102,16 @@
 }
 
 /*
+ * The hidden attribute always wins. Browsers hide [hidden] elements with a
+ * low-priority default rule, which any class that sets display (flex, grid…)
+ * silently overrides — so a card the finder script hides would stay visible.
+ * This makes hidden mean hidden, everywhere, whatever else is styled.
+ */
+[hidden] {
+    display: none !important;
+}
+
+/*
  * The page field: a warm lamplit-evening room. A gold "lamp glow" from the top,
  * a soft pool of purple light to one side, over a deep plum gradient. It is
  * fixed so the parchment panels feel like they float on a steady background.

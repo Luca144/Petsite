@@ -1438,3 +1438,13 @@ The search box shows itself from `gameplay.finder.search_shown_from` things up
 (and always while a search is active); the pills appear whenever there is more
 than one category. Both thresholds are display decisions only — the URL
 parameters always work.
+
+**No reload while filtering** (`public/js/item-finder.js` — the site's first
+JavaScript, and an enhancement only): when the page holds the complete list
+(the finder carries `data-complete-list`), pills and the search box filter the
+cards in the browser — no request, live as you type — and keep the address bar
+on the same `?category=&q=` shape. Its contract with the templates is the
+`data-category`/`data-name` attribute pair on every card (plus
+`data-category-section` on the inventory's group wrappers); an integration
+test fails if they disappear. Without JavaScript everything falls back to the
+links and the GET form, which is what the PHPUnit tests exercise.

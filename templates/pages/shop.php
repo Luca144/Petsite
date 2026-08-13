@@ -15,6 +15,9 @@
  * Variables: $shop (Shop), $items (Item[] — already narrowed by the finder),
  * $isFiltered (bool), $finder (see partials/item-finder), $flash (string|null).
  */
+// For the versioned address of the finder's enhancement script below.
+use Felkyo\Http\AssetUrl;
+
 $this->layout('layout', ['title' => $shop->name . ' — Felkyo Creatures']);
 ?>
 
@@ -42,11 +45,13 @@ $this->layout('layout', ['title' => $shop->name . ' — Felkyo Creatures']);
 
 <?= $this->insert('partials/item-finder', ['finder' => $finder]) ?>
 
-<?php if ($isFiltered && empty($items)): ?>
-    <?php /* Never a dead end: the finder's count line above carries the "show
-             everything" way back; this keeps the empty shelf itself friendly. */ ?>
-    <p class="empty-state">Ruinily doesn&rsquo;t have anything like that on the shelves.</p>
-<?php endif; ?>
+<?php /* Never a dead end: the finder's count line above carries the "show
+         everything" way back; this keeps the empty shelf itself friendly. It is
+         always in the page (hidden) so the no-reload filtering in
+         item-finder.js can reveal it without a round trip. */ ?>
+<p class="empty-state finder-empty" <?= $isFiltered && empty($items) ? '' : 'hidden' ?>>
+    <?= $this->e($finder['emptyLine']) ?>
+</p>
 
 <div class="shop-items">
     <?php foreach ($items as $item): ?>
@@ -57,7 +62,12 @@ $this->layout('layout', ['title' => $shop->name . ' — Felkyo Creatures']);
         $artworkFile = dirname(__DIR__, 2) . '/public' . $item->imagePath();
         $hasArtwork = is_file($artworkFile);
         ?>
-        <div class="shop-item" style="--card-tint: <?= $this->e($category->colourVariable()) ?>">
+        <?php /* data-category / data-name: the contract with item-finder.js,
+                 which filters these cards in place without a reload. */ ?>
+        <div class="shop-item"
+             data-category="<?= $this->e($category->slug) ?>"
+             data-name="<?= $this->e($item->name) ?>"
+             style="--card-tint: <?= $this->e($category->colourVariable()) ?>">
             <span class="shop-item__art">
                 <?php if ($hasArtwork): ?>
                     <img class="pixelated" src="<?= $this->e($item->imagePath()) ?>"
@@ -101,3 +111,7 @@ $this->layout('layout', ['title' => $shop->name . ' — Felkyo Creatures']);
         </div>
     <?php endforeach; ?>
 </div>
+
+<?php /* Filters the shelves in place, with no reload — and without it, every
+         pill and the search form work as plain links (see the file's header). */ ?>
+<script src="<?= AssetUrl::versioned('/js/item-finder.js') ?>" defer></script>

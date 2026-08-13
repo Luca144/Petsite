@@ -14,6 +14,7 @@
  *   'shownCount'    => int — how many survived the filters
  *   'searchShownFrom' => int — show the search box from this many things up
  *   'thingsWord'    => string — 'things' on the inventory, 'items' in the shop
+ *   'emptyLine'     => string — what to say when a filter matches nothing
  *
  * DESIGN DECISIONS (from docs/plan/2026-08-13-usability-pass.md):
  * - The pills are LINKS, never a dropdown (CLAUDE.md section 8). Each carries
@@ -24,6 +25,12 @@
  * - The search box only appears when the list is big enough to need it, or
  *   when a search is already running (so the state is always editable).
  * - An active filter always says what happened: "Showing 3 of 12".
+ *
+ * WORKS WITHOUT JAVASCRIPT, BETTER WITH IT: everything here is real links and
+ * a real GET form. public/js/item-finder.js additionally filters in place —
+ * no reload — but ONLY when data-complete-list below says the whole list is
+ * in the page. The data-* attributes are that script's contract; renaming one
+ * here means renaming it there.
  */
 $categories = $finder['categories'];
 $activeSlug = $finder['activeSlug'];
@@ -36,7 +43,10 @@ $showSearch = $finder['totalCount'] >= $finder['searchShownFrom'] || $searchText
 $showPills = count($categories) > 1;
 ?>
 <?php if ($showPills || $showSearch): ?>
-    <div class="finder">
+    <div class="finder"
+         data-action="<?= $this->e($finder['action']) ?>"
+         data-things-word="<?= $this->e($finder['thingsWord']) ?>"
+         <?= $isFiltered ? '' : 'data-complete-list' ?>>
         <?php if ($showSearch): ?>
             <form class="finder__search" method="get" action="<?= $this->e($finder['action']) ?>">
                 <?php /* The active category survives a new search via this hidden
@@ -62,7 +72,7 @@ $showPills = count($categories) > 1;
                 $searchPart = $searchText !== '' ? '?q=' . rawurlencode($searchText) : '';
                 ?>
                 <li>
-                    <a class="finder__pill"
+                    <a class="finder__pill" data-category=""
                        href="<?= $this->e($finder['action'] . ($searchPart !== '' ? $searchPart : '')) ?>"
                        <?= $activeSlug === '' ? 'aria-current="true"' : '' ?>>
                         everything &middot; <?= $this->e((string) $finder['totalCount']) ?>
@@ -74,7 +84,7 @@ $showPills = count($categories) > 1;
                         . ($searchText !== '' ? '&q=' . rawurlencode($searchText) : '');
                     ?>
                     <li>
-                        <a class="finder__pill"
+                        <a class="finder__pill" data-category="<?= $this->e($category['slug']) ?>"
                            href="<?= $this->e($href) ?>"
                            <?= $activeSlug === $category['slug'] ? 'aria-current="true"' : '' ?>>
                             <svg class="category-icon" aria-hidden="true" focusable="false">
@@ -87,13 +97,14 @@ $showPills = count($categories) > 1;
             </ul>
         <?php endif; ?>
 
-        <?php if ($isFiltered): ?>
-            <?php /* Say what happened (golden rule 4). role="status" so a screen
-                     reader hears the new count after following a filter link. */ ?>
-            <p class="finder__count" role="status">
-                <?= $this->e('Showing ' . $finder['shownCount'] . ' of ' . $finder['totalCount'] . ' ' . $finder['thingsWord'] . '.') ?>
-                <a href="<?= $this->e($finder['action']) ?>">Show everything</a>
-            </p>
-        <?php endif; ?>
+        <?php /* Say what happened (golden rule 4). Rendered even when nothing is
+                 filtered yet — hidden — so the in-browser filtering has a line
+                 to fill in. role="status" makes each new count heard, not only
+                 seen. The text lives in its own span so the script can update
+                 the words without touching the link beside them. */ ?>
+        <p class="finder__count" role="status" <?= $isFiltered ? '' : 'hidden' ?>>
+            <span class="finder__count-text"><?= $this->e('Showing ' . $finder['shownCount'] . ' of ' . $finder['totalCount'] . ' ' . $finder['thingsWord'] . '.') ?></span>
+            <a class="finder__reset" href="<?= $this->e($finder['action']) ?>">Show everything</a>
+        </p>
     </div>
 <?php endif; ?>

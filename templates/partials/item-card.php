@@ -32,7 +32,12 @@ $category = $item->category;
 $artworkFile = dirname(__DIR__, 2) . '/public' . $item->imagePath();
 $hasArtwork = is_file($artworkFile);
 ?>
+<?php /* data-category and data-name are the contract with item-finder.js: the
+         in-place filtering reads them to decide which cards to hide. They are
+         plain data, safe to render everywhere the card appears. */ ?>
 <a class="item-card" href="/inventory/<?= $this->e((string) $item->id) ?>"
+   data-category="<?= $this->e($category->slug) ?>"
+   data-name="<?= $this->e($item->name) ?>"
    style="--card-tint: <?= $this->e($category->colourVariable()) ?>">
 
     <span class="item-card__art">

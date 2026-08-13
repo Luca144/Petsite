@@ -63,6 +63,7 @@ final class InventoryController
                 'shownCount' => count($stacks),
                 'searchShownFrom' => $this->searchShownFrom,
                 'thingsWord' => 'things',
+                'emptyLine' => 'Nothing of yours matches that.',
             ],
         ]));
     }

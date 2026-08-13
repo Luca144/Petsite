@@ -76,6 +76,7 @@ final class ShopController
                 'shownCount' => count($items),
                 'searchShownFrom' => $this->config['search_shown_from'],
                 'thingsWord' => 'items',
+                'emptyLine' => 'Ruinily doesn’t have anything like that on the shelves.',
             ],
         ]));
     }
