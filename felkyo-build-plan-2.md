@@ -154,7 +154,12 @@ The artist can add and change content alone. **This is the point for the first e
 
 ---
 
-## M3 — Rehoming (the pound)
+## M3 — Rehoming, and the character a creature carries
+
+*Renamed from "Rehoming (the pound)". The pound is still the centre of it, but
+this milestone is now also where a creature stops being a species with a name and
+starts being somebody — traits, a title, an age you can read, and the ability to
+keep it at a stage you love.*
 
 **M3.1 — The pound.**
 Send a creature to the pound; another player adopts it. Required:
@@ -163,8 +168,36 @@ Send a creature to the pound; another player adopts it. Required:
 - Presentation as designed: forbidding outside, warm and cosy inside. The contrast is the point.
 Tests: grace boundaries, reclaim, adoption transfer, self-adoption block.
 
-**M3.2 — Personality traits.**
-Traits earned from time in the pound — "grateful" as a small bonus obtainable only this way, plus traits like skittish that soften as the creature is cared for. Traits are data. Keep the bonus small and negative traits flavourful and temporary: they exist to give an adopted creature a history, not to make it worse.
+**M3.2 — Personality traits, in two tiers.**
+A creature's character comes from two different places, and keeping them apart is the whole design:
+
+- **Personality traits are earned by living.** They arrive as a creature grows and is cared for — the player can see how they were come by, and they read as a record of what this creature has been through.
+- **System traits are given by the world.** The player does not earn these and cannot choose them. A creature released from the pound picks up **one or two shelter traits**; **"grateful"** is a *chance* reward on adoption, and is the one trait that carries a small **XP bonus**.
+
+Both tiers are **data, editable in the panel** (principle (b2): a new kind of content is not finished until the panel can manage it, in the same milestone).
+
+**Traits are flavour, plus that single XP bonus. Nothing else.** No trait changes a stat, a price, a cooldown or an outcome.
+
+> **Deferred on purpose, and written down so it is not quietly forgotten: combat stat modifiers.** The old prototype hung five combat stats off every growth stage. Attaching numbers to traits before the arena exists would mean designing a combat system by accident, one trait at a time, and then being stuck with it. **Traits gain stat effects only when the arena is designed (M13), if that design wants them.** Until then, adding a stat to a trait is a decision that needs raising, not a small edit.
+
+Keep the bonus small and the negative traits flavourful and temporary. They exist to give an adopted creature a history, not to make it a worse creature — a player who adopts from the pound should never end up wishing they had not.
+
+**M3.2b — Aging freeze, with a catch-up queue.**
+An owner can **freeze a creature at a stage they love**. Freezing stops growth; unfreezing **replays the missed stages, one per growth tick afterwards**, so nothing is lost and nothing arrives all at once.
+
+Why the queue rather than simply jumping to where the creature "should" be: a player who freezes a baby for six months and then unfreezes should get to watch it grow up, not find an adult in its place. The missed stages are a queue of pending evolutions, not a number to catch up to.
+
+**Fully reversible, no progression loss, and freezing is never punished** — a frozen creature still earns its owner currency when petted and still gains happiness. Freezing is about keeping a shape you love, not opting out of the game.
+
+*Placement note: this sits in M3 rather than M8 (care) because it is a property of the creature's identity — what it IS — rather than of looking after it. It also shares its machinery with the pound: both need a creature's growth to pause and resume cleanly.*
+
+**M3.2c — Level titles and a readable age.**
+Two small ladders, **both held as data and both editable in the panel**:
+
+- **Level titles** — a word for where a creature is, so "level 7" also reads as something. Shown wherever a level is shown.
+- **A friendly age ladder** — "a few days old", "getting on for a year" — instead of a raw date or a day count. Shown wherever a creature's age is shown.
+
+They are listed here rather than in a page-building milestone because they are **content, not layout**: adding a rung is a row, and every surface that already shows creature information picks them up at once.
 
 **M3.3 — Reputation. [DISCUSS SCOPE BEFORE BUILDING]**
 Adopting many creatures is looked on well; repeatedly abandoning them draws cooler NPC responses. The most socially delicate mechanic in the design document. Agree explicitly how harsh the negative side is before building. Default to light flavour rather than economic penalty, and ensure no player can be permanently locked out of anything.
@@ -310,6 +343,7 @@ A simple play interaction granting happiness is a small increment; a minigame is
 ## M9 — Shops and areas become plural
 
 **M9.1 — Multi-shop engine.** A shop is data: slug, name, NPC portrait, welcome and intro lines, flavour lines, offerings. Build the shop index and the shop page with its dialogue box. Migrate the existing shop as the proof; seed Ruinily with the voice lines already written.
+**Seasonal stock is already possible in the data.** Every shop listing carries an optional "available from" and "available to" date, added to the schema ahead of this milestone and inert until now. So Ruinily selling Valentine chocolates for one week in February, or the Gallows opening for Halloween, is a date on a row — not new code, and not a developer. Honour those dates when building the shop page, and give the panel two date fields when building its screen.
 
 **M9.2 — Multi-area world.** An area is data: slug, name, background, description, supported activities. Build the area index — a world view that reads well on a phone — and make the existing area one entry among several. Seed the twelve areas with names and descriptions; loot comes in M10. Areas without content show an honest "nothing here yet" rather than faking interactivity.
 
@@ -332,6 +366,7 @@ Tests: weighted distribution, limit enforcement, refresh window, tool gating, co
 **M10.6 — The fish tank.**
 Placed here deliberately: until it exists, a caught fish is just something to sell, which makes fishing a money faucet. The tank turns a fish someone named and kept into something they can display.
 A tank is a saved layout of positioned objects — fish the player owns, plus decorations. Arrangement is persistent and visible on their profile.
+Decorations here are **ownable items**, the same as room and profile decoration in M11.4 — bought, owned, placed from a menu.
 **Accessibility condition, non-negotiable:** dragging is not the only way to arrange things. Drag-and-drop is among the worst patterns for keyboard users, screen-reader users and anyone with limited fine motor control, and on a phone it fights with scrolling. Build **tap-to-select then tap-to-place** as a fully equal path, working by keyboard and touch, with dragging layered on top as a convenience. If only one can be built, build the tapping one — it works for everyone, including people who can drag.
 
 ---
@@ -347,6 +382,12 @@ A tank is a saved layout of positioned objects — fish the player owns, plus de
 **M11.4 — The home hub.**
 The player's house as something they build up: once the stations are earned, they craft at home instead of borrowing the shops'. A house is shown on their profile and, where it fits, on the world map.
 Reuse the recipe engine's station concept — an owned-unlock check, not a parallel system. Keep the progression gentle: the shops remain usable, so the hub is a comfort rather than a requirement.
+
+> **How decoration gets built, decided in advance.** Decorating a room or a profile is done with **ownable items** — bought or found, owned in the inventory, and placed from a menu — reusing the item system that already exists. It is explicitly **not** the old prototype's free-form stack of stickers, overlays and font pickers laid over a page.
+>
+> Two reasons. A free-form canvas is its own year-long project and lets a player build a page that breaks on a phone or fails contrast. And decoration-as-items means every piece already has a price, a picture, a category and a place in the shops, so the artist adds one the same way she adds anything else.
+>
+> **The actual design happens when this milestone starts** — this note fixes the approach, not the screens. One thing is settled now though, because it is an accessibility requirement rather than a design preference: **placement must work by tapping and by keyboard.** Dragging may be added on top as a convenience, never as the only way (same rule as the fish tank, M10.6).
 
 ---
 

@@ -191,8 +191,17 @@ stock is a simple join.
 | `id` | int unsigned | Primary key. |
 | `shop_id` | int unsigned, NOT NULL, FK → `shops.id` (CASCADE) | |
 | `item_id` | int unsigned, NOT NULL, FK → `items.id` (RESTRICT) | |
+| `available_from` | date, NULL | Optional start of a seasonal window. NULL = always been on sale. |
+| `available_to` | date, NULL | Optional end. NULL = and always will be. |
 
 Unique `(shop_id, item_id)` — a shop offers a given item at most once.
+
+**The two dates are not read by anything yet.** They exist ahead of the shop engine
+in M9 because adding a column to a table nobody is using costs nothing, and adding
+one later to a table full of live listings does not. NULL in either means "no
+limit at that end", so every existing listing behaves exactly as before. When M9
+honours them, a listing outside its window is simply not offered — never shown
+greyed out with "come back in March", which is a tease this site does not do.
 
 ### `rate_limit_hits` — records attempts, so they can be throttled
 The rate limiter (arriving with the first protected endpoint, A.1) records a row

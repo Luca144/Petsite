@@ -38,12 +38,15 @@ Changes from the last version are marked ⭐.
 
 **Done when:** Skerro adds a complete new creature — every stage, stats, lore, library entry — alone, start to finish.
 
-### M3 — The pound
+### M3 — The pound, and who a creature is
 - Send a creature to the pound; three-day grace period with reclaim
 - Adopt a creature someone else rehomed
 - Original owner can't re-adopt after the grace period
-- Personality traits earned from time in the pound
 - Forbidding outside, cosy inside
+- ⭐ **Personality traits in two tiers** — ones a creature *earns* by living, and ones the **world gives it**: a shelter trait or two on leaving the pound, and "grateful" as a lucky extra on adoption. Traits are data you edit in the panel.
+- ⭐ **Traits are flavour, plus one small XP bonus. Nothing else.** They never change a stat or a price. *(Combat effects wait for the arena in M13 — deciding them now would mean designing a fighting system by accident, one trait at a time.)*
+- ⭐ **Freeze a creature at a stage you love.** Growth pauses. Unfreeze and it works through the stages it missed, one at a time, so you still get to watch it grow up. Nothing is lost and a frozen creature still earns you coins.
+- ⭐ **Level titles and a friendly age** — "level 7" also reads as a word, and "born 3 August" also reads as "a few weeks old". Both are lists you can edit.
 
 ### M4 — Themes and accessibility
 - Selectable colour themes, addable through the panel
@@ -88,6 +91,7 @@ Changes from the last version are marked ⭐.
 
 ### M9 — Shops and areas become plural
 - Multi-shop engine with NPC portraits and dialogue; Ruinily gets her real lines
+- ⭐ **Seasonal stock** — every shop listing can carry a "from" and "to" date, so Valentine chocolates in February or the Gallows at Halloween is a date you type, not a job for a developer
 - Multi-area world with an area index
 - Both manageable from the panel
 
@@ -101,6 +105,7 @@ Changes from the last version are marked ⭐.
 ### M11 — Crafting and your own hub
 - Recipe engine; cooking with Yumie; potions with Luca
 - ⭐ **Your house as a hub you build up** — once you've earned the stations, you work from home instead of borrowing the shops'
+- ⭐ **Decorating your room and page uses things you own** — bought, kept in your inventory, placed from a menu. Not the old free-form sticker-and-font layer, which is its own year-long project and lets a page end up broken on a phone. Placement will always work by tapping and by keyboard, never dragging only. *(The screens get designed when this milestone starts.)*
 
 ### M12 — Farming
 - Seed to harvest, with the free daily click so rare visitors still grow things
