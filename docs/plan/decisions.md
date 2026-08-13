@@ -161,3 +161,45 @@ short:
   database rules, not good intentions.
 - Tunable numbers live in one file. Nothing is defined twice.
 - A creature's level is always worked out from what it has done, never stored.
+
+---
+
+## 2026-08-13 — Three usability decisions (the finder, the purse, the moments)
+
+The full plan, with the security answers and test cases, is in
+`docs/plan/2026-08-13-usability-pass.md`. The decisions in short:
+
+### 1. The creature's line became a rare event, not a header fixture
+
+**Decided.** A creature's line used to sit in the header of every page, changing
+once a day. Always-there is the same as never-noticed. Now roughly one page in
+five (tunable: `gameplay.creature_moments.chance_percent`) shows a speech bubble
+at the top of the content — the creature's portrait and its line — and ANY owned
+creature may speak, not just the featured one.
+
+**Left out on purpose: any reward for seeing a moment.** The instant a moment
+pays coins or XP, page loads become farmable by alt accounts. It stays flavour.
+
+### 2. The purse lives in the header, as status — not a button
+
+**Decided.** "Can I afford this?" is asked at the top of a page, so the balance
+shows at the top of every page: a dark status chip, centred above the nav on
+phones, tucked in the frame's top-right corner from tablet width up.
+
+**Left out on purpose: making the chip a link.** An earlier version of the purse
+sat among the nav pills, looked pressable, and did nothing — status dressed as a
+control is a small lie. The shop restates the balance next to the prices anyway.
+
+### 3. Finding things: category pills + a name search, one pattern for both economy pages
+
+**Decided.** Inventory and shop share one "finder row" (`ItemFinder` +
+`partials/item-finder.php`): category pill links with icon, word and count, and
+a GET search box that appears once a list holds 9+ things (tunable:
+`gameplay.finder.search_shown_from`). Filters combine, always say
+"Showing X of Y", and a no-hit result always links back to everything.
+
+**Left out on purpose: sort controls, pagination, and live-as-you-type
+filtering.** Category + search covers the next milestones' volumes; each of the
+three left-outs is real complexity that should wait until a real list hurts.
+The finder's URL shape (?category=&q=) is what a bigger SQL-backed version
+would keep, so nothing built against it will need to change.
