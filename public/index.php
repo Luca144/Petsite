@@ -28,7 +28,7 @@ use Felkyo\Core\FileLogger;
 use Felkyo\Creatures\AdoptionService;
 use Felkyo\Creatures\ContentFilter;
 use Felkyo\Creatures\CreatureBioService;
-use Felkyo\Creatures\CreatureGreeting;
+use Felkyo\Creatures\CreatureMoments;
 use Felkyo\Creatures\CreatureProfileBuilder;
 use Felkyo\Creatures\CreatureRepository;
 use Felkyo\Creatures\GrowthCalculator;
@@ -37,6 +37,7 @@ use Felkyo\Creatures\PettingService;
 use Felkyo\Creatures\SpeciesRepository;
 use Felkyo\Creatures\StarterCreatureService;
 use Felkyo\Economy\InventoryRepository;
+use Felkyo\Economy\ItemFinder;
 use Felkyo\Safety\ContactDetailDetector;
 use Felkyo\Safety\ImpersonationGuard;
 use Felkyo\Safety\ReportRepository;
@@ -236,24 +237,24 @@ if (is_int($currentUserId)) {
     $currentUser = $userRepository->findById($currentUserId);
 }
 
-// One of the player's creatures says something at the top of every page. The
-// spotlight creature is the one they chose to show off, or their newest if they
-// have not chosen — which makes the "featured" setting do something visible
-// everywhere rather than only reordering a grid.
-$spotlightCreature = null;
-$spotlightLine = null;
+// A creature moment: every few clicks, one of the player's creatures pops up in
+// a speech bubble at the top of the page. Most requests this stays null — the
+// rarity is deliberate (see CreatureMoments for the whole reasoning).
+$creatureMoment = null;
 
 if ($currentUser !== null) {
-    $spotlightCreature = $creatureRepository->findForProfile($currentUser->id, 1)[0] ?? null;
-    $spotlightLine = (new CreatureGreeting($config['gameplay']['creature_greetings']))
-        ->lineFor($spotlightCreature, date('Y-m-d'));
+    $creatureMoment = (new CreatureMoments(
+        $config['gameplay']['creature_moments']['lines'],
+        $config['gameplay']['creature_moments']['chance_percent']
+    ))->maybeFor(
+        $creatureProfileBuilder->summariesFor($creatureRepository->findByOwner($currentUser->id))
+    );
 }
 
 // Share these with every template (used by the shared layout's navigation).
 $templates->addData([
     'currentUser' => $currentUser,
-    'spotlightCreature' => $spotlightCreature,
-    'spotlightLine' => $spotlightLine,
+    'creatureMoment' => $creatureMoment,
     'currentPath' => $request->path(),
     // The label for the currency (e.g. "coins"), shown next to the balance.
     'currencyName' => $config['gameplay']['currency']['name'],
@@ -304,12 +305,19 @@ $explorationController = new ExplorationController(
         'rate_limit' => $config['security']['rate_limit_explore'],
     ]
 );
-$inventoryController = new InventoryController($templates, $session, $inventoryRepository);
+// The finder narrows the economy pages (category pills + name search). It is
+// shared by both controllers so the two pages can never filter by different rules.
+$itemFinder = new ItemFinder();
+$inventoryController = new InventoryController(
+    $templates, $session, $inventoryRepository, $itemFinder,
+    $config['gameplay']['finder']['search_shown_from']
+);
 $shopController = new ShopController(
-    $templates, $session, $csrf, $shopRepository, $purchaseService, $rateLimiter,
+    $templates, $session, $csrf, $shopRepository, $purchaseService, $rateLimiter, $itemFinder,
     [
         'slug' => 'general-store',
         'rate_limit' => $config['security']['rate_limit_purchase'],
+        'search_shown_from' => $config['gameplay']['finder']['search_shown_from'],
     ]
 );
 $itemController = new ItemController(

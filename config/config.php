@@ -325,38 +325,53 @@ return [
         // How many recent public creatures the "browse" page shows.
         'browse_recent_limit' => 12,
 
-        // The single in-game currency. A creature's OWNER earns this each time
-        // someone ELSE pets their creature (the petting cooldown limits how often,
-        // so it can't be farmed). "name" is only the label shown to players.
-        // What one of your creatures says at the top of the page.
+        // Creature moments: every few clicks, one of your creatures pops up in a
+        // speech bubble and does something.
         //
         // THIS IS THE SITE'S VOICE more than any other text on it, so it is the
         // first thing worth rewriting. "{name}" becomes the creature's own name.
         //
-        // The header used to say "hi, [player]" on every page forever, which is
-        // the voice of a form rather than of a place — the player already knows
-        // their name. A creature talking does real work in the same space: it
-        // says the creatures are there while you are not looking at them.
-        //
-        // One line is chosen per creature per DAY, so it stays put as you click
-        // around and changes tomorrow. Keep them short, warm and never needy —
+        // The line used to sit in the header of EVERY page, which made it
+        // wallpaper — always there is the same as never noticed. Now it is a
+        // small found event: chance_percent is how many pages out of 100 show a
+        // moment (20 = about one click in five). Any owned creature may speak,
+        // not only the featured one. Keep the lines short, warm and never needy —
         // nothing here should read as a chore or a guilt trip (build plan 2,
         // principle (d): keep the loop kind).
-        'creature_greetings' => [
-            '{name} is dozing in a patch of sun.',
-            '{name} looks pleased you came back.',
-            '{name} has been watching the window all morning.',
-            '{name} found something shiny and is being secretive about it.',
-            '{name} has made a nest out of your things. Sorry.',
-            '{name} is pretending not to have missed you.',
-            '{name} yawns, stretches, and settles again.',
-            '{name} would like it known that the kettle is on.',
-            '{name} has been practising looking dignified.',
-            '{name} is up to something in the other room.',
-            '{name} kept your seat warm.',
-            '{name} says it is a good day for wandering.',
+        //
+        // ON PURPOSE, no reward is attached to a moment. The instant it pays
+        // coins or XP, page loads become farmable (CLAUDE.md section 6,
+        // alt-account farming).
+        'creature_moments' => [
+            'chance_percent' => 20,
+            'lines' => [
+                '{name} is dozing in a patch of sun.',
+                '{name} looks pleased you came back.',
+                '{name} has been watching the window all morning.',
+                '{name} found something shiny and is being secretive about it.',
+                '{name} has made a nest out of your things. Sorry.',
+                '{name} is pretending not to have missed you.',
+                '{name} yawns, stretches, and settles again.',
+                '{name} would like it known that the kettle is on.',
+                '{name} has been practising looking dignified.',
+                '{name} is up to something in the other room.',
+                '{name} kept your seat warm.',
+                '{name} says it is a good day for wandering.',
+            ],
         ],
 
+        // The finder row on the inventory and shop pages. Category pills appear
+        // whenever there is more than one category to choose between; the search
+        // box appears once a list holds this many things (a search box floating
+        // over four items is clutter, not help). Purely a display threshold —
+        // searching by URL (?q=...) always works.
+        'finder' => [
+            'search_shown_from' => 9,
+        ],
+
+        // The single in-game currency. A creature's OWNER earns this each time
+        // someone ELSE pets their creature (the petting cooldown limits how often,
+        // so it can't be farmed). "name" is only the label shown to players.
         'currency' => [
             'name' => 'coins',
             'per_pet' => 5,

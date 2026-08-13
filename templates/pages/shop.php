@@ -12,7 +12,8 @@
  * so what you see in the shop window is what you will recognise on your own
  * shelf afterwards. (See partials/item-card.php for why all three signals.)
  *
- * Variables: $shop (Shop), $items (Item[]), $flash (string|null).
+ * Variables: $shop (Shop), $items (Item[] — already narrowed by the finder),
+ * $isFiltered (bool), $finder (see partials/item-finder), $flash (string|null).
  */
 $this->layout('layout', ['title' => $shop->name . ' — Felkyo Creatures']);
 ?>
@@ -37,6 +38,14 @@ $this->layout('layout', ['title' => $shop->name . ' — Felkyo Creatures']);
         You&rsquo;re carrying <?= $this->e((string) $currentUser->currencyBalance) ?>
         <?= $this->e($currencyName ?? 'coins') ?>.
     </p>
+<?php endif; ?>
+
+<?= $this->insert('partials/item-finder', ['finder' => $finder]) ?>
+
+<?php if ($isFiltered && empty($items)): ?>
+    <?php /* Never a dead end: the finder's count line above carries the "show
+             everything" way back; this keeps the empty shelf itself friendly. */ ?>
+    <p class="empty-state">Ruinily doesn&rsquo;t have anything like that on the shelves.</p>
 <?php endif; ?>
 
 <div class="shop-items">

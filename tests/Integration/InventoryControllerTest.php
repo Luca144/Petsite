@@ -37,8 +37,14 @@ final class InventoryControllerTest extends DatabaseTestCase
         $templates->registerFunction('csrf_field', static fn (): string => '');
         $session = new Session(cookieSecure: false);
 
+        $config = require dirname(__DIR__, 2) . '/config/config.php';
+
         $this->inventory = new InventoryRepository($this->connection);
-        $controller = new InventoryController($templates, $session, $this->inventory);
+        $controller = new InventoryController(
+            $templates, $session, $this->inventory,
+            new \Felkyo\Economy\ItemFinder(),
+            $config['gameplay']['finder']['search_shown_from']
+        );
 
         $this->router = new Router();
         $this->router->get('/inventory', [$controller, 'show']);
@@ -53,9 +59,9 @@ final class InventoryControllerTest extends DatabaseTestCase
         $this->itemIdToGive = $item->id;
     }
 
-    private function get(): \Felkyo\Http\Response
+    private function get(array $query = []): \Felkyo\Http\Response
     {
-        return $this->router->dispatch(new Request('GET', '/inventory', [], '127.0.0.1'));
+        return $this->router->dispatch(new Request('GET', '/inventory', [], '127.0.0.1', $query));
     }
 
     public function testInventoryRequiresLogin(): void
@@ -85,5 +91,105 @@ final class InventoryControllerTest extends DatabaseTestCase
 
         $this->assertSame(200, $response->statusCode());
         $this->assertStringContainsString('don', $response->body()); // "don't own anything yet"
+    }
+
+    /** Give the owner one treat (dish) and one sticker, so filters have work to do. */
+    private function giveOneOfEachCategory(): array
+    {
+        $shops = new ShopRepository($this->connection);
+        $stock = $shops->findItems($shops->findBySlug('general-store')->id);
+
+        $byCategory = [];
+        foreach ($stock as $item) {
+            if (!isset($byCategory[$item->category->slug])) {
+                $byCategory[$item->category->slug] = $item;
+                $this->inventory->addItem($this->userId, $item->id);
+            }
+        }
+
+        return $byCategory; // slug => Item, one owned per category
+    }
+
+    public function testACategoryFilterShowsOnlyThatCategory(): void
+    {
+        $_SESSION['user_id'] = $this->userId;
+        $owned = $this->giveOneOfEachCategory();
+
+        $response = $this->get(['category' => 'dish']);
+
+        $this->assertStringContainsString($owned['dish']->name, $response->body());
+        $this->assertStringNotContainsString($owned['sticker']->name, $response->body());
+        $this->assertStringContainsString('Showing 1 of 2', $response->body());
+    }
+
+    public function testASearchFindsByPartOfTheName(): void
+    {
+        $_SESSION['user_id'] = $this->userId;
+        $this->inventory->addItem($this->userId, $this->itemIdToGive);
+
+        // Part of the name, wrong case — a player half-remembering, not quoting.
+        $fragment = strtoupper(substr($this->itemName, 2, 4));
+        $response = $this->get(['q' => $fragment]);
+
+        $this->assertStringContainsString($this->itemName, $response->body());
+    }
+
+    public function testASearchWithNoHitsIsNotADeadEnd(): void
+    {
+        $_SESSION['user_id'] = $this->userId;
+        $this->inventory->addItem($this->userId, $this->itemIdToGive);
+
+        $response = $this->get(['q' => 'zzz-nothing']);
+
+        $this->assertStringContainsString('Nothing of yours matches', $response->body());
+        $this->assertStringContainsString('Show everything', $response->body());
+    }
+
+    public function testAnUnknownCategorySimplyShowsEverything(): void
+    {
+        $_SESSION['user_id'] = $this->userId;
+        $this->inventory->addItem($this->userId, $this->itemIdToGive);
+
+        $response = $this->get(['category' => 'no-such-thing']);
+
+        $this->assertSame(200, $response->statusCode());
+        $this->assertStringContainsString($this->itemName, $response->body());
+    }
+
+    public function testAnotherPlayersThingsNeverAppearWhateverTheFilter(): void
+    {
+        // The other player owns a sticker; the signed-in owner owns nothing.
+        // No filter combination may surface someone else's things.
+        $otherId = (new UserRepository($this->connection))
+            ->create('someone-else', 'else@example.com', 'hash')->id;
+
+        $shops = new ShopRepository($this->connection);
+        $sticker = null;
+        foreach ($shops->findItems($shops->findBySlug('general-store')->id) as $item) {
+            if ($item->category->slug === 'sticker') {
+                $sticker = $item;
+            }
+        }
+        $this->inventory->addItem($otherId, $sticker->id);
+
+        $_SESSION['user_id'] = $this->userId;
+
+        // Checked as "no item card at all" rather than "name absent", because a
+        // search for the sticker's name legitimately echoes that name back in
+        // the search box — what must never appear is the item itself.
+        foreach ([[], ['category' => 'sticker'], ['q' => $sticker->name]] as $query) {
+            $this->assertStringNotContainsString('item-card', $this->get($query)->body());
+        }
+    }
+
+    public function testHostileSearchTextComesBackEscaped(): void
+    {
+        $_SESSION['user_id'] = $this->userId;
+        $this->inventory->addItem($this->userId, $this->itemIdToGive);
+
+        $response = $this->get(['q' => '<script>alert(1)</script>']);
+
+        $this->assertStringNotContainsString('<script>alert(1)</script>', $response->body());
+        $this->assertStringContainsString('&lt;script&gt;', $response->body());
     }
 }

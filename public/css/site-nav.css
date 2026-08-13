@@ -132,11 +132,133 @@
 }
 
 /* ---------------------------------------------------------------------------
+   THE PURSE — a status chip in the header
+   "Can I afford this?" is asked at the top of the page, so the balance lives
+   at the top of the page. It is a dark chip with light text (the same recipe
+   as the spotlight label — comfortably past AA), and deliberately NOT shaped
+   like the nav pills: an earlier version sat among them, looked pressable,
+   and did nothing when pressed. Status should look like status.
+   --------------------------------------------------------------------------- */
+
+.site-purse {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-sm);
+    background: var(--plum);
+    color: var(--parchment);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+/* The coin diamond. Gold ON THE DARK CHIP — decoration beside the words, and a
+   surface where gold actually has contrast (never gold on parchment). */
+.site-purse span[aria-hidden] {
+    color: var(--gold-lit);
+}
+
+/* From tablet width up there is spare room in the frame's top corner, so the
+   chip tucks up there instead of taking a line of the centred header. The
+   header is position:relative via the rule below, purely to anchor this. */
+@media (min-width: 640px) {
+    .site-header {
+        position: relative;
+    }
+
+    .site-purse {
+        position: absolute;
+        /* Pulled up into the frame's own padding band, so the chip sits on
+           empty parchment beside the banner's top corner instead of covering
+           the artist's art. */
+        top: calc(var(--space-8) * -1);
+        right: 0;
+        margin-top: 0;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+   A CREATURE MOMENT — the speech bubble at the top of the page content
+   Rare on purpose (see CreatureMoments). The whole thing is one link to the
+   creature's page: portrait on the left, its line in a bubble with a tail.
+   --------------------------------------------------------------------------- */
+
+.creature-moment {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-6);
+    text-decoration: none;
+    color: var(--ink);
+    /* Arrives gently. The resting state is fully visible, so the global
+       reduced-motion rule (which disables all animation) simply shows it. */
+    animation: moment-arrive 0.5s ease-out;
+}
+
+@keyframes moment-arrive {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+}
+
+.creature-moment__img {
+    flex: 0 0 auto;
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+}
+
+/* The bubble: a panel with a small tail pointing at the portrait. The tail is
+   two stacked triangles (border trick) — one in the border colour, one in the
+   panel colour, offset by a pixel — which draws an outlined point with no
+   image and no extra markup. */
+.creature-moment__bubble {
+    position: relative;
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 1.02rem;
+    line-height: 1.4;
+}
+
+.creature-moment__bubble::before,
+.creature-moment__bubble::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    border: 7px solid transparent;
+    transform: translateY(-50%);
+}
+
+.creature-moment__bubble::before {
+    left: -14px;
+    border-right-color: var(--border);
+}
+
+.creature-moment__bubble::after {
+    left: -12px;
+    border-right-color: var(--panel);
+}
+
+/* The same response to hover and keyboard focus: the bubble warms. The focus
+   ring from theme.css stays as well — the glow is a nicety, the ring is how a
+   keyboard user knows where they are. */
+.creature-moment:hover .creature-moment__bubble,
+.creature-moment:focus-visible .creature-moment__bubble {
+    border-color: var(--gold);
+    box-shadow: 0 8px 18px -10px rgba(201, 162, 39, 0.7);
+}
+
+/* ---------------------------------------------------------------------------
    WHO YOU ARE — now in the footer
-   Your purse, your name and the way out. It sat in the header among the
-   navigation, where the purse looked like a button that did nothing when
-   pressed, and log out — the most final control on the site — sat beside the
-   ones you press all day.
+   Your name and the way out. Log out once sat in the header among the
+   navigation — the most final control on the site beside the ones you press
+   all day. (The purse lives in the header now, as the status chip above.)
    --------------------------------------------------------------------------- */
 
 .site-you {
@@ -149,20 +271,6 @@
     font-family: var(--font-mono);
     font-size: 0.74rem;
     color: var(--ink-soft);
-}
-
-.site-you__purse {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-    color: var(--plum);
-    font-weight: 700;
-}
-
-/* Gold as decoration only. The number stays plum, because gold on parchment
-   fails contrast badly (CLAUDE.md section 8). */
-.site-you__purse span[aria-hidden] {
-    color: var(--gold);
 }
 
 .site-you__form {

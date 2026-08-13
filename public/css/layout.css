@@ -257,31 +257,6 @@
     }
 }
 
-/* A creature speaking, at the top of the page. It replaces the fixed tagline
-   once you are logged in — see CreatureGreeting for why the site greeting you by
-   your own name was the wrong voice for this place. */
-.site-header__voice {
-    max-width: 42ch;
-    margin: var(--space-2) auto 0;
-    font-family: var(--font-display);
-    font-size: 1.02rem;
-    font-style: italic;
-    line-height: 1.4;
-    /* Purple, like the guest tagline this line replaces. An earlier version used
-       parchment here — parchment text on the parchment header, which made the
-       creature's line invisible. The colour must stay readable on parchment:
-       purple or plum only (gold fails contrast, CLAUDE.md section 8). */
-    color: var(--purple);
-    text-wrap: balance;
-}
-
-.site-header__voice-mark {
-    color: var(--gold-lit);
-    font-size: 1.4em;
-    line-height: 0;
-    vertical-align: -0.15em;
-}
-
 .site-footer__line {
     display: block;
 }

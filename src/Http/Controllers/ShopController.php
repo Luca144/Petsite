@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Felkyo\Http\Controllers;
 
 use Felkyo\Auth\Session;
+use Felkyo\Economy\ItemFinder;
 use Felkyo\Economy\PurchaseService;
 use Felkyo\Economy\ShopRepository;
 use Felkyo\Http\Csrf;
@@ -26,7 +27,7 @@ use League\Plates\Engine;
 final class ShopController
 {
     /**
-     * @param array{slug: string, rate_limit: array{max_attempts: int, window_seconds: int}} $config
+     * @param array{slug: string, rate_limit: array{max_attempts: int, window_seconds: int}, search_shown_from: int} $config
      */
     public function __construct(
         private Engine $templates,
@@ -35,6 +36,7 @@ final class ShopController
         private ShopRepository $shops,
         private PurchaseService $purchase,
         private RateLimiter $rateLimiter,
+        private ItemFinder $finder,
         private array $config,
     ) {
     }
@@ -51,10 +53,30 @@ final class ShopController
             return Response::html('The shop is not available right now.', 500);
         }
 
+        // The whole stock, then what the finder row narrows it to. The stock is
+        // public catalogue data, so the only validation the filters need is the
+        // finder's own (length-capped search, category must actually exist).
+        $allItems = $this->shops->findItems($shop->id);
+        $categories = $this->finder->categoriesOfItems($allItems);
+        $categorySlug = $this->finder->validCategorySlug($request->query('category'), $categories);
+        $searchText = $this->finder->cleanSearchText($request->query('q'));
+        $items = $this->finder->filterItems($allItems, $categorySlug, $searchText);
+
         return Response::html($this->templates->render('pages/shop', [
             'shop' => $shop,
-            'items' => $this->shops->findItems($shop->id),
+            'items' => $items,
+            'isFiltered' => $categorySlug !== '' || $searchText !== '',
             'flash' => $this->session->takeFlash(),
+            'finder' => [
+                'action' => '/shop',
+                'categories' => $categories,
+                'activeSlug' => $categorySlug,
+                'searchText' => $searchText,
+                'totalCount' => count($allItems),
+                'shownCount' => count($items),
+                'searchShownFrom' => $this->config['search_shown_from'],
+                'thingsWord' => 'items',
+            ],
         ]));
     }
 

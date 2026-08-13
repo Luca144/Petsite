@@ -105,13 +105,23 @@ use Felkyo\Http\AssetUrl;
                 <div class="site-header__sub" aria-hidden="true">Creatures</div>
                 <?php if (empty($currentUser)): ?>
                     <?php /* The welcome is for somebody who has not arrived yet. Once
-                             you are in, a creature saying something is the same space
-                             doing better work — see CreatureGreeting. */ ?>
+                             you are in, this space stays quiet — the creatures speak
+                             for themselves now and then (see CreatureMoments). */ ?>
                     <p class="site-header__tagline">come in &mdash; the kettle&rsquo;s on</p>
-                <?php elseif (!empty($spotlightLine)): ?>
-                    <p class="site-header__voice">
-                        <span class="site-header__voice-mark" aria-hidden="true">&ldquo;</span>
-                        <?= $this->e($spotlightLine) ?>
+                <?php endif; ?>
+
+                <?php if (!empty($currentUser)): ?>
+                    <?php /* The purse, visible without scrolling. "Can I afford
+                             this?" is asked at the top of the page, so the answer
+                             lives up here — as a quiet status chip, deliberately
+                             not shaped like a button (an earlier version sat among
+                             the nav pills, looked pressable, and did nothing).
+                             The diamond is decoration; the words carry it. */ ?>
+                    <p class="site-purse">
+                        <span aria-hidden="true">&#9670;</span>
+                        <span class="visually-hidden">You&rsquo;re carrying</span>
+                        <?= $this->e((string) $currentUser->currencyBalance) ?>
+                        <?= $this->e($currencyName ?? 'coins') ?>
                     </p>
                 <?php endif; ?>
 
@@ -127,32 +137,29 @@ use Felkyo\Http\AssetUrl;
 
             <!-- The page's own content is dropped in here. -->
             <main id="main">
+                <?php if (!empty($creatureMoment)): ?>
+                    <?php /* A creature chose this page to pop up on (a rare roll —
+                             see CreatureMoments). It sits above the content as a
+                             visitor would, not pinned into the header as furniture. */ ?>
+                    <?= $this->insert('partials/creature-moment', ['moment' => $creatureMoment]) ?>
+                <?php endif; ?>
                 <?= $this->section('content') ?>
             </main>
 
             <footer class="site-footer">
                 <?php if (!empty($currentUser)): ?>
-                    <?php /* Your purse and the way out. Both moved down here from the
-                             header, for different reasons.
-
-                             Log out is not a destination, and putting it among the
-                             places you can go meant the most final control on the site
-                             sat next to the ones you press all day.
-
-                             The purse was odd up there too: it looked like a button
-                             and did nothing when pressed. Down here it reads as what
-                             it is — a note about you, not somewhere to go. */ ?>
+                    <?php /* Who you are and the way out. Log out is not a
+                             destination, so it does not live among the nav pills —
+                             the most final control on the site should not sit next
+                             to the ones you press all day. (The purse used to be
+                             here too; it moved up to the header, because a balance
+                             below the fold answers "can I afford this?" too late.) */ ?>
                     <?php /* A <div>, not a <p>: this strip contains the log-out
                              <form>, and a form is not allowed inside a paragraph.
                              Browsers "fix" that by closing the paragraph early,
                              which silently pushed the form outside .site-you and
                              stripped the button of all its styling. */ ?>
                     <div class="site-you">
-                        <span class="site-you__purse">
-                            <span aria-hidden="true">&#9670;</span>
-                            <?= $this->e((string) $currentUser->currencyBalance) ?>
-                            <?= $this->e($currencyName ?? 'coins') ?>
-                        </span>
                         <span class="site-you__name">signed in as <?= $this->e($currentUser->username) ?></span>
                         <form method="post" action="/logout" class="site-you__form">
                             <?= $this->csrf_field() ?>

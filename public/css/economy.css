@@ -6,6 +6,101 @@
  * components file stays focused. Reads all colours/spacing from theme.css.
  */
 
+/* ---- The finder row (shared by inventory and shop) ----
+   Category pills + a name search. Pills are links, never a dropdown (CLAUDE.md
+   section 8). The active pill is filled AND marked aria-current, and every pill
+   carries its icon, its name in words and a count — never colour alone. */
+
+.finder {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin: var(--space-4) 0;
+}
+
+.finder__label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+    margin-bottom: var(--space-2);
+}
+
+/* Input and button side by side; the input takes whatever width is left. */
+.finder__row {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.finder__input {
+    flex: 1;
+    min-width: 0; /* lets the input actually shrink on a narrow phone */
+    font-family: var(--font-body);
+    font-size: 1rem;
+    color: var(--plum);
+    background: var(--parchment);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-3);
+    min-height: 48px;
+}
+
+.finder__input:focus {
+    border-color: var(--purple);
+    outline: none; /* replaced by the clear :focus-visible ring from theme.css */
+}
+
+.finder__pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.finder__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px; /* full touch target, like every pill on the site */
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-pill);
+    border: 1.5px solid var(--border);
+    background: var(--panel);
+    color: var(--plum);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 700;
+    transition: transform 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.finder__pill:hover {
+    background: var(--gold-lit);
+    color: var(--plum);
+    transform: translateY(-2px);
+}
+
+/* The active filter: filled, plus the same inset gold underline the nav uses —
+   a shape as well as a colour, so it never signals by colour alone. */
+.finder__pill[aria-current="true"] {
+    background: var(--purple);
+    color: var(--parchment);
+    border-color: var(--purple);
+    box-shadow: inset 0 -3px 0 var(--gold-lit);
+}
+
+/* "Showing 3 of 12" — the finder always says what it did (golden rule 4). */
+.finder__count {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+}
+
 /* ---- Inventory ---- */
 
 .inventory-type {

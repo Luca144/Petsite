@@ -57,7 +57,12 @@ final class ShopControllerTest extends DatabaseTestCase
 
         $controller = new ShopController(
             $templates, $session, $this->csrf, $shops, $purchase, $rateLimiter,
-            ['slug' => 'general-store', 'rate_limit' => $config['security']['rate_limit_purchase']]
+            new \Felkyo\Economy\ItemFinder(),
+            [
+                'slug' => 'general-store',
+                'rate_limit' => $config['security']['rate_limit_purchase'],
+                'search_shown_from' => $config['gameplay']['finder']['search_shown_from'],
+            ]
         );
 
         $this->router = new Router();
@@ -101,6 +106,47 @@ final class ShopControllerTest extends DatabaseTestCase
 
         $this->assertSame(200, $response->statusCode());
         $this->assertStringContainsString('Village Store', $response->body());
+    }
+
+    public function testACategoryFilterNarrowsTheStock(): void
+    {
+        $_SESSION['user_id'] = $this->userId;
+
+        // The seed stocks treats (dish) and stickers; filtering to stickers must
+        // drop the treats and say what happened.
+        $response = $this->router->dispatch(new Request(
+            'GET', '/shop', [], '127.0.0.1', ['category' => 'sticker']
+        ));
+
+        $this->assertStringNotContainsString('Acorn Treat', $response->body());
+        $this->assertStringContainsString('Sticker', $response->body());
+        $this->assertStringContainsString('Showing', $response->body());
+    }
+
+    public function testASearchWithNoHitsOffersTheWayBack(): void
+    {
+        $_SESSION['user_id'] = $this->userId;
+
+        $response = $this->router->dispatch(new Request(
+            'GET', '/shop', [], '127.0.0.1', ['q' => 'zzz-nothing']
+        ));
+
+        // Never a dead end: the empty shelf explains itself and links back.
+        $this->assertStringContainsString('anything like that', $response->body());
+        $this->assertStringContainsString('Show everything', $response->body());
+    }
+
+    public function testHostileSearchTextComesBackEscaped(): void
+    {
+        $_SESSION['user_id'] = $this->userId;
+
+        $response = $this->router->dispatch(new Request(
+            'GET', '/shop', [], '127.0.0.1', ['q' => '<script>alert(1)</script>']
+        ));
+
+        // The text is echoed into the search box and the page — escaped, only.
+        $this->assertStringNotContainsString('<script>alert(1)</script>', $response->body());
+        $this->assertStringContainsString('&lt;script&gt;', $response->body());
     }
 
     public function testBuyingDeductsCurrencyAndAddsTheItem(): void

@@ -1396,3 +1396,45 @@ the signal that never fails anybody.
 
 Gold text on deep plum is 7.8:1 — the one place gold text is allowed, since on
 parchment it fails badly.
+
+---
+
+## The usability pass — moments, the purse, and the finder
+
+*(Plan and reasoning: `docs/plan/2026-08-13-usability-pass.md`. Decisions in
+short: `docs/plan/decisions.md`, entry 2026-08-13.)*
+
+### Creature moments
+
+One page load in five (tunable: `gameplay.creature_moments.chance_percent`),
+one of your creatures pops up in a speech bubble at the top of the content —
+portrait, line, and the whole bubble is a link to its page. The roll happens in
+`CreatureMoments` (randomness injectable for tests), wired once in
+`public/index.php`, rendered by `partials/creature-moment.php`.
+
+**To change the site's voice**, edit `gameplay.creature_moments.lines` in
+config — `{name}` becomes the creature's name. No reward may ever be attached
+to a moment (see the decisions entry for why).
+
+### The purse
+
+Every logged-in page shows the balance as a status chip in the header
+(`.site-purse`, styles in `site-nav.css`). It is deliberately not a link and
+not pill-shaped — status should not dress as a control.
+
+### The finder (how to reuse it)
+
+Both economy pages narrow their lists the same way. To add a finder to a new
+page of items later:
+
+1. fetch the full list, then let `ItemFinder` do everything:
+   `categoriesOf…()`, `validCategorySlug()`, `cleanSearchText()`, `filter…()`;
+2. hand the template a `finder` array (see `partials/item-finder.php` for the
+   keys) and insert the partial;
+3. keep the URL shape `?category=<slug>&q=<text>` — it is bookmarkable, works
+   without JavaScript, and is what a SQL-backed version would keep.
+
+The search box shows itself from `gameplay.finder.search_shown_from` things up
+(and always while a search is active); the pills appear whenever there is more
+than one category. Both thresholds are display decisions only — the URL
+parameters always work.
