@@ -619,17 +619,16 @@ because they are looked up by species slug and life stage.)
 | File | Used by | Why |
 |---|---|---|
 | `art/favicon.png` | `templates/layout.php` | the browser-tab icon |
-| `art/logo-small.png` | `templates/layout.php` | square badge — the phone masthead |
-| `art/logo-large.png` | `templates/layout.php` | wide banner — the desktop masthead |
+| `art/logo-small.png` | *(retired from the layout, 2026-08-14)* | square badge — kept on disk for future use |
+| `art/logo-large.png` | `templates/layout.php` | wide banner — the masthead on every screen |
 | `art/not-found.gif` | `templates/pages/not-found.php` | the animated 404 |
+| `art/background.webp` | `public/css/theme.css` | the painted starfield tiled behind the page |
 
-**How the logo picks a version.** The masthead uses the standard HTML `<picture>`
-element. The plain `<img>` inside it is the phone version, and a `<source>` with
-`media="(min-width: 640px)"` offers the wide banner above that width. The browser
-reads the rule and downloads **only** the file it will actually show — so this is
-responsive art with no JavaScript at all. The square badge only reads "Felkyo", so
-a small "Creatures" line sits under it on phones; CSS hides that line from 640px
-up, where the banner already contains the word.
+**How the logo picks a version — superseded.** The masthead originally used a
+`<picture>` element to give phones the square badge and desktops the wide
+banner. The 2026-08-14 redesign (see "The artist's layout" section below)
+retired the badge: the wide banner scales to a slim strip on phones, which
+gives every page most of a screen of height back. One plain `<img>` remains.
 
 **Two things worth knowing before you touch the images:**
 
@@ -1366,6 +1365,11 @@ else.
 The whole thing lives in `partials/site-nav.php`, because the layout was pushing
 past its 200-line limit and the navigation reads better on its own anyway.
 
+*(Superseded 2026-08-14: the grouped nav was replaced by the sidebar/world-bar
+split — see "The artist's layout" section at the end of this guide. The lesson
+this section records — status is not navigation, groups beat heaps — carried
+straight into that redesign.)*
+
 ### Petting now looks like it did something
 
 It already had one small heart, which was easy to miss entirely — you clicked, the
@@ -1418,9 +1422,10 @@ to a moment (see the decisions entry for why).
 
 ### The purse
 
-Every logged-in page shows the balance as a status chip in the header
-(`.site-purse`, styles in `site-nav.css`). It is deliberately not a link and
-not pill-shaped — status should not dress as a control.
+Every logged-in page shows the balance as a status chip (`.site-purse`). It is
+deliberately not a link and not pill-shaped — status should not dress as a
+control. *(Since the 2026-08-14 redesign it sits at the top of the sidebar,
+beside your name; styles moved to `sidebar.css`.)*
 
 ### The finder (how to reuse it)
 
@@ -1448,3 +1453,63 @@ on the same `?category=&q=` shape. Its contract with the templates is the
 `data-category-section` on the inventory's group wrappers); an integration
 test fails if they disappear. Without JavaScript everything falls back to the
 links and the GET form, which is what the PHPUnit tests exercise.
+
+---
+
+## The artist's layout — sidebar, banner, and a starry sky
+
+*(Plan and reasoning: `docs/plan/2026-08-14-the-new-face.md`. Decisions in
+short: `docs/plan/decisions.md`, entry 2026-08-14.)*
+
+The artist drew a new shape for the whole site and painted a tiling starfield
+(`public/assets/art/background.webp`) to go behind it. The shell is now **two
+parchment panels floating on that sky**:
+
+- **The sidebar** (`templates/partials/site-side.php`, styles in
+  `public/css/sidebar.css`) is everything that is *yours*: your name, the
+  purse chip, your avatar — which is the door to your own page, and says
+  "my page" in words underneath — home / my creatures / inventory, a quiet
+  log out, and your favourite creature as a keepsake card (it reuses
+  `partials/creature-card`, so a favourite looks the same everywhere).
+- **The main panel** holds *the world*: a small server clock, the painted
+  banner (now the masthead on every screen size), the world bar
+  (`partials/site-nav.php` — shop · explore · adopt · browse creatures ·
+  find people, flat, no group labels needed at five), the page content, and
+  a footer with an honest old-web "Back to top" anchor.
+
+**The phone view is the point.** The old phone masthead (a 208px square badge,
+helper line, purse, nine grouped pills) spent half a screen on chrome on every
+page. Now the sidebar renders first as a compact identity strip, the banner is
+a ~67px strip, and the favourite card is desktop-only (`display: none` below
+900px — it is a duplicate of what home already shows, not lost information).
+The side-by-side grid arrives at **900px**, not the 640px the old layout used —
+a 260px sidebar needs the wider floor.
+
+**The creature moment became the popup the artist drew.** Same markup and same
+place in the DOM (top of `<main>`); from 900px up, CSS lifts it
+(`position: absolute` against the main panel) over the banner from the top
+left, with a parchment circle behind the portrait so the sprite reads against
+the busy art. The banner is decoration whose name lives in its alt text, so
+nothing important is covered.
+
+**Where the sidebar's data comes from.** `public/index.php` already fetched the
+player's creature summaries every logged-in request for the moment roll; the
+same array now also supplies the favourite (lowest `featured_order`, the same
+creature the profile spotlights) at no extra query. The avatar takes one
+`ProfileRepository::findById()` lookup and goes through the `AvatarSet`
+allow-list like everywhere else. Guests get nulls and the sidebar shows the
+door instead (log in / sign up).
+
+**The palette moved one token.** `--purple` is now `#7B3FA0` (orchid), tuned to
+the magenta nebula clouds — checked at 5.43:1 on parchment *before* being
+chosen, so every AA pass holds. New derived token `--night` is the fallback
+colour behind the background image. CLAUDE.md's palette section was amended in
+the same change; that is the audit trail.
+
+**If you touch the shell**, the layering is: `layout.php` (the shell and the
+main panel) → `partials/site-side.php` (sidebar) → `partials/site-nav.php`
+(world bar). Styles: `layout.css` (arrangement + shared panel recipe + main
+panel), `sidebar.css` (sidebar), `site-nav.css` (world bar + creature moment).
+`tests/Unit/ArtAssetsTest.php` guards the banner and the background;
+`bin/smoke-test.php` walks every page and checks alt text, ids and heading
+order on the real HTML.

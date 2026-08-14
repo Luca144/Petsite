@@ -1,0 +1,256 @@
+/*
+ * sidebar.css — the sidebar panel: everything that is YOURS.
+ *
+ * WHAT THIS FILE IS: the styles for partials/site-side.php — your name, your
+ * purse, your avatar (the door to your own page), the links to your things,
+ * log out, and the favourite-creature keepsake. The panel surface itself (the
+ * parchment + gold border recipe) comes from layout.css, shared with the main
+ * panel, so the two always read as a set.
+ *
+ * Written mobile-first: the base rules make a COMPACT identity strip for a
+ * ~360px phone (the redesign's whole point was giving phones their height
+ * back), and the 900px media query turns it into the tall left column the
+ * artist drew. Every colour and spacing value comes from theme.css.
+ */
+
+/* The strip: everything in one wrapping row on a phone. */
+.site-side {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    padding: var(--space-3) var(--space-4);
+}
+
+/* Name + purse share the first line, name left, purse right. */
+.site-side__who {
+    flex: 1 1 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-3);
+}
+
+.site-side__name {
+    max-width: none;
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 1.35rem;
+    color: var(--plum);
+    line-height: 1.1;
+}
+
+/*
+ * The purse — a status chip, deliberately NOT shaped like the nav pills: an
+ * earlier version sat among them, looked pressable, and did nothing when
+ * pressed. Status should look like status. Dark chip, light text (well past
+ * AA); the gold diamond is decoration on the dark surface, where gold is
+ * allowed (never gold text on parchment — CLAUDE.md section 8).
+ */
+.site-purse {
+    max-width: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-sm);
+    background: var(--plum);
+    color: var(--parchment);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.site-purse span[aria-hidden] {
+    color: var(--gold-lit);
+}
+
+/*
+ * Your portrait — the door to your own page, and it says so in words ("my
+ * page") because an icon on its own has to be learnt. On a phone it is a small
+ * pill among the others; on desktop it grows into the framed portrait box.
+ */
+.site-side__portrait {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1);
+    text-decoration: none;
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-pill);
+    transition: transform 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.site-side__portrait-img {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--parchment);
+    border: 1.5px solid var(--border);
+}
+
+.site-side__portrait-word {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--plum);
+}
+
+/* The personal links: the same pill recipe as the world bar (site-nav.css),
+   so "a pill is a place you can go" stays one single idea site-wide. */
+.site-side__nav {
+    display: contents; /* on the phone strip, the list flows with its siblings */
+}
+
+.site-side__links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.site-side__links a {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-decoration: none;
+    color: var(--plum);
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    /* Slim padding shapes the pill; min-height guarantees the 44px tap target
+       (CLAUDE.md section 8). */
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-pill);
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    transition: transform 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.site-side__links a:hover,
+.site-side__portrait:hover {
+    background: var(--gold-lit);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px -8px rgba(201, 162, 39, 0.7);
+}
+
+/* The page you are on: filled AND underlined — a shape as well as a colour,
+   so the signal never rides on colour alone. */
+.site-side__links a[aria-current="page"],
+.site-side__portrait[aria-current="page"] {
+    background: var(--purple);
+    border-color: var(--purple);
+    box-shadow: inset 0 -3px 0 var(--gold-lit);
+}
+
+.site-side__links a[aria-current="page"],
+.site-side__portrait[aria-current="page"] .site-side__portrait-word {
+    color: var(--parchment);
+}
+
+/* The way out — deliberately the quietest control on the page: a plain word,
+   not a pill. Log out is final, and the most final control should not dress
+   like the ones you press all day. */
+.site-side__logout {
+    margin: 0;
+    display: inline-flex;
+}
+
+.site-side__logout button {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 400;
+    min-height: 44px;
+    padding: var(--space-2) var(--space-3);
+    background: transparent;
+    border: 1.5px solid transparent;
+    border-radius: var(--radius-pill);
+    color: var(--ink-soft);
+    cursor: pointer;
+}
+
+.site-side__logout button:hover {
+    background: var(--panel);
+    border-color: var(--border);
+    color: var(--plum);
+}
+
+/* The keepsake card is a desktop pleasure only: on a phone it would spend the
+   exact scroll height this redesign gives back, and the same creature is one
+   tap away on home. (Hidden visually AND from screen readers — it is a
+   duplicate, not information anyone loses.) */
+.site-side__favourite {
+    display: none;
+}
+
+/* ---------------------------------------------------------------------------
+   DESKTOP: the tall left column the artist drew.
+   --------------------------------------------------------------------------- */
+@media (min-width: 900px) {
+    .site-side {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--space-4);
+        padding: var(--space-6) var(--space-4);
+        text-align: center;
+        /* The column follows you as the main panel scrolls, so your links are
+           always at hand. align-self keeps it its own height (a stretched grid
+           item cannot stick). */
+        align-self: start;
+        position: sticky;
+        top: var(--space-4);
+    }
+
+    .site-side__who {
+        flex: 0 1 auto;
+        flex-direction: column;
+        gap: var(--space-2);
+    }
+
+    .site-side__name {
+        font-size: 1.7rem;
+    }
+
+    /* The portrait grows from a pill into the framed box of the mockup. */
+    .site-side__portrait {
+        flex-direction: column;
+        gap: var(--space-1);
+        padding: var(--space-2);
+        border-radius: var(--radius-md);
+    }
+
+    .site-side__portrait-img {
+        width: 96px;
+        height: 96px;
+        border-radius: var(--radius-sm);
+    }
+
+    /* The links stack into full-width buttons, like the mockup's stacked pills. */
+    .site-side__nav {
+        display: block;
+        width: 100%;
+    }
+
+    .site-side__links {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .site-side__links a {
+        justify-content: center;
+    }
+
+    .site-side__favourite {
+        display: block;
+        width: 100%;
+        max-width: 200px;
+    }
+}

@@ -11,21 +11,30 @@
  * colour values. A new colour is added here as a named token, then used by name.
  * This keeps the palette consistent and makes a future re-skin a small, safe edit.
  *
- * The aesthetic is "cosy autumn hygge": a warm, lamplit-evening plum field with
- * parchment panels floating on it, and small gold sparkles of accent.
+ * The aesthetic is "cosy autumn hygge under a night sky": the artist's
+ * hand-painted starfield behind everything, with warm parchment panels floating
+ * on it and small gold sparkles of accent.
  */
 
 :root {
     /* ---- Brand palette (the exact approved values — do not change casually) ---- */
     --parchment: #F1E4C3; /* warm cream — the main content surface */
     --panel: #E7D4A8;     /* slightly deeper parchment — cards and boxes */
-    --purple: #6A4C93;    /* primary accent — buttons, links, mid elements */
-    --plum: #3D2B4F;      /* deep purple — body text on parchment, and the page background */
+    --purple: #7B3FA0;    /* primary accent — buttons, links, mid elements.
+                             Orchid, tuned 2026-08-14 to rhyme with the magenta
+                             nebula clouds in the painted background. Contrast
+                             checked BEFORE choosing: 5.43:1 on parchment and
+                             4.70:1 on panel — within 0.01 of the old #6A4C93,
+                             so every AA pass still passes. */
+    --plum: #3D2B4F;      /* deep purple — body text on parchment, dark chips */
     --gold: #C9A227;      /* accent — borders, glows, highlights (the "sparkle") */
     --border: #B89A6A;    /* muted dividers and outlines */
 
     /* ---- Derived shades (clearly named; still live only here) ---- */
-    --plum-deep: #2A1C3A;   /* darker plum for the background gradient's far end */
+    --plum-deep: #2A1C3A;   /* darker plum for dark panels and chips */
+    --night: #0E081A;       /* the sky behind everything — shown while the painted
+                               background image loads, and wherever it can't.
+                               Parchment on night is 15.6:1, far past AA. */
     --gold-lit: #E8C95A;    /* lighter gold for glows and sparkles */
     --ink: var(--plum);     /* default text colour (an alias, reads nicely in rules) */
     --ink-soft: #5A4568;    /* softened ink for secondary/caption text on parchment */
@@ -83,7 +92,9 @@
     --glow-gold: 0 0 26px rgba(232, 201, 90, 0.5);
 
     /* ---- Layout ---- */
-    --content-max: 840px; /* the comfortable maximum width of the content column */
+    --content-max: 840px; /* the comfortable maximum width of the main panel */
+    --shell-max: 1160px;  /* sidebar + gap + main panel, the whole arrangement */
+    --side-width: 260px;  /* the sidebar column on a desktop */
 }
 
 /*
@@ -112,9 +123,16 @@
 }
 
 /*
- * The page field: a warm lamplit-evening room. A gold "lamp glow" from the top,
- * a soft pool of purple light to one side, over a deep plum gradient. It is
- * fixed so the parchment panels feel like they float on a steady background.
+ * The page field: the artist's hand-painted starfield, tiled edge to edge —
+ * black space, magenta nebula clouds, a river of blue stars, gold sparkles.
+ * She painted it as a repeating tile for exactly this job, the way old personal
+ * pet pages tiled their backgrounds, and that's the spirit: the parchment
+ * panels float like letters pinned on a night sky.
+ *
+ * --night is the fallback colour: it shows while the image loads (or if it
+ * ever goes missing) so light text near the edges never sits on white. The
+ * background scrolls with the page rather than being fixed — "fixed" plus a
+ * large image causes visible repaint jank on phones, and phones matter most.
  */
 body {
     font-family: var(--font-body);
@@ -122,12 +140,8 @@ body {
     font-size: 17px;
     line-height: 1.65;
     min-height: 100vh;
-    padding: var(--space-8) var(--space-4) var(--space-12);
-    background:
-        radial-gradient(820px 480px at 50% -6%, rgba(232, 201, 90, 0.30), transparent 60%),
-        radial-gradient(680px 600px at 85% 12%, rgba(106, 76, 147, 0.45), transparent 55%),
-        linear-gradient(160deg, var(--plum) 0%, var(--plum-deep) 100%);
-    background-attachment: fixed;
+    padding: var(--space-6) var(--space-3) var(--space-12);
+    background: var(--night) url('/assets/art/background.webp') repeat top left;
 }
 
 /* Headings use the characterful display serif. Sizes scale with the viewport

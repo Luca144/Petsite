@@ -29,8 +29,8 @@ final class ArtAssetsTest extends TestCase
      */
     private const REQUIRED_ARTWORK = [
         '/assets/art/favicon.png',
-        '/assets/art/logo-small.png',
         '/assets/art/logo-large.png',
+        '/assets/art/background.webp',
         '/assets/art/not-found.gif',
     ];
 
@@ -60,15 +60,28 @@ final class ArtAssetsTest extends TestCase
     }
 
     /**
-     * The masthead shows the logo art. Two versions are supplied so <picture> can
-     * give a phone the square badge and a desktop the wide banner.
+     * The masthead shows the wide painted banner on every screen size — the
+     * 2026-08-14 redesign retired the square badge from the layout (it filled
+     * half a phone screen on every page; the banner scales to a slim strip).
      */
-    public function testTheMastheadUsesBothLogoVersions(): void
+    public function testTheMastheadUsesTheWideBanner(): void
     {
         $html = $this->render('pages/hello');
 
-        $this->assertStringContainsString('/assets/art/logo-small.png', $html);
         $this->assertStringContainsString('/assets/art/logo-large.png', $html);
+    }
+
+    /**
+     * The page field is the artist's painted starfield, applied by the theme
+     * stylesheet. Both halves are checked: the file exists (above) and the
+     * stylesheet really points at it — a broken background fails silently
+     * back to a plain dark page, which nobody would report as a bug.
+     */
+    public function testTheThemePointsAtThePaintedBackground(): void
+    {
+        $themeCss = file_get_contents(dirname(__DIR__, 2) . '/public/css/theme.css');
+
+        $this->assertStringContainsString('/assets/art/background.webp', $themeCss);
     }
 
     public function testTheBrowserTabIconIsTheRealFavicon(): void

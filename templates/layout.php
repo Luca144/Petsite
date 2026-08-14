@@ -4,13 +4,20 @@
  *
  * @package Felkyo\Templates
  *
- * WHAT THIS IS: the outer HTML wrapper for the whole site — the gold-edged
- * parchment frame, the masthead (logo + tagline), the navigation, and the
- * footer. Individual page templates fill the "content" section in the middle.
+ * WHAT THIS IS: the outer HTML wrapper for the whole site. Since the 2026-08-14
+ * redesign (docs/plan/2026-08-14-the-new-face.md) the shell is TWO parchment
+ * panels floating on the artist's painted starfield:
+ *
+ *   - a sidebar (partials/site-side.php) holding everything that is YOURS —
+ *     name, purse, avatar, personal links, log out, favourite creature;
+ *   - the main panel holding THE WORLD — the painted banner, the row of
+ *     world destinations (partials/site-nav.php), the page content, the footer.
+ *
+ * On a phone the two panels simply stack, sidebar first as a compact strip.
+ * The side-by-side arrangement appears from 900px up (see layout.css).
  *
  * HOW IT FITS TOGETHER: a page template calls $this->layout('layout', [...]) and
  * defines a "content" section; this file wraps that content in the shared shell.
- * The look comes entirely from the three stylesheets in /public/css.
  *
  * Plates escapes values passed in via $this->e(...), so any user-provided text
  * that reaches the layout cannot break the page or inject scripts.
@@ -38,10 +45,11 @@ use Felkyo\Http\AssetUrl;
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Nunito:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap">
 
-    <!-- Our styles, split by concern: tokens/base, layout, components, and the
-         creature page. Small enough that loading them together is simplest. -->
+    <!-- Our styles, split by concern: tokens/base, layout, sidebar, nav, and the
+         per-page stylesheets. Small enough that loading them together is simplest. -->
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/theme.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/layout.css') ?>">
+    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/sidebar.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/site-nav.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/components.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/creature.css') ?>">
@@ -57,7 +65,7 @@ use Felkyo\Http\AssetUrl;
     <a class="skip-link" href="#main">Skip to content</a>
 
     <!-- Decorative drifting sparkles; hidden from screen readers and from anyone
-         who prefers reduced motion. -->
+         who prefers reduced motion. They now fall in front of a real sky. -->
     <div class="site-motes" aria-hidden="true">
         <span>&#10086;</span><span>&#10022;</span><span>&#10087;</span><span>&#10022;</span>
     </div>
@@ -74,35 +82,36 @@ use Felkyo\Http\AssetUrl;
         </p>
     <?php endif; ?>
 
-    <div class="site-frame">
-        <div class="site-frame__inner">
-            <header class="site-header">
-                <!--
-                    The wordmark is the artist's logo art. Two versions were drawn: a
-                    square badge that suits a phone, and a wide banner that suits a
-                    desktop. <picture> lets the BROWSER choose between them with no
-                    JavaScript at all — it reads the media rule and downloads only the
-                    file it is actually going to show.
+    <!-- id="top" is the target of the footer's "Back to top" link. -->
+    <div class="site-shell" id="top">
+        <?= $this->insert('partials/site-side', [
+            'currentUser' => $currentUser ?? null,
+            'currentPath' => $currentPath ?? '',
+            'currencyName' => $currencyName ?? 'coins',
+            'registrationOpen' => $registrationOpen ?? false,
+            'currentAvatarPath' => $currentAvatarPath ?? null,
+            'currentAvatarName' => $currentAvatarName ?? null,
+            'favouriteSummary' => $favouriteSummary ?? null,
+        ]) ?>
 
-                    Mobile-first (CLAUDE.md section 8): the plain <img> is the phone
-                    version, and the wide banner is opted into from 640px upward. The
-                    alt text is the site's name, so screen-reader users and anyone
-                    whose images fail to load still get the branding.
-                -->
+        <div class="site-main">
+            <?php /* The server clock — the classic petsite "server time" touch.
+                     The server's own date(), nothing from the visitor, purely
+                     decorative (the page works identically without reading it). */ ?>
+            <p class="site-clock"><?= $this->e(date('H:i, M jS')) ?></p>
+
+            <header class="site-header">
+                <!-- The masthead is the artist's wide painted banner on every
+                     screen size. At phone width it scales down to a ~67px strip —
+                     a warm little masthead rather than a full-screen landing
+                     (the old square badge filled half the screen on every page).
+                     The alt text carries the site's name for screen readers and
+                     for anyone whose images fail to load. -->
                 <h1 class="site-header__wordmark">
-                    <picture>
-                        <source media="(min-width: 640px)" srcset="/assets/art/logo-large.png"
-                                width="800" height="150">
-                        <img class="site-header__logo" src="/assets/art/logo-small.png"
-                             alt="Felkyo Creatures" width="256" height="256">
-                    </picture>
+                    <img class="site-header__banner" src="/assets/art/logo-large.png"
+                         alt="Felkyo Creatures" width="800" height="150">
                 </h1>
-                <!-- The square badge only reads "Felkyo", so this line completes the
-                     name on a phone. It is hidden from screen readers because the logo's
-                     alt text already says "Felkyo Creatures" — without aria-hidden they
-                     would hear "Creatures" twice. On wide screens the banner art already
-                     contains the word, so the stylesheet hides this line there. -->
-                <div class="site-header__sub" aria-hidden="true">Creatures</div>
+
                 <?php if (empty($currentUser)): ?>
                     <?php /* The welcome is for somebody who has not arrived yet. Once
                              you are in, this space stays quiet — the creatures speak
@@ -110,26 +119,9 @@ use Felkyo\Http\AssetUrl;
                     <p class="site-header__tagline">come in &mdash; the kettle&rsquo;s on</p>
                 <?php endif; ?>
 
-                <?php if (!empty($currentUser)): ?>
-                    <?php /* The purse, visible without scrolling. "Can I afford
-                             this?" is asked at the top of the page, so the answer
-                             lives up here — as a quiet status chip, deliberately
-                             not shaped like a button (an earlier version sat among
-                             the nav pills, looked pressable, and did nothing).
-                             The diamond is decoration; the words carry it. */ ?>
-                    <p class="site-purse">
-                        <span aria-hidden="true">&#9670;</span>
-                        <span class="visually-hidden">You&rsquo;re carrying</span>
-                        <?= $this->e((string) $currentUser->currencyBalance) ?>
-                        <?= $this->e($currencyName ?? 'coins') ?>
-                    </p>
-                <?php endif; ?>
-
                 <?= $this->insert('partials/site-nav', [
                     'currentUser' => $currentUser ?? null,
                     'currentPath' => $currentPath ?? '',
-                    'currencyName' => $currencyName ?? 'coins',
-                    'registrationOpen' => $registrationOpen ?? false,
                 ]) ?>
             </header>
 
@@ -139,37 +131,22 @@ use Felkyo\Http\AssetUrl;
             <main id="main">
                 <?php if (!empty($creatureMoment)): ?>
                     <?php /* A creature chose this page to pop up on (a rare roll —
-                             see CreatureMoments). It sits above the content as a
-                             visitor would, not pinned into the header as furniture. */ ?>
+                             see CreatureMoments). On a phone it sits here, above the
+                             content; from 900px up the stylesheet lifts it over the
+                             banner as the little popup the artist drew. */ ?>
                     <?= $this->insert('partials/creature-moment', ['moment' => $creatureMoment]) ?>
                 <?php endif; ?>
                 <?= $this->section('content') ?>
             </main>
 
             <footer class="site-footer">
-                <?php if (!empty($currentUser)): ?>
-                    <?php /* Who you are and the way out. Log out is not a
-                             destination, so it does not live among the nav pills —
-                             the most final control on the site should not sit next
-                             to the ones you press all day. (The purse used to be
-                             here too; it moved up to the header, because a balance
-                             below the fold answers "can I afford this?" too late.) */ ?>
-                    <?php /* A <div>, not a <p>: this strip contains the log-out
-                             <form>, and a form is not allowed inside a paragraph.
-                             Browsers "fix" that by closing the paragraph early,
-                             which silently pushed the form outside .site-you and
-                             stripped the button of all its styling. */ ?>
-                    <div class="site-you">
-                        <span class="site-you__name">signed in as <?= $this->e($currentUser->username) ?></span>
-                        <form method="post" action="/logout" class="site-you__form">
-                            <?= $this->csrf_field() ?>
-                            <button type="submit">log out</button>
-                        </form>
-                    </div>
-                <?php endif; ?>
-
+                <?php /* "Back to top" — honest and old-web. Scrolls to the shell's
+                         id="top"; smooth only for people who allow motion. */ ?>
+                <a class="site-footer__top" href="#top">
+                    <span aria-hidden="true">&#9650;</span> Back to top
+                </a>
                 <span class="site-footer__line">
-                    Felkyo Creatures &middot; made with
+                    &copy; Felkyo Creatures <?= $this->e(date('Y')) ?> &middot; made with
                     <span class="heart" aria-hidden="true">&hearts;</span> &middot;
                     a warm little corner of the web
                 </span>

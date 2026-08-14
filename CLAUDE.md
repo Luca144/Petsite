@@ -172,18 +172,18 @@ The aesthetic is **cosy autumn hygge — like coming home to a warm, lamplit roo
 **Colour palette (the central theme file uses exactly these — no other hex values in components):**
 - `--parchment: #F1E4C3` — warm cream, the main content surface
 - `--panel: #E7D4A8` — slightly deeper parchment for cards/boxes
-- `--purple: #6A4C93` — primary accent (buttons, links, mid elements)
-- `--plum: #3D2B4F` — deep purple: body text on parchment, and the immersive page background
+- `--purple: #7B3FA0` — primary accent (buttons, links, mid elements). *Amended 2026-08-14* from `#6A4C93` to rhyme with the magenta nebula clouds of the painted background; contrast on parchment is 5.43:1 (the old value was 5.42:1), so every AA pass holds.
+- `--plum: #3D2B4F` — deep purple: body text on parchment, and dark chips/panels
 - `--gold: #C9A227` — accent for borders, glows, highlights (the "sparkle")
 - `--border: #B89A6A` — muted dividers and outlines
-- Derived shades are allowed in the theme file if clearly named (e.g. a deeper plum for the background gradient, a lighter gold for glows). Everything still lives in the theme file.
+- Derived shades are allowed in the theme file if clearly named (e.g. `--night` for the sky behind the background image, a lighter gold for glows). Everything still lives in the theme file.
 
 **Typography (load from Google Fonts; define as theme tokens):**
 - **Fraunces** — display/headings (the characterful, slightly whimsical serif). Use its optical-size and soft settings for warmth.
 - **Nunito** — body text (rounded, friendly, highly readable).
 - **Space Mono** — small data, labels, and captions (the old-web "computery" texture). Never below ~0.7rem and never the only carrier of essential information.
 
-**Background treatment:** the page field is the deep plum (a warm lamplit-evening gradient with a soft gold glow), with parchment panels floating on it. This is the agreed direction — warm, enveloping, cosy-at-night, not a flat light page.
+**Background treatment** (*amended 2026-08-14*)**:** the page field is the artist's hand-painted starfield tile (`/assets/art/background.webp` — black space, magenta nebula, blue star-river, gold sparkles), tiled edge to edge the way old personal pet pages tiled their backgrounds, with parchment panels floating on it. `--night` is the fallback colour behind the image. This replaced the earlier plum-gradient treatment — still warm, enveloping, cosy-at-night, never a flat light page.
 
 ### The golden rules — what makes this site good to use
 

@@ -1,78 +1,36 @@
 /*
- * site-nav.css — the site's chrome: the navigation, the creature's greeting, and
- * the small strip in the footer saying who you are.
+ * site-nav.css — the world bar under the banner, and the creature moment.
  *
- * WHAT THIS FILE IS: everything that frames a page rather than being part of one.
- * It was split out of layout.css when that file passed the 400-line limit in
- * CLAUDE.md section 3 — and it splits cleanly, because "how you get around" is a
- * genuinely different concern from "how a page is laid out".
+ * WHAT THIS FILE IS: the row of pill links to every place in Felkyo (the
+ * sidebar's personal links live in sidebar.css), plus the creature-moment
+ * speech bubble — which on a phone flows above the page content and from
+ * 900px up becomes the little popup over the banner that the artist drew.
+ *
+ * The nav used to be nine grouped, labelled pills; the 2026-08-14 redesign
+ * (docs/plan/2026-08-14-the-new-face.md) split "you" into the sidebar and kept
+ * only the five world destinations here — five is glanceable without labels.
+ * No dropdowns anywhere (CLAUDE.md section 8).
  *
  * Every colour and spacing value comes from theme.css.
  */
-/* ---------------------------------------------------------------------------
-   THE NAVIGATION
-   Grouped, and the groups are LABELLED. An earlier version separated them by
-   spacing alone, which looked tidy on a wide screen and fell apart on a narrow
-   one: the groups wrap, the gaps carrying the meaning wrap away with them, and
-   you are left with a row of buttons in no evident order. A word above each
-   group survives any amount of wrapping — and answers "why is it sorted like
-   this?", which is a fair question that spacing cannot answer.
-   No dropdowns anywhere (CLAUDE.md section 8).
-   --------------------------------------------------------------------------- */
 
 .site-nav {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    justify-content: center;
-    /* Tight on purpose. Together with the header this chrome repeats on every
-       single page, so every saved pixel here is saved on every visit. The wider
-       breathing room returns on desktop (media query below), where vertical
-       space is not the scarce thing. */
-    gap: var(--space-3) var(--space-4);
-    margin-top: var(--space-4);
+    margin-top: var(--space-3);
 }
 
-.site-nav__set {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-2);
-}
-
-/* The group name. Quiet on purpose — it is a signpost, not a heading, and it
-   should never compete with the links underneath it. */
-.site-nav__set-label {
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--ink-soft);
-}
-
-.site-nav__group {
+.site-nav__row {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: var(--space-2);
+    gap: var(--space-2) var(--space-2);
     margin: 0;
     padding: 0;
     list-style: none;
 }
 
-/* Home sits on its own, aligned with the links rather than the labels, because
-   it has no group above it. The same goes for any group without a label above
-   it (the guest's "log in / sign up" pair): bottom-aligning them lines their
-   pills up with the pills of the labelled groups, instead of floating them at
-   label height. */
-.site-nav__home,
-.site-nav > .site-nav__group {
-    align-self: flex-end;
-}
-
-.site-nav a,
-.site-you button {
+/* The same pill recipe as the sidebar's links (sidebar.css), so "a pill is a
+   place you can go" stays one single idea site-wide. */
+.site-nav a {
     font-family: var(--font-mono);
     font-size: 0.8rem;
     font-weight: 700;
@@ -80,37 +38,32 @@
     color: var(--plum);
     background: var(--panel);
     border: 1.5px solid var(--border);
-    /* Slimmer padding than a content button, but min-height keeps every pill at
-       the full 44px touch target (CLAUDE.md section 8) — the padding shapes the
-       pill, the min-height guarantees the tap. */
+    /* Slim padding shapes the pill; min-height guarantees every pill the full
+       44px touch target (CLAUDE.md section 8). */
     padding: var(--space-2) var(--space-3);
     border-radius: var(--radius-pill);
     min-height: 44px;
     display: inline-flex;
     align-items: center;
-    gap: var(--space-2);
     transition: transform 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
 }
 
-.site-nav a:hover,
-.site-you button:hover {
+.site-nav a:hover {
     background: var(--gold-lit);
     color: var(--plum);
     transform: translateY(-2px);
     box-shadow: 0 8px 18px -8px rgba(201, 162, 39, 0.7);
 }
 
-.site-nav a:focus-visible,
-.site-you button:focus-visible {
+.site-nav a:focus-visible {
     outline: 3px solid var(--purple);
     outline-offset: 3px;
 }
 
-/* The page you are on: filled, AND underlined. An earlier version added a dot
-   with ::before, which made the pill wider than its neighbours and opened a
-   visible gap in the row. An inset underline changes no dimensions at all, and
-   an underline is a shape rather than a colour — so the rule about never
-   signalling with colour alone is still kept. */
+/* The page you are on: filled, AND underlined. The inset underline changes no
+   dimensions (a ::before dot once widened the pill and opened a gap in the
+   row), and an underline is a shape rather than a colour — so the rule about
+   never signalling with colour alone is kept. */
 .site-nav a[aria-current="page"] {
     background: var(--purple);
     color: var(--parchment);
@@ -118,72 +71,29 @@
     box-shadow: inset 0 -3px 0 var(--gold-lit);
 }
 
-/* Desktop refinements: the roomier spacing returns where a tall header costs
-   nothing, and the pills get their fuller padding back. */
-@media (min-width: 640px) {
+/* Desktop: a touch more air between the pills, under the wide banner. */
+@media (min-width: 900px) {
     .site-nav {
-        gap: var(--space-4) var(--space-6);
-        margin-top: var(--space-6);
+        margin-top: var(--space-4);
+    }
+
+    .site-nav__row {
+        gap: var(--space-2) var(--space-3);
     }
 
     .site-nav a {
-        padding: var(--space-3) var(--space-4);
+        padding: var(--space-2) var(--space-4);
     }
 }
 
 /* ---------------------------------------------------------------------------
-   THE PURSE — a status chip in the header
-   "Can I afford this?" is asked at the top of the page, so the balance lives
-   at the top of the page. It is a dark chip with light text (the same recipe
-   as the spotlight label — comfortably past AA), and deliberately NOT shaped
-   like the nav pills: an earlier version sat among them, looked pressable,
-   and did nothing when pressed. Status should look like status.
-   --------------------------------------------------------------------------- */
-
-.site-purse {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    margin-top: var(--space-3);
-    padding: var(--space-1) var(--space-3);
-    border-radius: var(--radius-sm);
-    background: var(--plum);
-    color: var(--parchment);
-    font-family: var(--font-mono);
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-}
-
-/* The coin diamond. Gold ON THE DARK CHIP — decoration beside the words, and a
-   surface where gold actually has contrast (never gold on parchment). */
-.site-purse span[aria-hidden] {
-    color: var(--gold-lit);
-}
-
-/* From tablet width up there is spare room in the frame's top corner, so the
-   chip tucks up there instead of taking a line of the centred header. The
-   header is position:relative via the rule below, purely to anchor this. */
-@media (min-width: 640px) {
-    .site-header {
-        position: relative;
-    }
-
-    .site-purse {
-        position: absolute;
-        /* Pulled up into the frame's own padding band, so the chip sits on
-           empty parchment beside the banner's top corner instead of covering
-           the artist's art. */
-        top: calc(var(--space-8) * -1);
-        right: 0;
-        margin-top: 0;
-    }
-}
-
-/* ---------------------------------------------------------------------------
-   A CREATURE MOMENT — the speech bubble at the top of the page content
+   A CREATURE MOMENT — the speech bubble
    Rare on purpose (see CreatureMoments). The whole thing is one link to the
    creature's page: portrait on the left, its line in a bubble with a tail.
+   On a phone it sits at the top of the page content; from 900px up it lifts
+   over the banner as a proper little popup (the artist's drawing) — nothing
+   important is under it there, because the banner is decoration whose name
+   lives in its alt text.
    --------------------------------------------------------------------------- */
 
 .creature-moment {
@@ -203,11 +113,19 @@
     to { opacity: 1; transform: none; }
 }
 
+/* The portrait sits on a parchment circle with a gold rim, so the sprite reads
+   clearly wherever the bubble lands — especially over the busy banner art.
+   The box is 76px so the creature inside keeps roughly its 64px size. */
 .creature-moment__img {
     flex: 0 0 auto;
-    width: 64px;
-    height: 64px;
+    width: 76px;
+    height: 76px;
+    padding: 5px;
     object-fit: contain;
+    background: var(--parchment);
+    border: 1.5px solid var(--gold);
+    border-radius: 50%;
+    box-shadow: 0 4px 12px -4px rgba(14, 8, 26, 0.4);
 }
 
 /* The bubble: a panel with a small tail pointing at the portrait. The tail is
@@ -254,46 +172,18 @@
     box-shadow: 0 8px 18px -10px rgba(201, 162, 39, 0.7);
 }
 
-/* ---------------------------------------------------------------------------
-   WHO YOU ARE — now in the footer
-   Your name and the way out. Log out once sat in the header among the
-   navigation — the most final control on the site beside the ones you press
-   all day. (The purse lives in the header now, as the status chip above.)
-   --------------------------------------------------------------------------- */
-
-.site-you {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-3);
-    margin: 0 0 var(--space-4);
-    font-family: var(--font-mono);
-    font-size: 0.74rem;
-    color: var(--ink-soft);
-}
-
-.site-you__form {
-    margin: 0;
-    display: inline-flex;
-}
-
-/* Deliberately the quietest control on the page. */
-.site-you button {
-    font-size: 0.7rem;
-    font-weight: 400;
-    min-height: 36px;
-    padding: var(--space-2) var(--space-3);
-    background: transparent;
-    border-color: transparent;
-    color: var(--ink-soft);
-    cursor: pointer;
-}
-
-.site-you button:hover {
-    background: var(--panel);
-    border-color: var(--border);
-    color: var(--plum);
-    transform: none;
-    box-shadow: none;
+/* From 900px up: the popup the artist drew — lifted out of the flow and laid
+   over the banner from the top left. The main panel is the positioning anchor
+   (position:relative in layout.css). The right inset keeps it clear of the
+   server clock in the opposite corner. A drop shadow lifts it off the art. */
+@media (min-width: 900px) {
+    .creature-moment {
+        position: absolute;
+        z-index: 3;
+        top: var(--space-8);
+        left: var(--space-6);
+        right: 28%;
+        margin-bottom: 0;
+        filter: drop-shadow(0 14px 24px rgba(14, 8, 26, 0.45));
+    }
 }

@@ -239,3 +239,47 @@ that. Making purchases fire without a reload means CSRF, double-submit and
 failure handling in JavaScript — real complexity against a much smaller
 annoyance, since buying is a decision, not a browsing gesture. Raise it
 separately if the reload after Buy starts to hurt.
+
+---
+
+## 2026-08-14 — The artist's layout: sidebar, banner, and a starry sky
+
+The full plan is in `docs/plan/2026-08-14-the-new-face.md`. The artist drew a
+new shape for the whole site — a parchment sidebar beside a wide main panel,
+floating on her hand-painted starfield tile — and left three questions open.
+The decisions in short:
+
+### 1. The sidebar is *you*; the bar under the banner is *the world*
+
+**Decided.** Sidebar: name, purse, avatar (which is the door to your own page),
+home / my creatures / inventory, log out, and your favourite creature as a
+keepsake card. Under the banner: shop · explore · adopt · browse creatures ·
+find people. Five buttons each side of the split, every button somewhere for a
+reason, and the old grouped nine-pill nav (labels and all) retires.
+
+### 2. Phones get the banner, not the badge — and their height back
+
+**Decided.** The wide painted banner is the masthead everywhere; at phone width
+it is a ~67px strip instead of the old 208px square badge filling the screen on
+every page. The sidebar renders first as a compact identity strip, the
+favourite-creature card is desktop-only (it lives on home and your page
+anyway), and no sticky bars eat the space saved.
+
+### 3. The creature moment becomes the popup the artist drew — on desktop
+
+**Decided.** From 900px up, the moment overlays the banner from the top left,
+its portrait seated on a parchment circle so it reads against the busy art.
+The banner is decoration, so nothing important is covered. On phones it stays
+in the flow above the content. Same markup, CSS only.
+
+### The palette moved one token
+
+`--purple` went from `#6A4C93` to `#7B3FA0` (orchid), to rhyme with the
+magenta nebula clouds. Chosen by arithmetic before taste: 5.43:1 on parchment
+against the old value's 5.42:1, so every AA pass still passes. The plum
+gradient background is gone; the body is the tiled painting over a new
+`--night` fallback. CLAUDE.md's palette section was amended in the same change.
+
+**Left out on purpose:** faq/tos/credits footer links (the pages don't exist —
+a dead link is worse than no link); any hamburger or collapsing menu; a second
+mobile rendering of the favourite creature.

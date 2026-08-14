@@ -146,6 +146,13 @@ $explorationRepository = new ExplorationRepository($pdo);
 $shopRepository = new ShopRepository($pdo);
 $inventoryRepository = new InventoryRepository($pdo);
 $guestbookRepository = new GuestbookRepository($pdo);
+$profileRepository = new ProfileRepository($pdo);
+
+// The avatar allow-list. The set is content/config, so adding an avatar needs no
+// code change (docs/adding-avatars.md). Built here (not further down with the
+// profile controller) because the sidebar on EVERY page shows the logged-in
+// player's avatar, so the layout needs it before any controller runs.
+$avatarSet = new AvatarSet($config['avatars']);
 
 // ---- Services (own the business rules) ----
 $passwordHasher = new PasswordHasher();
@@ -242,19 +249,51 @@ if (is_int($currentUserId)) {
 // rarity is deliberate (see CreatureMoments for the whole reasoning).
 $creatureMoment = null;
 
+// The sidebar's identity pieces (redesign 2026-08-14): the player's avatar and
+// their favourite creature as a keepsake card. Guests simply have nulls here —
+// the sidebar shows them the door (log in / sign up) instead.
+$favouriteSummary = null;
+$currentAvatarPath = null;
+$currentAvatarName = null;
+
 if ($currentUser !== null) {
+    // One database trip for the player's creatures serves both displays below:
+    // the rare creature-moment roll AND the sidebar's favourite card.
+    $creatureSummaries = $creatureProfileBuilder->summariesFor(
+        $creatureRepository->findByOwner($currentUser->id)
+    );
+
     $creatureMoment = (new CreatureMoments(
         $config['gameplay']['creature_moments']['lines'],
         $config['gameplay']['creature_moments']['chance_percent']
-    ))->maybeFor(
-        $creatureProfileBuilder->summariesFor($creatureRepository->findByOwner($currentUser->id))
-    );
+    ))->maybeFor($creatureSummaries);
+
+    // The keepsake is the FIRST favourite by the player's own ordering
+    // (featured_order), the same creature the profile page spotlights. A player
+    // who never chose one simply has no keepsake card — nothing is invented.
+    foreach ($creatureSummaries as $summary) {
+        $order = $summary['creature']->featuredOrder;
+        if ($order !== null
+            && ($favouriteSummary === null || $order < $favouriteSummary['creature']->featuredOrder)) {
+            $favouriteSummary = $summary;
+        }
+    }
+
+    // The avatar: stored as a key, turned into a picture only by the AvatarSet
+    // allow-list (see that class for why this is a safety boundary, not a lookup).
+    $profileForSidebar = $profileRepository->findById($currentUser->id);
+    $avatarKey = $profileForSidebar?->avatarKey ?? AvatarSet::FALLBACK_KEY;
+    $currentAvatarPath = $avatarSet->imagePathFor($avatarKey);
+    $currentAvatarName = $avatarSet->nameFor($avatarKey);
 }
 
-// Share these with every template (used by the shared layout's navigation).
+// Share these with every template (used by the shared layout's shell).
 $templates->addData([
     'currentUser' => $currentUser,
     'creatureMoment' => $creatureMoment,
+    'favouriteSummary' => $favouriteSummary,
+    'currentAvatarPath' => $currentAvatarPath,
+    'currentAvatarName' => $currentAvatarName,
     'currentPath' => $request->path(),
     // The label for the currency (e.g. "coins"), shown next to the balance.
     'currencyName' => $config['gameplay']['currency']['name'],
@@ -327,10 +366,9 @@ $itemController = new ItemController(
     $config['security']['rate_limit_item_disposal']
 );
 
-// A player's page. The avatar set and the profile limits are content/config, so
-// adding an avatar or changing how much someone may write needs no code change.
-$avatarSet = new AvatarSet($config['avatars']);
-$profileRepository = new ProfileRepository($pdo);
+// A player's page. The avatar set and the profile repository are built near the
+// top of this file (the sidebar needs them on every page); the profile limits
+// are content/config, so changing how much someone may write needs no code change.
 $profileController = new ProfileController(
     $templates, $session, $csrf, $profileRepository,
     new ProfileService(

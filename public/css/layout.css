@@ -1,20 +1,22 @@
 /*
  * layout.css — the shared page structure for Felkyo Creatures.
  *
- * WHAT THIS FILE IS: the styles for the pieces every page shares — the gold-edged
- * parchment "frame" that holds the content, the masthead (wordmark + tagline),
- * the navigation, the decorative divider, the footer, and the gentle ambient
- * sparkles. Individual pages fill the content area; this file frames it.
+ * WHAT THIS FILE IS: the styles for the shell every page shares since the
+ * 2026-08-14 redesign (docs/plan/2026-08-14-the-new-face.md) — TWO parchment
+ * panels floating on the artist's painted starfield. The sidebar panel itself
+ * is styled in sidebar.css; this file owns the arrangement, the shared panel
+ * recipe, the main panel (clock, banner, divider, footer), the demo notice,
+ * the skip link, and the ambient sparkles.
  *
- * It reads all its colours, fonts and spacing from theme.css — no raw values here.
- * Written mobile-first: the base rules target a ~360px phone, and a min-width
- * media query at the bottom adds the roomier desktop refinements.
+ * It reads all its colours, fonts and spacing from theme.css — no raw values.
+ * Written mobile-first: the base rules stack the panels for a ~360px phone,
+ * and the 900px media query at the bottom arranges them side by side.
  */
 
 /*
  * Skip link: the first thing a keyboard/screen-reader user meets. It lets them
- * jump straight past the header to the main content. It is hidden off-screen
- * until focused, then appears.
+ * jump straight past the sidebar and header to the main content. It is hidden
+ * off-screen until focused, then appears.
  */
 .skip-link {
     position: absolute;
@@ -36,8 +38,8 @@
 
 /*
  * Ambient sparkles ("motes"): a few gold glyphs drifting slowly down the page,
- * like dust in lamplight. Purely decorative, so hidden from screen readers, and
- * sitting behind the content. They are turned off entirely for reduced-motion.
+ * falling in front of the painted sky like dust in lamplight. Purely decorative,
+ * so hidden from screen readers, and turned off entirely for reduced-motion.
  */
 .site-motes {
     position: fixed;
@@ -74,24 +76,21 @@
 }
 
 /*
- * The demo notice: a calm strip above the page frame saying plainly that this is
- * a demo, not a live service. It only appears when config turns it on, which by
- * default means on the deployed site and not on your machine.
- *
- * It sits on the dark plum background, so its text is parchment — light on dark,
- * which reads easily. Gold appears only on the little sun glyph and the bold
- * words, both on the dark panel where gold has enough contrast (gold on parchment
- * would not — see the accessibility rules in CLAUDE.md).
+ * The demo notice: a calm strip above the panels saying plainly that this is a
+ * demo, not a live service. It sits directly on the starfield, so its own dark
+ * backing keeps the text readable whatever stars happen to be behind it.
+ * Gold appears only on the little sun glyph and the bold words — on the dark
+ * backing, where gold has contrast (never gold on parchment; CLAUDE.md rules).
  */
 .demo-notice {
     position: relative;
     z-index: 1;
     /* Overrides the global 62ch limit on paragraphs so the strip lines up with
-       the page frame beneath it. */
-    max-width: var(--content-max);
+       the panels beneath it. */
+    max-width: var(--shell-max);
     margin: 0 auto var(--space-4);
     padding: var(--space-3) var(--space-4);
-    background: rgba(42, 28, 58, 0.85);
+    background: rgba(14, 8, 26, 0.82);
     border: 1.5px solid var(--gold);
     border-radius: var(--radius-md);
     color: var(--parchment);
@@ -109,26 +108,23 @@
     color: var(--gold);
 }
 
-/*
- * The frame: a parchment surface with a soft gold gradient border, floating on
- * the plum field. The gradient border is drawn with two stacked backgrounds
- * (one clipped to the padding box, one to the border box) — a standard CSS
- * technique for a gradient outline that a plain "border" cannot produce.
- */
-.site-frame {
+/* ---------------------------------------------------------------------------
+   THE SHELL — the whole arrangement: sidebar panel + main panel.
+   On a phone they stack (sidebar first, as a compact identity strip); from
+   900px up they sit side by side. The gap lets the painted sky show between
+   them, which is what makes the panels read as things floating ON the sky.
+   --------------------------------------------------------------------------- */
+
+.site-shell {
     position: relative;
     z-index: 1;
-    max-width: var(--content-max);
+    max-width: var(--shell-max);
     margin: 0 auto;
-    background:
-        linear-gradient(var(--parchment), var(--parchment)) padding-box,
-        linear-gradient(150deg, var(--gold-lit), var(--gold) 45%, var(--border) 100%) border-box;
-    border: 2.5px solid transparent;
-    border-radius: calc(var(--radius-lg) + 6px);
-    padding: 7px;
-    box-shadow: var(--shadow-panel), 0 0 0 1px rgba(201, 162, 39, 0.18);
-    /* Gentle "settle in" on load (the magic pass, C.3). The resting state is fully
-       visible, so with reduced motion (animation disabled) it simply appears. */
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    /* Gentle "settle in" on load. The resting state is fully visible, so with
+       reduced motion (animation disabled) it simply appears. */
     animation: frame-rise 0.5s ease-out;
 }
 
@@ -137,70 +133,81 @@
     to { opacity: 1; transform: none; }
 }
 
-.site-frame__inner {
-    border-radius: var(--radius-lg);
-    padding: var(--space-6) var(--space-4) var(--space-8);
+/*
+ * The shared panel recipe: a parchment surface with a soft gold gradient border
+ * and a faint sheen of light in its top corner. The gradient border is drawn
+ * with stacked backgrounds (clipped to padding box and border box) — a standard
+ * CSS technique for a gradient outline that a plain "border" cannot produce.
+ * Both the sidebar and the main panel use exactly this, so they read as a set.
+ */
+.site-side,
+.site-main {
     background:
-        radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.35), transparent 38%),
-        var(--parchment);
+        radial-gradient(circle at 20% 12%, rgba(255, 255, 255, 0.35), transparent 38%) padding-box,
+        linear-gradient(var(--parchment), var(--parchment)) padding-box,
+        linear-gradient(150deg, var(--gold-lit), var(--gold) 45%, var(--border) 100%) border-box;
+    border: 2.5px solid transparent;
+    border-radius: calc(var(--radius-lg) + 6px);
+    box-shadow: var(--shadow-panel), 0 0 0 1px rgba(201, 162, 39, 0.18);
 }
 
-/* ---- Masthead (the site header) ---- */
-.site-header {
-    text-align: center;
-    padding: var(--space-2) 0 var(--space-4);
+/* The main panel. position:relative anchors the desktop creature-moment
+   overlay (site-nav.css), which sits over the banner from 900px up. */
+.site-main {
+    position: relative;
+    padding: var(--space-3) var(--space-4) var(--space-6);
 }
 
-/* The wordmark is the artist's logo art rather than type. It stays inside a real
-   <h1> — screen readers and search engines need a heading here — so this rule only
-   has to stop the heading's line box from adding a stray gap under the image. */
+/*
+ * The server clock — the classic petsite "server time" line, tucked in the
+ * panel's top corner in the small computery type. Decoration with a wink;
+ * nothing on the site depends on reading it.
+ */
+.site-clock {
+    max-width: none;
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    margin-bottom: var(--space-2);
+}
+
+/* ---- Masthead (the painted banner) ---- */
+
+/* The wordmark is the artist's banner art rather than type. It stays inside a
+   real <h1> — screen readers and search engines need a heading here — so this
+   rule only stops the heading's line box adding a stray gap under the image. */
 .site-header__wordmark {
     line-height: 0;
 }
 
-/* The logo image itself. It never overflows a narrow screen, and "height: auto"
-   keeps its proportions while it shrinks.
+/* The banner: the wide painted art on EVERY screen size. At 360px wide it
+   scales to a ~67px strip — a warm masthead, not a landing page (the old
+   square badge filled half a phone screen on every single page).
 
-   NOTE — no "image-rendering: pixelated" here, deliberately. That setting is for
-   pixel art being scaled UP (as the creature portraits are). These logos are only
-   ever displayed at their own size or smaller, and forcing pixelated on a
-   shrinking image makes it look ragged instead of crisp. */
-.site-header__logo {
-    /* On a phone this is the 256px square badge, and at full size it filled two
-       thirds of the screen's height with header before any page content appeared
-       — on EVERY page. Capped a little smaller it stays the warm welcome it is
-       meant to be without pushing the actual page below the fold. The desktop
-       banner is unaffected: the media query below lifts the cap where the wide
-       art takes over. */
-    max-width: 208px;
+   NOTE — no "image-rendering: pixelated" here, deliberately: that setting is
+   for pixel art scaled UP, and this art is only ever shown at or below its own
+   size, where pixelated would make it ragged instead of crisp. */
+.site-header__banner {
     width: 100%;
     height: auto;
-    border-radius: var(--radius-md);
-    /* A soft gold glow seats the art on the parchment, echoing the page frame. */
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    /* A soft gold glow seats the art on the parchment, echoing the panel edge. */
     filter: drop-shadow(0 6px 18px rgba(201, 162, 39, 0.35));
 }
 
-.site-header__sub {
-    font-family: var(--font-mono);
-    font-weight: 700;
-    font-size: 0.9rem;
-    letter-spacing: 0.42em;
-    text-transform: uppercase;
-    color: var(--purple);
-    margin-top: var(--space-2);
-    padding-left: 0.42em; /* balances the wide letter-spacing visually */
-}
-
 .site-header__tagline {
+    max-width: none;
+    text-align: center;
     font-family: var(--font-display);
     font-style: italic;
     font-weight: 500;
     color: var(--purple);
     font-size: 1.05rem;
-    margin-top: var(--space-1);
+    margin-top: var(--space-3);
 }
-
-/* ---- Navigation (pill buttons; never a dropdown — CLAUDE.md section 8) ---- */
 
 /* ---- Decorative divider with a central sparkle ---- */
 .rule {
@@ -208,7 +215,7 @@
     border: none;
     border-top: 1.5px solid var(--border);
     opacity: 0.55;
-    margin: var(--space-6) var(--space-2);
+    margin: var(--space-4) var(--space-2);
     position: relative;
 }
 
@@ -224,39 +231,59 @@
     font-size: 0.85rem;
 }
 
-/* ---- Footer ---- */
+/* ---- Footer (inside the main panel) ---- */
 .site-footer {
-    text-align: center;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2) var(--space-4);
     margin-top: var(--space-8);
     font-family: var(--font-mono);
     font-size: 0.7rem;
     color: var(--ink-soft);
     letter-spacing: 0.04em;
+    text-align: center;
 }
 
 .site-footer .heart {
     color: var(--gold);
 }
 
-/* ---- Desktop refinements (added on top of the mobile-first base) ---- */
-@media (min-width: 640px) {
-    .site-frame__inner {
-        padding: var(--space-8) var(--space-8) var(--space-12);
-    }
-
-    /* From here up, <picture> has swapped in the wide banner, which already reads
-       "Felkyo Creatures" — so the helper line under it would just repeat the word. */
-    .site-header__sub {
-        display: none;
-    }
-
-    /* The wide banner may use the full content width — the phone-size cap above
-       is only for the square badge. */
-    .site-header__logo {
-        max-width: 100%;
-    }
+/* "Back to top" — a real link with a real underline, honest and old-web.
+   min-height keeps it a comfortable tap target even at this small size. */
+.site-footer__top {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-height: 44px;
+    color: var(--purple);
+    font-weight: 700;
 }
 
-.site-footer__line {
-    display: block;
+/* ---- Desktop refinements (added on top of the mobile-first base) ---- */
+@media (min-width: 900px) {
+    .site-shell {
+        display: grid;
+        /* Sidebar at its fixed width; minmax(0, 1fr) lets the main panel
+           shrink properly (a plain 1fr refuses to go below its content's
+           intrinsic width, which makes wide tables overflow the page). */
+        grid-template-columns: var(--side-width) minmax(0, 1fr);
+        gap: var(--space-6);
+        align-items: start;
+    }
+
+    .site-main {
+        padding: var(--space-4) var(--space-8) var(--space-8);
+    }
+
+    .rule {
+        margin: var(--space-6) var(--space-2);
+    }
+
+    /* Footer spreads out: back-to-top on the left, the makers' line right. */
+    .site-footer {
+        justify-content: space-between;
+        text-align: left;
+    }
 }
