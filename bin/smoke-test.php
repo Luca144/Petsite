@@ -343,6 +343,34 @@ foreach ($captured as $path => $html) {
 }
 
 // ---------------------------------------------------------------------------
+// Logging out
+//
+// This runs LAST, because everything after it would be a logged-out request.
+//
+// It was reported as broken, and "there is a log out button" is not the claim
+// worth checking — the claim is that pressing it ends the session. So this posts
+// the real form with the real token and then asks a page that requires an
+// account whether it still knows who you are.
+// ---------------------------------------------------------------------------
+
+echo "\nLogging out:\n";
+$logout = request('/logout', ['_csrf_token' => tokenFrom('/player/' . $name)]);
+check('logging out sends you somewhere', in_array($logout['status'], [200, 302, 303], true), 'status ' . $logout['status']);
+
+// /profile/edit is for logged-in players only, so a guest is sent to the log-in
+// page. If we are still logged in, it renders the edit form instead.
+$afterLogout = request('/profile/edit');
+check(
+    'you are really logged out afterwards',
+    !str_contains($afterLogout['body'], 'name="avatar_key"'),
+    'the profile edit form still rendered, so the session survived'
+);
+check(
+    'the world bar offers a way back in',
+    str_contains(request('/')['body'], 'href="/login"')
+);
+
+// ---------------------------------------------------------------------------
 // Nothing was logged that should not have been
 // ---------------------------------------------------------------------------
 
