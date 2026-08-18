@@ -58,7 +58,7 @@ $isCurrent = static function (string $href) use ($currentPath): bool {
                href="/player/<?= $this->e(rawurlencode($currentUser->username)) ?>"<?=
                 $isCurrent('/player/' . rawurlencode($currentUser->username)) || $isCurrent('/profile')
                     ? ' aria-current="page"' : '' ?>>
-                <img class="site-side__portrait-img pixelated"
+                <img class="site-side__portrait-img"
                      src="<?= $this->e($currentAvatarPath) ?>"
                      alt="" width="96" height="96">
                 <span class="site-side__portrait-word">my page</span>

@@ -56,7 +56,7 @@ $this->layout('layout', ['title' => 'Find a player — Felkyo Creatures']);
             <?php foreach ($results as $player): ?>
                 <li>
                     <a class="search-result" href="/player/<?= $this->e(rawurlencode($player['username'])) ?>">
-                        <img class="search-result__avatar pixelated"
+                        <img class="search-result__avatar"
                              src="<?= $this->e($player['avatarPath']) ?>"
                              alt="" width="40" height="40">
                         <span class="search-result__name"><?= $this->e($player['username']) ?></span>

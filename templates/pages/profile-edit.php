@@ -42,7 +42,7 @@ $this->layout('layout', ['title' => 'Change your page — Felkyo Creatures']);
                            name="avatar_key"
                            value="<?= $this->e($avatar['key']) ?>"
                            <?= $avatar['key'] === $profile->avatarKey ? 'checked' : '' ?>>
-                    <img class="avatar-choice__img pixelated"
+                    <img class="avatar-choice__img"
                          src="<?= $this->e($avatar['imagePath']) ?>"
                          alt="" width="72" height="72">
                     <span class="avatar-choice__name"><?= $this->e($avatar['name']) ?></span>

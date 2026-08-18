@@ -22,9 +22,9 @@ $this->layout('layout', ['title' => $profile->username . ' — Felkyo Creatures'
 <?php endif; ?>
 
 <header class="profile-header">
-    <img class="profile-header__avatar pixelated"
+    <img class="profile-header__avatar"
          src="<?= $this->e($avatarPath) ?>"
-         alt="<?= $this->e($profile->username . '’s avatar: ' . $avatarName) ?>"
+         alt="<?= $this->e($profile->username . ‘’s avatar: ‘ . $avatarName) ?>"
          width="96" height="96">
 
     <div class="profile-header__text">

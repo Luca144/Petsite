@@ -87,7 +87,7 @@ if (!in_array($tab, ['creatures', 'users'])) {
                     <?php foreach ($foundPlayers as $player): ?>
                         <li>
                             <a class="search-result" href="/player/<?= $this->e(rawurlencode($player->username)) ?>">
-                                <img class="search-result__avatar pixelated"
+                                <img class="search-result__avatar"
                                      src="<?= $this->e($avatarSet->imagePathFor($player->avatarKey)) ?>"
                                      alt="" width="40" height="40">
                                 <span class="search-result__name"><?= $this->e($player->username) ?></span>
