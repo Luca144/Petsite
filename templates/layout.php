@@ -168,6 +168,22 @@ use Felkyo\Http\AssetUrl;
 
             <!-- The page's own content is dropped in here. -->
             <main id="main">
+                <?php if (!empty($flash)): ?>
+                    <?php /* The one-time message from whatever just happened, shown
+                             for EVERY page rather than by each page separately.
+
+                             It used to be per-page, and the home page had no such
+                             block — so feeding a creature from the keepsake card,
+                             which lands you back on the home page, silently said
+                             nothing. golden rule 4 is that every action gets a
+                             visible answer, and the only way to keep that promise
+                             is for the answer not to be optional.
+
+                             role="status" announces it politely to a screen reader
+                             rather than interrupting. */ ?>
+                    <p class="flash" role="status"><?= $this->e($flash) ?></p>
+                <?php endif; ?>
+
                 <?= $this->section('content') ?>
             </main>
 

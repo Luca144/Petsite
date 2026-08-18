@@ -221,6 +221,26 @@
         align-self: start;
         position: sticky;
         top: var(--space-4);
+
+        /* THE COLUMN MUST NEVER BE TALLER THAN THE SCREEN, and this is not a
+           nicety — it is what stops the bottom of it being unreachable.
+
+           A sticky element taller than the viewport hangs its overflow below the
+           fold and then stops moving, because sticky pins it. Scrolling does not
+           bring the bottom up; only reaching the end of the whole page does. When
+           M2 added the keepsake card the column grew past a typical laptop screen,
+           and the card — the thing the feature is for — could only be reached by
+           scrolling to the very end of every page.
+
+           Capping the height to the viewport and letting the column scroll inside
+           itself fixes that for any content and any screen. The overflow bar only
+           appears when it is actually needed, so on a tall screen nothing changes.
+
+           overscroll-behavior stops a flick inside the column carrying on into the
+           page once it reaches its own end, which reads as the page lurching. */
+        max-height: calc(100vh - (2 * var(--space-4)));
+        overflow-y: auto;
+        overscroll-behavior: contain;
     }
 
     .site-side__who {

@@ -17,10 +17,6 @@
 $this->layout('layout', ['title' => $profile->username . ' — Felkyo Creatures']);
 ?>
 
-<?php if (!empty($flash)): ?>
-    <p class="flash" role="status"><?= $this->e($flash) ?></p>
-<?php endif; ?>
-
 <header class="profile-header">
     <img class="profile-header__avatar"
          src="<?= $this->e($avatarPath) ?>"

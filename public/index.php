@@ -361,8 +361,32 @@ if ($currentUser !== null) {
     $currentAvatarName = $avatarSet->nameFor($avatarKey);
 }
 
+// THE ONE-TIME MESSAGE, TAKEN ONCE, HERE.
+//
+// It used to be each page's own job: five controllers called takeFlash() and eight
+// templates drew the paragraph. Which meant a page that forgot simply swallowed
+// the message — and the home page had forgotten. So feeding a creature from the
+// keepsake card, which lands you on the home page, said nothing at all. Worse than
+// nothing: the message stayed in the session and appeared later on whatever
+// unrelated page happened to ask for one.
+//
+// Taken here and handed to the layout, every page shows it and no new page can
+// forget. Controllers still only ever flash-and-redirect, which is what makes one
+// read per request correct.
+$flash = $session->takeFlash();
+
+// The "something nice just happened" flag, read the same way and for the same
+// reason. It drives the heart animation, and it used to be read by the creature
+// page alone — so petting or feeding from the keepsake card, which lands you
+// somewhere else entirely, animated nothing. Worse, nothing consumed it there, so
+// the flag sat in the session and made the NEXT creature page celebrate for no
+// reason. One read, one truth, every template.
+$justPetted = $session->takeCelebration() === 'pet';
+
 // Share these with every template (used by the shared layout's shell).
 $templates->addData([
+    'flash' => $flash,
+    'justPetted' => $justPetted,
     'currentUser' => $currentUser,
     'creatureMoment' => $creatureMoment,
     'favouriteSummary' => $favouriteSummary,

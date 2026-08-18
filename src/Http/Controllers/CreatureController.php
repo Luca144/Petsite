@@ -101,9 +101,11 @@ final class CreatureController
             'guestbook' => $guestbook,
             'canSignGuestbook' => $this->session->has('user_id'),
             // A one-time message from a just-completed action (e.g. after petting).
-            'flash' => $this->session->takeFlash(),
-            // True just after a successful pet, so the page plays the heart once.
-            'justPetted' => $this->session->takeCelebration() === 'pet',
+            // The one-time message and the "play the heart once" flag are BOTH read
+            // in public/index.php now, once per request, and handed to every
+            // template. They used to be taken here — which meant the keepsake card
+            // in the sidebar could never celebrate, and the home page (which the
+            // card's own buttons redirect to) showed no message at all.
         ]);
 
         return Response::html($html);

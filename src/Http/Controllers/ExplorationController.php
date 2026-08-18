@@ -72,7 +72,6 @@ final class ExplorationController
             'areaSlug' => $areaSlug,
             'area' => $area,
             'remaining' => $this->exploration->remainingClicks($userId, $areaSlug),
-            'flash' => $this->session->takeFlash(),
         ]));
     }
 

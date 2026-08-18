@@ -74,7 +74,6 @@ final class ShopController
             // and are never filtered by it (a creature is not a thing on a shelf).
             'creaturesForSale' => $this->creaturePurchase->forSale(),
             'isFiltered' => $categorySlug !== '' || $searchText !== '',
-            'flash' => $this->session->takeFlash(),
             'finder' => [
                 'action' => '/shop',
                 'categories' => $categories,

@@ -17,10 +17,6 @@
 $this->layout('layout', ['title' => $area['name'] . ' — Felkyo Creatures']);
 ?>
 
-<?php if (!empty($flash)): ?>
-    <p class="flash" role="status"><?= $this->e($flash) ?></p>
-<?php endif; ?>
-
 <h2 class="panel-label"><?= $this->e($area['name']) ?></h2>
 <p><?= $this->e($area['description']) ?></p>
 <p class="explore-clicks">Searches left this visit: <b><?= $this->e((string) $remaining) ?></b></p>

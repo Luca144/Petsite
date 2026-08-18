@@ -48,9 +48,17 @@ $image = '/assets/creatures/' . rawurlencode($species?->slug ?? '')
         <span class="keepsake__name"><?= $this->e($creature->name) ?></span>
     </a>
 
-    <p class="keepsake__mood"><?= $this->e($mood->sentence($creature->name)) ?></p>
+    <p class="keepsake__mood" role="status"><?= $this->e($mood->sentence($creature->name)) ?></p>
 
-    <?= $this->insert('partials/mood-bars', ['mood' => $mood, 'justPetted' => false]) ?>
+    <?php /* $justPetted comes from the layout's shared data, so the card celebrates
+             when the thing that just happened happened HERE. It used to be hard-coded
+             false, which meant pressing pet or feed on the card changed the bar's
+             width silently — the one action with no visible answer on the whole
+             site (golden rule 4). */ ?>
+    <?= $this->insert('partials/mood-bars', [
+        'mood' => $mood,
+        'justPetted' => $justPetted ?? false,
+    ]) ?>
 
     <div class="keepsake__actions">
         <?php /* Petting your own creature earns no gems (you cannot pay yourself),

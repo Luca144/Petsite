@@ -30,6 +30,8 @@ use League\Plates\Engine;
 final class CreatureControllerTest extends DatabaseTestCase
 {
     private Router $router;
+    /** Kept so a test can share data with the layout the way index.php does. */
+    private Engine $templates;
     private int $ownerId;
     private int $publicCreatureId;
 
@@ -42,6 +44,9 @@ final class CreatureControllerTest extends DatabaseTestCase
         $config = require dirname(__DIR__, 2) . '/config/config.php';
 
         $templates = new Engine(dirname(__DIR__, 2) . '/templates');
+        // Kept on the test as well, so a test can share data with the layout the
+        // way public/index.php does — which is how the celebration flag arrives.
+        $this->templates = $templates;
         $session = new Session(cookieSecure: false);
         // The shared layout may render the log-out form, which needs this helper.
         $templates->registerFunction('csrf_field', static fn (): string => '');
@@ -104,17 +109,39 @@ final class CreatureControllerTest extends DatabaseTestCase
         $this->assertStringContainsString('/assets/creatures/foxlen/baby.gif', $response->body());
     }
 
-    public function testTheHeartCelebrationShowsOnceThenIsCleared(): void
+    /**
+     * The heart plays when the page is told something just happened.
+     *
+     * WHY THIS TEST CHANGED SHAPE. It used to set $_SESSION['celebrate'] and expect
+     * this controller to consume it, because the controller did. It no longer does:
+     * the flag is read once in public/index.php and handed to every template, so
+     * that the keepsake card in the sidebar can celebrate too — pressing pet or
+     * feed on that card used to change a bar's width silently, which was the one
+     * action on the site with no visible answer.
+     *
+     * The consumption itself is Session's job and is tested there (take-once). What
+     * belongs HERE is that the page draws the celebration when it is told to, and
+     * does not when it is not — so the flag is handed in the way the front
+     * controller hands it, through shared template data.
+     */
+    public function testTheHeartCelebrationIsDrawnWhenThePageIsToldToCelebrate(): void
     {
-        // Set the one-time celebration (as PetController does after a pet).
-        $_SESSION['celebrate'] = 'pet';
+        $this->templates->addData(['justPetted' => true]);
 
-        $first = $this->get('/creature/' . $this->publicCreatureId);
-        $this->assertStringContainsString('creature__portrait--celebrate', $first->body());
+        $this->assertStringContainsString(
+            'creature__portrait--celebrate',
+            $this->get('/creature/' . $this->publicCreatureId)->body()
+        );
+    }
 
-        // Viewing again does not celebrate — the flag was consumed.
-        $second = $this->get('/creature/' . $this->publicCreatureId);
-        $this->assertStringNotContainsString('creature__portrait--celebrate', $second->body());
+    public function testAnOrdinaryVisitDoesNotCelebrate(): void
+    {
+        // Nothing shared, nothing to celebrate. This is the ordinary case, and it
+        // being quiet is what stops the heart from playing on every page view.
+        $this->assertStringNotContainsString(
+            'creature__portrait--celebrate',
+            $this->get('/creature/' . $this->publicCreatureId)->body()
+        );
     }
 
     /**

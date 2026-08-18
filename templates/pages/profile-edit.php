@@ -17,10 +17,6 @@
 $this->layout('layout', ['title' => 'Change your page — Felkyo Creatures']);
 ?>
 
-<?php if (!empty($flash)): ?>
-    <p class="flash" role="status"><?= $this->e($flash) ?></p>
-<?php endif; ?>
-
 <h2 class="panel-label">Change your page</h2>
 
 <p class="profile-edit__intro">

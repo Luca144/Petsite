@@ -71,7 +71,6 @@ final class ItemController
 
         return Response::html($this->templates->render('pages/item', [
             'stack' => $stack,
-            'flash' => $this->session->takeFlash(),
         ]));
     }
 

@@ -20,10 +20,6 @@ $this->layout('layout', ['title' => $item->name . ' — Felkyo Creatures']);
 
 <?= $this->insert('partials/item-icons') ?>
 
-<?php if (!empty($flash)): ?>
-    <p class="flash" role="status"><?= $this->e($flash) ?></p>
-<?php endif; ?>
-
 <p class="item-detail__back"><a href="/inventory">&larr; Back to your things</a></p>
 
 <article class="item-detail" style="--card-tint: <?= $this->e($category->colourVariable()) ?>">

@@ -86,19 +86,9 @@ if (empty($currentUser)) {
             </ul>
         </nav>
 
-        <?php /* The way out — deliberately the quietest control here, and DESKTOP
-                 ONLY (see sidebar.css). On a phone the sidebar is a compact strip
-                 right at the top of every page, which put "log out" a mis-tap away
-                 from the links people actually use all day. It lives on your own
-                 page there instead, which is where you go on purpose. */ ?>
-        <form method="post" action="/logout" class="site-side__logout">
-            <?= $this->csrf_field() ?>
-            <button type="submit">log out</button>
-        </form>
-
         <?php if (!empty($favouriteSummary)): ?>
             <?php /* The keepsake: your favourite creature, how it is feeling, and
-                     two things you can do about it without leaving the page.
+                     the things you can do about it without leaving the page.
                      It used to be the plain collection card — a picture and a
                      link, which is a shortcut rather than a companion. Now it is
                      the creature itself, on every screen.
@@ -106,7 +96,12 @@ if (empty($currentUser)) {
                      SHOWN ON PHONES TOO (changed in M2). The card was
                      desktop-only because it cost scroll height and only saved a
                      tap. Now it is the feature, and a feature you can only reach
-                     on a laptop is not one most players have. */ ?>
+                     on a laptop is not one most players have.
+
+                     IT COMES BEFORE THE WAY OUT. It used to be last, after "log
+                     out", which put the most-used thing in the column below the
+                     least-used one — and on a screen shorter than the column, that
+                     meant the card was the part you could not reach. */ ?>
             <div class="site-side__favourite">
                 <?= $this->insert('partials/keepsake', [
                     'summary' => $favouriteSummary,
@@ -114,4 +109,14 @@ if (empty($currentUser)) {
                 ]) ?>
             </div>
         <?php endif; ?>
+
+        <?php /* The way out — deliberately the quietest control here, last in the
+                 column, and DESKTOP ONLY (see sidebar.css). On a phone the sidebar
+                 is a compact strip right at the top of every page, which put "log
+                 out" a mis-tap away from the links people use all day. It lives on
+                 your own page there instead, which you reach on purpose. */ ?>
+        <form method="post" action="/logout" class="site-side__logout">
+            <?= $this->csrf_field() ?>
+            <button type="submit">log out</button>
+        </form>
 </aside>

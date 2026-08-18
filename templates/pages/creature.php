@@ -34,12 +34,6 @@ $createdLabel = $creature->createdAt !== null
     : 'unknown';
 ?>
 
-<?php if (!empty($flash)): ?>
-    <!-- A one-time message from the action just taken (role="status" so screen
-         readers announce it politely). -->
-    <p class="flash" role="status"><?= $this->e($flash) ?></p>
-<?php endif; ?>
-
 <article class="creature">
     <?php /* After a pet, --celebrate does three things at once: the creature gives a
              happy wriggle, three hearts drift up at slightly different times, and the

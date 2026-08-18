@@ -87,7 +87,6 @@ final class ProfileController
             // as though it has lost something. A visitor has no business knowing
             // how many creatures somebody keeps out of sight.
             'hiddenCount' => $isOwner ? $this->creatures->countPrivateForOwner($profile->id) : 0,
-            'flash' => $this->session->takeFlash(),
         ]));
     }
 
@@ -119,7 +118,6 @@ final class ProfileController
             'featuredIds' => $this->creatures->findFeaturedIds($userId),
             'maxAboutLength' => $this->limits['max_about_length'],
             'maxFeatured' => $this->limits['max_featured_creatures'],
-            'flash' => $this->session->takeFlash(),
         ]));
     }
 

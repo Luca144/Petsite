@@ -23,10 +23,6 @@ $this->layout('layout', ['title' => $shop->name . ' — Felkyo Creatures']);
 
 <?= $this->insert('partials/item-icons') ?>
 
-<?php if (!empty($flash)): ?>
-    <p class="flash" role="status"><?= $this->e($flash) ?></p>
-<?php endif; ?>
-
 <h2 class="panel-label"><?= $this->e($shop->name) ?></h2>
 <?php if ($shop->description !== null): ?>
     <p><?= $this->e($shop->description) ?></p>

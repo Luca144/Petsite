@@ -478,6 +478,27 @@ if ($creaturePath !== null) {
     check('choosing a favourite puts the keepsake card on the page', str_contains($home, 'class="keepsake"'));
     check('the keepsake card offers a pet button', str_contains($home, 'keepsake__actions'));
     check('the keepsake card shows how the creature feels', str_contains($home, 'keepsake__mood'));
+
+    // THE CARD'S OWN BUTTONS MUST ANSWER. They redirect to the home page, and the
+    // home page had no flash block — so petting or feeding from the card said
+    // nothing whatsoever, which is the one thing golden rule 4 forbids. The
+    // message is now drawn by the layout, so no page can forget it again.
+    $pettedFromCard = request($creaturePath . '/pet', [
+        '_csrf_token' => tokenFrom('/'),
+        'from' => 'home',
+    ]);
+    check(
+        'petting from the keepsake card lands you back on the home page',
+        str_contains($pettedFromCard['body'], 'class="keepsake"')
+    );
+    check(
+        'and says what happened there',
+        str_contains($pettedFromCard['body'], 'class="flash"')
+    );
+    check(
+        'and plays the celebration on the card',
+        str_contains($pettedFromCard['body'], 'mood-bar__fill--just-changed')
+    );
 }
 
 // ---------------------------------------------------------------------------
