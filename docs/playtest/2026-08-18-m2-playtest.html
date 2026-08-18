@@ -1,0 +1,688 @@
+<title>Felkyo M2 Playtest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Nunito:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap">
+
+<style>
+/* ---------------------------------------------------------------------------
+   Felkyo's own tokens. This document is read by the people who own that
+   palette, so it uses theirs rather than inventing one — including the rule
+   that gold is never text on parchment (too low contrast), only a border or a
+   glyph. The complete light palette lives on bare :root; the dark blocks
+   below redefine ONLY tokens, so nothing has a colour that exists in one
+   theme and not the other.
+   --------------------------------------------------------------------------- */
+:root {
+  --parchment: #F1E4C3;
+  --panel: #E7D4A8;
+  --purple: #7B3FA0;
+  --plum: #3D2B4F;
+  --gold: #C9A227;
+  --border: #B89A6A;
+  --night: #0E081A;
+
+  --ground: var(--parchment);
+  --surface: #F7EDD6;
+  --surface-quiet: var(--panel);
+  --ink: var(--plum);
+  --ink-soft: #5A4568;
+  --rule: var(--border);
+  --accent: var(--purple);
+  --accent-ink: #FBF4E4;
+  --edge: var(--gold);
+
+  --step--1: 0.82rem;
+  --step-0: 1.02rem;
+  --step-1: 1.28rem;
+  --step-2: 1.62rem;
+  --step-3: 2.15rem;
+  --step-4: 2.9rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: var(--night);
+    --surface: #1B1230;
+    --surface-quiet: #2A1C3A;
+    --ink: #F3E8CF;
+    --ink-soft: #C0AECB;
+    --rule: #4A3A5C;
+    --accent: #C79BE4;
+    --accent-ink: #1B1230;
+    --edge: #E8C95A;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground: var(--night);
+  --surface: #1B1230;
+  --surface-quiet: #2A1C3A;
+  --ink: #F3E8CF;
+  --ink-soft: #C0AECB;
+  --rule: #4A3A5C;
+  --accent: #C79BE4;
+  --accent-ink: #1B1230;
+  --edge: #E8C95A;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: Nunito, "Segoe UI", system-ui, sans-serif;
+  font-size: var(--step-0);
+  line-height: 1.65;
+  -webkit-text-size-adjust: 100%;
+}
+
+.page {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.75rem;
+}
+
+h1, h2, h3 {
+  font-family: Fraunces, Georgia, serif;
+  text-wrap: balance;
+  margin: 0;
+  line-height: 1.15;
+}
+h1 { font-size: var(--step-4); font-weight: 900; letter-spacing: -0.015em; }
+h2 { font-size: var(--step-2); font-weight: 600; }
+h3 { font-size: var(--step-1); font-weight: 600; }
+
+p { margin: 0; }
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+
+.eyebrow {
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-size: var(--step--1);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* ---- Masthead ---- */
+.masthead { display: flex; flex-direction: column; gap: 1rem; }
+.masthead__lede {
+  font-size: var(--step-1);
+  color: var(--ink-soft);
+  max-width: 34ch;
+}
+.masthead__rule {
+  height: 3px;
+  background: var(--edge);
+  border-radius: 2px;
+  width: 4.5rem;
+}
+
+/* ---- Facts strip. Tabular figures so the numbers line up. ---- */
+.facts {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  overflow: hidden;
+}
+@media (min-width: 34rem) { .facts { grid-template-columns: repeat(3, 1fr); } }
+.fact { background: var(--surface); padding: 0.9rem 1.1rem; }
+.fact__key {
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  display: block;
+}
+.fact__value { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ---- Sections ---- */
+section { display: flex; flex-direction: column; gap: 1.25rem; }
+.section__head { display: flex; flex-direction: column; gap: 0.35rem; }
+.section__note { color: var(--ink-soft); max-width: 62ch; }
+
+/* ---- Task cards. Numbered because these genuinely are a sequence: a new
+       player's first half-hour, in the order they would live it. ---- */
+.task {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--accent);
+  border-radius: 10px;
+  padding: 1.25rem 1.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.task__num {
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+}
+.task__ask {
+  font-family: Fraunces, Georgia, serif;
+  font-size: var(--step-1);
+  font-weight: 600;
+  text-wrap: balance;
+}
+.task__ask::before, .task__ask::after { content: '\201C'; }
+.task__ask::after { content: '\201D'; }
+
+/* The facilitator's half, on a quieter surface — a different thing from the
+   words you read out, and it must never be mistaken for them. */
+.watch {
+  background: var(--surface-quiet);
+  border-radius: 8px;
+  padding: 0.9rem 1.05rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.watch__label {
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.watch ul { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.4rem; }
+.watch li { font-size: var(--step--1); }
+.watch b { font-weight: 800; }
+
+/* ---- Check lists. A different mode of testing from the tasks above, so a
+       visibly different device: real ticks, no numbering, no script. ---- */
+.checks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.checks li {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 0.7rem 0.85rem;
+}
+.checks input[type="checkbox"] {
+  flex: 0 0 auto;
+  width: 1.2rem;
+  height: 1.2rem;
+  margin: 0.18rem 0 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.checks label { cursor: pointer; font-size: 0.94rem; }
+.checks .who {
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  display: block;
+}
+
+/* ---- A raised aside for the things we already know ---- */
+.known {
+  background: var(--surface-quiet);
+  border: 1px solid var(--rule);
+  border-top: 4px solid var(--edge);
+  border-radius: 10px;
+  padding: 1.25rem 1.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.known h3 { font-size: var(--step-0); font-weight: 600; }
+.known p { font-size: 0.94rem; }
+.known .sum {
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+}
+
+/* ---- The findings sheet ---- */
+.sheet {
+  border: 1px dashed var(--rule);
+  border-radius: 10px;
+  padding: 1.25rem 1.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+.sheet__row { display: flex; flex-direction: column; gap: 0.3rem; }
+.sheet__line {
+  border-bottom: 1px solid var(--rule);
+  min-height: 1.7rem;
+}
+
+.setup { display: flex; flex-direction: column; gap: 0.7rem; }
+.setup ol { margin: 0; padding-left: 1.3rem; display: flex; flex-direction: column; gap: 0.55rem; }
+
+kbd {
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-size: 0.85em;
+  background: var(--surface-quiet);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 0.05em 0.4em;
+}
+code {
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-size: 0.88em;
+  background: var(--surface-quiet);
+  border-radius: 4px;
+  padding: 0.08em 0.35em;
+}
+
+footer {
+  border-top: 1px solid var(--rule);
+  padding-top: 1.25rem;
+  color: var(--ink-soft);
+  font-size: var(--step--1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+</style>
+
+<div class="page">
+
+  <header class="masthead">
+    <span class="eyebrow">Playtest script &middot; M2</span>
+    <h1>Felkyo M2 Playtest</h1>
+    <div class="masthead__rule"></div>
+    <p class="masthead__lede">
+      Does a creature feel like something you keep &mdash; or like a page you visit?
+    </p>
+    <p>
+      M2 gave every creature a mood that changes while you are away, treats to give it,
+      a card that keeps it beside you, and a shop that sells creatures for gems.
+      Daily adoption is gone. This script is how we find out whether any of that
+      lands with somebody who was not in the room while it was built.
+    </p>
+  </header>
+
+  <div class="facts">
+    <div class="fact">
+      <span class="fact__key">One session</span>
+      <span class="fact__value">35&ndash;45 min</span>
+    </div>
+    <div class="fact">
+      <span class="fact__key">Testers needed</span>
+      <span class="fact__value">1 + a watcher</span>
+    </div>
+    <div class="fact">
+      <span class="fact__key">Test on</span>
+      <span class="fact__value">Phone first</span>
+    </div>
+  </div>
+
+  <section>
+    <div class="section__head">
+      <span class="eyebrow">Before you start</span>
+      <h2>Setting up</h2>
+    </div>
+    <div class="setup">
+      <ol>
+        <li>
+          <b>Use a phone for the whole first half.</b> Most of what changed in M2 was
+          decided on a 360px screen, and most of Skerro's notes were about phones.
+          Move to a laptop only where the script says so.
+        </li>
+        <li>
+          <b>Have a second account signed in elsewhere</b> &mdash; another browser, or the
+          demo accounts. Earning gems means petting <i>somebody else's</i> creature,
+          so a tester alone in the world cannot earn anything.
+        </li>
+        <li>
+          <b>Do not help.</b> This is the whole method. Read the sentence in quotes,
+          then stop talking. If the tester asks "where do I click?", the answer is
+          "wherever you think" &mdash; and note the question, because it is a finding.
+        </li>
+        <li>
+          <b>Write down the moment they hesitate</b>, not just whether they got there.
+          A task completed after twenty confused seconds is a failed task.
+        </li>
+      </ol>
+      <p class="section__note">
+        Ticking a box here does not save anything &mdash; the page forgets when you close it.
+        Keep the real notes on paper or in the findings sheet at the bottom.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="section__head">
+      <span class="eyebrow">Part one &middot; watch, don't help</span>
+      <h2>The first ten minutes</h2>
+      <p class="section__note">
+        These are in the order a new player would live them. Read the quoted sentence
+        aloud and nothing else. What we are testing is golden rule 1: if it needs
+        explaining, it isn't designed yet.
+      </p>
+    </div>
+
+    <div class="task">
+      <span class="task__num">01 &middot; Arriving</span>
+      <p class="task__ask">Get yourself into Felkyo and find out what you have.</p>
+      <div class="watch">
+        <span class="watch__label">What to watch</span>
+        <ul>
+          <li>Do they find their way in? A logged-out visitor now gets <b>no sidebar</b> &mdash; the only door is the <b>log in</b> pill in the top row. That is new, and it is the thing most likely to be wrong.</li>
+          <li>Once in: do they realise they <b>have a creature</b>, and do they go to it without being told?</li>
+          <li>On the creature's page, what do they read first? It should be the sentence &mdash; <i>"Biscuit is very happy."</i> If their eye goes to the numbers instead, the mood line is not doing its job.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="task">
+      <span class="task__num">02 &middot; Caring</span>
+      <p class="task__ask">Your creature has been on its own for a while. Do something nice for it.</p>
+      <div class="watch">
+        <span class="watch__label">What to watch</span>
+        <ul>
+          <li>Petting should be immediate. Do they <b>see</b> the happiness bar move? If they miss it, the animation is too quiet.</li>
+          <li>Do they discover the <b>treats they already own</b>? Every new player is given three. Nobody is told this in words &mdash; the chooser is simply there. If they never notice it, that is a real finding.</li>
+          <li>Do they read what a treat <i>does</i> before choosing, or pick the first one? The three differ in kind on purpose &mdash; if that difference is invisible, the choice is decoration.</li>
+          <li>Ask afterwards: <b>"what would happen if you didn't come back for a week?"</b> The honest answer is "it gets sleepy and is pleased to see you". If they say "it would be sad" or "it might die", the wording is frightening people and needs softening.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="task">
+      <span class="task__num">03 &middot; Keeping</span>
+      <p class="task__ask">Keep this creature where you can see it, wherever you go on the site.</p>
+      <div class="watch">
+        <span class="watch__label">What to watch</span>
+        <ul>
+          <li>Do they find the <b>star</b>? It is right under the creature. Before M2 this lived in the profile settings, which nobody opened.</li>
+          <li>After starring, do they <b>notice the card appear</b>? It is at the bottom of the strip on a phone. If they scroll past it, the placement is wrong.</li>
+          <li>Do they work out that they can pet and feed <b>from the card</b>, without opening the creature? That is the entire point of the feature.</li>
+          <li>Watch whether pressing the star twice confuses them. It is a toggle &mdash; the word changes from "make favourite" to "favourite".</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section__head">
+      <span class="eyebrow">Part two &middot; watch, don't help</span>
+      <h2>Earning and spending</h2>
+      <p class="section__note">
+        This is the loop the whole site now turns on: gems come from visiting other
+        people's creatures, and go on your own. If a tester cannot join those two
+        halves up on their own, the loop does not exist for them.
+      </p>
+    </div>
+
+    <div class="task">
+      <span class="task__num">04 &middot; Wanting</span>
+      <p class="task__ask">You'd like a second creature. See if you can get one.</p>
+      <div class="watch">
+        <span class="watch__label">What to watch</span>
+        <ul>
+          <li>Where do they look first? <b>Shop</b> is correct. If they hunt for an "adopt" button, the change from daily adoption has left a hole.</li>
+          <li>A new player cannot afford one. Read them the refusal: it should say <b>how many gems short</b> they are <i>and</i> where gems come from. Ask whether they now know what to do.</li>
+          <li>Note whether they try to press a button that looks unavailable. Nothing is greyed out on purpose &mdash; a disabled button says "no" and nothing else.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="task">
+      <span class="task__num">05 &middot; Visiting</span>
+      <p class="task__ask">Go and find somebody else's creature, and say hello to it.</p>
+      <div class="watch">
+        <span class="watch__label">What to watch</span>
+        <ul>
+          <li>Do they find <b>community</b>? Browsing creatures and finding people are two tabs on one page now &mdash; they used to be two separate pills.</li>
+          <li>When they pet a stranger's creature, do they <b>notice they were paid</b>? The message says so. If they miss it, the loop's one reward is invisible.</li>
+          <li>Then ask: <b>"how would you get enough for that creature you wanted?"</b> If the answer is "keep doing this", the loop has landed. If they shrug, it hasn't.</li>
+          <li>Does anything make them feel they are <i>farming</i> rather than visiting? That feeling is the failure mode of paying the clicker.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section__head">
+      <span class="eyebrow">Part three &middot; do these yourself</span>
+      <h2>Checks a player would never make</h2>
+      <p class="section__note">
+        Not for the tester. These are the things Skerro asked for by name, plus the
+        accessibility requirements that are part of "done" in CLAUDE.md and that
+        no test suite can answer.
+      </p>
+    </div>
+
+    <h3>Skerro's notes, on a phone</h3>
+    <ul class="checks">
+      <li>
+        <input type="checkbox" id="c1">
+        <label for="c1">
+          <span class="who">Phone &middot; 360px</span>
+          The floating &ldquo;hello, traveller&rdquo; panel is <b>gone</b> when logged out. No login box above the banner.
+        </label>
+      </li>
+      <li>
+        <input type="checkbox" id="c2">
+        <label for="c2">
+          <span class="who">Phone &middot; 360px</span>
+          The top row is <b>one tidy line</b>, not a wrapped mess: shop &middot; explore &middot; community &middot; myself.
+        </label>
+      </li>
+      <li>
+        <input type="checkbox" id="c3">
+        <label for="c3">
+          <span class="who">Phone &middot; 360px</span>
+          <b>Log out is on your own page</b> (bottom), and <b>not</b> in the strip at the top where it was a mis-tap away.
+        </label>
+      </li>
+      <li>
+        <input type="checkbox" id="c4">
+        <label for="c4">
+          <span class="who">Phone &middot; 360px</span>
+          Log out <b>actually logs you out</b> &mdash; press it, then try to reach your own settings.
+        </label>
+      </li>
+      <li>
+        <input type="checkbox" id="c5">
+        <label for="c5">
+          <span class="who">Phone &middot; 360px</span>
+          When a creature pops up with a line, the bubble is at the <b>very top</b>, above the clock and banner. (Rare &mdash; roughly one page in five.)
+        </label>
+      </li>
+      <li>
+        <input type="checkbox" id="c6">
+        <label for="c6">
+          <span class="who">Phone &middot; 360px</span>
+          The avatar's <b>lines are still visible</b> &mdash; not blurred, not vanished. Check your own page and a search result.
+        </label>
+      </li>
+      <li>
+        <input type="checkbox" id="c7">
+        <label for="c7">
+          <span class="who">Desktop &middot; 1280px</span>
+          In the inventory, an item's name and its count have <b>clear space between them</b>.
+        </label>
+      </li>
+    </ul>
+
+    <h3>The new screens, both widths</h3>
+    <ul class="checks">
+      <li>
+        <input type="checkbox" id="d1">
+        <label for="d1">
+          <span class="who">360px and 1280px</span>
+          The <b>keepsake card</b> is not squashed, the bars are readable, and the two buttons are comfortably tappable.
+        </label>
+      </li>
+      <li>
+        <input type="checkbox" id="d2">
+        <label for="d2">
+          <span class="who">360px and 1280px</span>
+          The <b>creature shop</b> sits above the shelves, its pictures are crisp, and nothing overlaps.
+        </label>
+      </li>
+      <li>
+        <input type="checkbox" id="d3">
+        <label for="d3">
+          <span class="who">360px and 1280px</span>
+          The <b>community tabs</b> clearly show which one is open &mdash; check without relying on the colour.
+        </label>
+      </li>
+      <li>
+        <input type="checkbox" id="d4">
+        <label for="d4">
+          <span class="who">Any width</span>
+          Filter the inventory to a category. The creature shop is <b>not</b> affected by it.
+        </label>
+      </li>
+    </ul>
+
+    <h3>Accessibility &mdash; part of &ldquo;done&rdquo;</h3>
+    <ul class="checks">
+      <li>
+        <input type="checkbox" id="a1">
+        <label for="a1">
+          <span class="who">Keyboard only</span>
+          Reach and use <b>pet, feed and the star</b> with <kbd>Tab</kbd> and <kbd>Enter</kbd> alone. Focus is visible at every stop.
+        </label>
+      </li>
+      <li>
+        <input type="checkbox" id="a2">
+        <label for="a2">
+          <span class="who">Browser zoom 200%</span>
+          Creature page, shop and keepsake card: <b>no sideways scrolling</b>, no overlapping text.
+        </label>
+      </li>
+      <li>
+        <input type="checkbox" id="a3">
+        <label for="a3">
+          <span class="who">Reduced motion on</span>
+          Turn it on in the OS. Bars still arrive at the right width, nothing glows, and the site is still <b>pleasant</b> &mdash; not just functional.
+        </label>
+      </li>
+      <li>
+        <input type="checkbox" id="a4">
+        <label for="a4">
+          <span class="who">Greyscale</span>
+          Screenshot the keepsake card and the community tabs in greyscale. Every state must still be readable &mdash; the star, the open tab, both bars.
+        </label>
+      </li>
+      <li>
+        <input type="checkbox" id="a5">
+        <label for="a5">
+          <span class="who">Screen reader</span>
+          The mood bars announce a <b>value out of 100</b> and a word, not "loading".
+        </label>
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="section__head">
+      <span class="eyebrow">Part four</span>
+      <h2>Two things that need a decision, not a test</h2>
+      <p class="section__note">
+        These came out of building M2. No amount of watching a tester will settle
+        them &mdash; they are the Product Owner's call.
+      </p>
+    </div>
+
+    <div class="known">
+      <h3>The second creature may be too easy to afford</h3>
+      <p class="sum">
+        1 gem per pet &middot; 30&thinsp;s cooldown per creature &middot; 12 creatures on the browse page
+        &middot; 50 gems for the cheapest creature &middot; 100 gems a day, at most
+      </p>
+      <p>
+        Twelve creatures are reachable at a time and the cooldown is half a minute, so a
+        determined player earns roughly <b>24 gems a minute</b>. That puts a new creature
+        about two minutes away, and the daily ceiling about four.
+      </p>
+      <p>
+        <b>Our read:</b> that makes the cap an anti-script measure rather than pacing,
+        which is fine &mdash; but it also means a second creature costs almost nothing.
+        Watch the tester's face when they buy one. If it does not feel earned, the
+        lever to pull is the price, not the cooldown: a longer cooldown punishes the
+        honest player and barely inconveniences anyone else.
+      </p>
+    </div>
+
+    <div class="known">
+      <h3>Two art questions, both optional</h3>
+      <p>
+        <b>A sleepy sprite.</b> A dozing creature currently reads as dozing through its
+        words, its energy bar, and a slightly softened picture. A real drawing would be
+        lovelier; it is one more image per species.
+      </p>
+      <p>
+        <b>Favourite treats.</b> One column and one line of copy would let a creature
+        prefer something &mdash; the difference between feeding a stat and feeding a
+        character. Cheap to add, and nothing depends on it.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="section__head">
+      <span class="eyebrow">Afterwards</span>
+      <h2>Findings sheet</h2>
+      <p class="section__note">
+        One line per thing that went wrong or felt wrong. Write what the tester
+        <i>did</i>, not what you think should change &mdash; the fix is our job, the
+        observation is theirs.
+      </p>
+    </div>
+
+    <div class="sheet">
+      <div class="sheet__row">
+        <span class="eyebrow">Where they got stuck, and for how long</span>
+        <div class="sheet__line"></div>
+        <div class="sheet__line"></div>
+        <div class="sheet__line"></div>
+      </div>
+      <div class="sheet__row">
+        <span class="eyebrow">Anything they said out loud</span>
+        <div class="sheet__line"></div>
+        <div class="sheet__line"></div>
+        <div class="sheet__line"></div>
+      </div>
+      <div class="sheet__row">
+        <span class="eyebrow">What they never found at all</span>
+        <div class="sheet__line"></div>
+        <div class="sheet__line"></div>
+      </div>
+      <div class="sheet__row">
+        <span class="eyebrow">Their answer to &ldquo;what if you didn't come back for a week?&rdquo;</span>
+        <div class="sheet__line"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Felkyo Creatures &middot; playtest script for M2, <i>the creature you keep</i>.
+    The reasoning behind each decision is in
+    <code>docs/plan/2026-08-18-m2-the-creature-you-keep.md</code>; where things live is in
+    <code>docs/developer-guide.md</code>.
+  </footer>
+
+</div>
