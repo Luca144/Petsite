@@ -56,6 +56,7 @@ use Felkyo\Http\AssetUrl;
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/creature-actions.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/explore.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/economy.css') ?>">
+    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/creature-shop.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/item-detail.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/profile.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/social.css') ?>">

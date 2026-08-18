@@ -1,0 +1,89 @@
+/*
+ * creature-shop.css — the creatures looking for a home.
+ *
+ * WHAT THIS FILE IS: the section at the top of the shop page where creatures are
+ * bought. Its own file because economy.css reached its 400-line limit
+ * (CLAUDE.md §3), and because this genuinely is a different concern from the
+ * shelves: a creature is not a thing you stack in a satchel.
+ *
+ * The section deliberately sits ABOVE the item finder and OUTSIDE it — creatures
+ * must not be filtered alongside the treats, and keeping them outside means
+ * item-finder.js can never hide them by accident.
+ *
+ * Every colour comes from theme.css.
+ */
+/* ---------------------------------------------------------------------------
+   Creatures for sale (M2).
+
+   This section sits ABOVE the item finder and outside it: a creature is not a
+   thing on a shelf, it should not be filtered alongside the treats, and keeping
+   it outside means item-finder.js can never hide it by accident.
+   --------------------------------------------------------------------------- */
+
+.creature-shop {
+    margin-bottom: var(--space-5);
+}
+
+.creature-shop__intro {
+    margin: 0 0 var(--space-4);
+    color: var(--ink-soft);
+    font-size: 0.9rem;
+}
+
+/* One column on a phone, filling out as there is room. Creatures are bigger
+   than item cards because the picture is the point of them. */
+.creature-shop__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+}
+
+@media (min-width: 560px) {
+    .creature-shop__grid {
+        grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    }
+}
+
+.creature-shop__offer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    text-align: center;
+    background: var(--parchment);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.creature-shop__img {
+    width: 96px;
+    height: 96px;
+    object-fit: contain;
+}
+
+.creature-shop__name {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.creature-shop__flavour {
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+}
+
+/* The price on a dark chip, which is the one place gold text is allowed — on
+   parchment its contrast is too low to read (CLAUDE.md §8). */
+.creature-shop__price {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-3);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--gold-lit);
+    background: var(--plum-deep);
+    border-radius: var(--radius-pill);
+}

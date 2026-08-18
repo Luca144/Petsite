@@ -55,8 +55,17 @@ final class ShopControllerTest extends DatabaseTestCase
         $purchase = new PurchaseService($this->connection, $shops, $this->users, $this->inventory);
         $rateLimiter = new RateLimiter(new RateLimitRepository($this->connection));
 
+        $creaturePurchase = new \Felkyo\Creatures\CreaturePurchaseService(
+            $this->connection,
+            new \Felkyo\Creatures\SpeciesRepository($this->connection),
+            new \Felkyo\Creatures\CreatureRepository($this->connection),
+            $this->users,
+            ['Pip'],
+            'gems'
+        );
+
         $controller = new ShopController(
-            $templates, $session, $this->csrf, $shops, $purchase, $rateLimiter,
+            $templates, $session, $this->csrf, $shops, $purchase, $creaturePurchase, $rateLimiter,
             new \Felkyo\Economy\ItemFinder(),
             [
                 'slug' => 'general-store',

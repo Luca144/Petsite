@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Felkyo\Http\Controllers;
 
 use Felkyo\Auth\Session;
+use Felkyo\Creatures\CreaturePurchaseService;
 use Felkyo\Economy\ItemFinder;
 use Felkyo\Economy\PurchaseService;
 use Felkyo\Economy\ShopRepository;
@@ -35,6 +36,10 @@ final class ShopController
         private Csrf $csrf,
         private ShopRepository $shops,
         private PurchaseService $purchase,
+        // Buying a creature is a different transaction from buying a treat — it
+        // creates a living thing rather than adding to a pile — so it has its own
+        // service. They share this page and nothing else.
+        private CreaturePurchaseService $creaturePurchase,
         private RateLimiter $rateLimiter,
         private ItemFinder $finder,
         private array $config,
@@ -65,6 +70,9 @@ final class ShopController
         return Response::html($this->templates->render('pages/shop', [
             'shop' => $shop,
             'items' => $items,
+            // The creatures sit outside the finder, so they are passed separately
+            // and are never filtered by it (a creature is not a thing on a shelf).
+            'creaturesForSale' => $this->creaturePurchase->forSale(),
             'isFiltered' => $categorySlug !== '' || $searchText !== '',
             'flash' => $this->session->takeFlash(),
             'finder' => [
@@ -107,6 +115,44 @@ final class ShopController
         $itemId = (int) $request->input('item_id');
         $result = $this->purchase->buy($userId, $shop->id, $itemId);
         $this->session->flash($result->message());
+
+        return Response::redirect('/shop');
+    }
+
+    /**
+     * Buy a creature. Its own action rather than a flag on buy(), because "get
+     * paid a pile of treats" and "take a living thing home" are different enough
+     * that the difference should never be a value the browser sends.
+     */
+    public function buyCreature(Request $request): Response
+    {
+        $userId = $this->session->get('user_id');
+        if (!is_int($userId)) {
+            return Response::redirect('/login');
+        }
+
+        if (!$this->csrf->isValid($request->input('_csrf_token'))) {
+            return Response::redirect('/shop');
+        }
+
+        // The same limit buying anything else uses. The real gate is the price.
+        $limit = $this->config['rate_limit'];
+        if (!$this->rateLimiter->isAllowed('purchase', $request->clientIp(), $limit['max_attempts'], $limit['window_seconds'])) {
+            $this->session->flash('You are buying a little too fast — please slow down.');
+            return Response::redirect('/shop');
+        }
+        $this->rateLimiter->record('purchase', $request->clientIp());
+
+        $result = $this->creaturePurchase->buy($userId, (int) $request->input('species_id'));
+        $this->session->flash($result->message());
+
+        // Go straight to the new arrival. Meeting it is the whole point of having
+        // bought it, and leaving somebody to find it in a list afterwards would
+        // waste the one moment the purchase was for.
+        $creature = $result->creature();
+        if ($creature !== null) {
+            return Response::redirect('/creature/' . $creature->id);
+        }
 
         return Response::redirect('/shop');
     }

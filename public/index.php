@@ -25,8 +25,8 @@ use Felkyo\Auth\RegistrationService;
 use Felkyo\Auth\Session;
 use Felkyo\Core\Database;
 use Felkyo\Core\FileLogger;
-use Felkyo\Creatures\AdoptionService;
 use Felkyo\Creatures\ContentFilter;
+use Felkyo\Creatures\CreaturePurchaseService;
 use Felkyo\Creatures\CreatureBioService;
 use Felkyo\Creatures\CreatureMoments;
 use Felkyo\Creatures\CreatureProfileBuilder;
@@ -57,7 +57,6 @@ use Felkyo\Guestbook\GuestbookMessages;
 use Felkyo\Guestbook\GuestbookPanel;
 use Felkyo\Guestbook\GuestbookRepository;
 use Felkyo\Guestbook\GuestbookService;
-use Felkyo\Http\Controllers\AdoptionController;
 use Felkyo\Http\Controllers\BioController;
 use Felkyo\Http\Controllers\BrowseController;
 use Felkyo\Http\Controllers\CollectionController;
@@ -190,14 +189,18 @@ $starterCreatureService = new StarterCreatureService(
     // errand they have to earn their way to. See the service for the reasoning.
     $pdo, $inventoryRepository
 );
-$adoptionService = new AdoptionService(
+// Buying a creature. This replaced daily adoption in M2: a creature used to be
+// one free arrival every 24 hours, which meant the only way to want another was
+// to wait. Now gems buy them, and gems come from visiting other people's
+// creatures — so the way you get a creature is the way the site is meant to be
+// used. See CreaturePurchaseService for the whole reasoning.
+$creaturePurchaseService = new CreaturePurchaseService(
+    $pdo,
     $speciesRepository,
     $creatureRepository,
     $userRepository,
-    [
-        'cooldown_seconds' => $config['gameplay']['adoption']['cooldown_seconds'],
-        'names' => $config['gameplay']['creature_names'],
-    ]
+    $config['gameplay']['creature_names'],
+    $config['gameplay']['currency']['name']
 );
 $growthCalculator = new GrowthCalculator(
     $config['gameplay']['growth']['xp_per_level'],
@@ -390,9 +393,6 @@ $creatureRenameController = new CreatureRenameController(
 $collectionController = new CollectionController(
     $templates, $session, $creatureRepository, $creatureProfileBuilder
 );
-$adoptionController = new AdoptionController(
-    $templates, $session, $csrf, $adoptionService, $rateLimiter, $config['security']['rate_limit_adopt']
-);
 $explorationController = new ExplorationController(
     $templates, $session, $csrf, $explorationService, $rateLimiter,
     [
@@ -408,7 +408,8 @@ $inventoryController = new InventoryController(
     $config['gameplay']['finder']['search_shown_from']
 );
 $shopController = new ShopController(
-    $templates, $session, $csrf, $shopRepository, $purchaseService, $rateLimiter, $itemFinder,
+    $templates, $session, $csrf, $shopRepository, $purchaseService, $creaturePurchaseService,
+    $rateLimiter, $itemFinder,
     [
         'slug' => 'general-store',
         'rate_limit' => $config['security']['rate_limit_purchase'],
@@ -517,9 +518,10 @@ $router->post('/logout', [$logoutController, 'submit']);
 // The player's own collection of creatures.
 $router->get('/creatures', [$collectionController, 'show']);
 
-// Daily adoption.
-$router->get('/adopt', [$adoptionController, 'show']);
-$router->post('/adopt', [$adoptionController, 'adopt']);
+// /adopt was daily adoption, retired in M2 when creatures moved into the shop.
+// It stays as a redirect rather than a 404: people have it bookmarked, and
+// "the thing you wanted is now over here" is a better answer than "gone".
+$router->get('/adopt', static fn (): Response => Response::redirect('/shop'));
 
 // Exploration: the list of areas, one area's scene, and searching it.
 $router->get('/explore', [$explorationController, 'index']);
@@ -529,6 +531,9 @@ $router->post('/explore/{area}', [$explorationController, 'search']);
 // The economy: the shop (view + buy) and the player's inventory.
 $router->get('/shop', [$shopController, 'show']);
 $router->post('/shop/buy', [$shopController, 'buy']);
+// Buying a creature. A separate route from buying an item, so "a pile of treats"
+// and "a living thing" are never told apart by a value the browser sent.
+$router->post('/shop/creature', [$shopController, 'buyCreature']);
 $router->get('/inventory', [$inventoryController, 'show']);
 // One owned item, and the two ways to part with it. Selling and discarding are
 // separate routes rather than one route with a flag, so the difference between

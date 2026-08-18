@@ -113,9 +113,18 @@ final class ConfigSingleSourceTest extends TestCase
             ['gameplay', 'growth', 'xp_per_level'],
             ['gameplay', 'growth', 'stage_start_levels'],
             ['gameplay', 'petting', 'cooldown_seconds'],
-            ['gameplay', 'adoption', 'cooldown_seconds'],
             ['gameplay', 'economy', 'maximum_sell_fraction_of_price'],
             ['gameplay', 'currency', 'name'],
+            ['gameplay', 'currency', 'per_pet'],
+            ['gameplay', 'currency', 'daily_cap'],
+            // The mood rules. The floor is the one that matters most: it is what
+            // keeps a creature from ever being worse than sleepy, and a config
+            // missing it would surface as a null inside the decay arithmetic.
+            ['gameplay', 'mood', 'starting_happiness'],
+            ['gameplay', 'mood', 'happiness_floor'],
+            ['gameplay', 'mood', 'happiness_decay_per_day'],
+            ['gameplay', 'mood', 'energy_recovery_per_hour'],
+            ['gameplay', 'mood', 'happiness_words'],
             ['gameplay', 'creature_moments', 'chance_percent'],
             ['gameplay', 'creature_moments', 'lines'],
             ['search', 'minimum_length'],

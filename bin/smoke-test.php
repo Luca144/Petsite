@@ -194,7 +194,7 @@ echo "\nEvery page loads:\n";
 $searchPrefix = substr($name, 0, -1);
 
 $pages = [
-    '/', '/creatures', '/adopt', '/explore', '/shop', '/inventory', '/browse',
+    '/', '/creatures', '/explore', '/shop', '/inventory', '/browse',
     '/players', '/players?q=' . $searchPrefix, '/profile/edit', '/player/' . $name,
     // The community hub and BOTH of its tabs. Loading only the default tab would
     // have missed the people half entirely — and the people half is the one that
@@ -413,7 +413,47 @@ if ($creaturePath !== null) {
     }
 
     // The shop still sells treats, for the players who run out of the free ones.
-    check('the shop sells treats', str_contains(request('/shop')['body'], 'Honey Treat'));
+    $shopPage = request('/shop')['body'];
+    check('the shop sells treats', str_contains($shopPage, 'Honey Treat'));
+
+    // -----------------------------------------------------------------------
+    // Buying a creature
+    //
+    // This replaced daily adoption, so the checks are: is the offer on the page,
+    // does it name a price, and does trying to buy one you cannot afford say
+    // exactly how short you are rather than just refusing.
+    // -----------------------------------------------------------------------
+
+    check('the shop offers creatures', str_contains($shopPage, 'creature-shop__offer'));
+    check('each creature names its price', str_contains($shopPage, 'creature-shop__price'));
+
+    preg_match('~name="species_id" value="(\d+)"~', $shopPage, $speciesMatch);
+    $speciesId = $speciesMatch[1] ?? null;
+    check('a creature can be chosen', $speciesId !== null);
+
+    if ($speciesId !== null) {
+        // A brand-new player has no gems, so this is the refusal path — and the
+        // refusal is the more important half: it has to say the exact gap and
+        // where gems come from, or somebody with an empty purse is stuck.
+        $tooPoor = request('/shop/creature', [
+            '_csrf_token' => tokenFrom('/shop'),
+            'species_id' => $speciesId,
+        ]);
+        check(
+            'trying to buy without gems says how many are missing',
+            str_contains($tooPoor['body'], 'You need') && str_contains($tooPoor['body'], 'more gems')
+        );
+        check(
+            'and says where gems come from',
+            str_contains($tooPoor['body'], 'petting other players')
+        );
+    }
+
+    // The old adoption address still leads somewhere sensible rather than a 404.
+    check(
+        'the retired /adopt page sends you to the shop',
+        str_contains(request('/adopt')['body'], 'creature-shop__offer')
+    );
 
     // The keepsake card only appears once a favourite has been chosen, and the
     // star on the creature's own page is how a player would choose one. Pressing

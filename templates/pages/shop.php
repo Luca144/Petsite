@@ -43,6 +43,68 @@ $this->layout('layout', ['title' => $shop->name . ' — Felkyo Creatures']);
     </p>
 <?php endif; ?>
 
+<?php /* CREATURES FIRST, and above the finder on purpose.
+         A creature is not a thing on a shelf, and it should not be filtered
+         alongside the treats — so this section sits outside the finder entirely,
+         which also means item-finder.js can never hide it by accident.
+         It is what most people come here for; the shelves can wait a screen. */ ?>
+<?php if (!empty($creaturesForSale)): ?>
+    <section class="creature-shop" aria-labelledby="creature-shop-heading">
+        <h3 class="panel-label" id="creature-shop-heading">Creatures looking for a home</h3>
+        <p class="creature-shop__intro">
+            Each one comes with a name you can change straight away.
+        </p>
+
+        <div class="creature-shop__grid">
+            <?php foreach ($creaturesForSale as $species): ?>
+                <?php
+                // A creature on the shelf is shown as a baby — that is what you
+                // would be taking home. Same art convention as everywhere else.
+                $canAfford = !empty($currentUser) && $currentUser->currencyBalance >= $species->gemPrice;
+                ?>
+                <div class="creature-shop__offer">
+                    <img class="creature-shop__img pixelated"
+                         src="<?= $this->e($species->imagePathFor('baby')) ?>"
+                         alt="<?= $this->e('A baby ' . $species->name) ?>"
+                         width="96" height="96">
+
+                    <span class="creature-shop__name"><?= $this->e($species->name) ?></span>
+
+                    <?php if ($species->flavourText !== null): ?>
+                        <span class="creature-shop__flavour"><?= $this->e($species->flavourText) ?></span>
+                    <?php endif; ?>
+
+                    <?php /* The price is written out with its unit ("50 gems", not
+                             just "50"), because a bare number beside a picture is
+                             a guess. */ ?>
+                    <span class="creature-shop__price">
+                        <span aria-hidden="true">&#9670;</span>
+                        <?= $this->e((string) $species->gemPrice) ?>
+                        <?= $this->e($currencyName ?? 'gems') ?>
+                    </span>
+
+                    <form method="post" action="/shop/creature">
+                        <?= $this->csrf_field() ?>
+                        <input type="hidden" name="species_id" value="<?= $this->e((string) $species->id) ?>">
+                        <?php /* The button is NEVER disabled when somebody cannot
+                                 afford it. A disabled button says "no" and nothing
+                                 else; pressing this one says exactly how many gems
+                                 short you are and where they come from, which is
+                                 golden rule 3. The server refuses either way. */ ?>
+                        <button class="btn <?= $canAfford ? 'btn--primary' : 'btn--secondary' ?>" type="submit">
+                            Take home
+                        </button>
+                    </form>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </section>
+
+    <hr class="rule">
+<?php endif; ?>
+
+<h3 class="panel-label">On the shelves</h3>
+
 <?= $this->insert('partials/item-finder', ['finder' => $finder]) ?>
 
 <?php /* Never a dead end: the finder's count line above carries the "show

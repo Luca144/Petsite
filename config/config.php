@@ -163,11 +163,6 @@ return [
             'window_seconds' => 60,  // ...per minute, per IP (anti-abuse; the
                                      // per-creature cooldown below is the main gate)
         ],
-        'rate_limit_adopt' => [
-            'max_attempts' => 10,     // at most 10 adoption attempts...
-            'window_seconds' => 3600, // ...per hour, per IP (anti-abuse; the
-                                      // once-per-day cooldown is the main gate)
-        ],
         'rate_limit_explore' => [
             'max_attempts' => 30,    // at most 30 explore clicks...
             'window_seconds' => 60,  // ...per minute, per IP (anti-abuse; the
@@ -308,13 +303,16 @@ return [
             ],
         ],
 
-        // Daily adoption — a player can adopt one new creature per "day" from the
-        // pool of adoptable species. "Once per day" is measured as a cooldown from
-        // their last adoption, not from midnight. 86400 seconds is a full day; lower
-        // it (e.g. to 60) if you want to try the flow repeatedly while developing.
-        'adoption' => [
-            'cooldown_seconds' => 86400,
-        ],
+        // WHERE CREATURES COME FROM (changed in M2). There used to be a knob here
+        // for daily adoption — one free creature every 24 hours. That is gone:
+        // creatures are bought with gems in the shop, and one may still follow you
+        // home from exploring.
+        //
+        // Their PRICES are not here, because a price belongs to the species that
+        // has it — see the gem_price column, set by the M2 migration and editable
+        // per species. The only rule worth keeping is that the cheapest stays
+        // reachable in an evening's petting: a creature you cannot afford for a
+        // fortnight is not a goal, it is a wall.
 
 
         // The economy's safety rule, and the one number that enforces it.

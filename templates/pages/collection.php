@@ -16,7 +16,12 @@ $this->layout('layout', ['title' => 'Your creatures — Felkyo Creatures']);
 <h2 class="panel-label">Your creatures</h2>
 
 <?php if (empty($summaries)): ?>
-    <p class="empty-state">You don&rsquo;t have any creatures yet. Try adopting one!</p>
+    <?php /* Never a dead end: say where creatures come from and link there. */ ?>
+    <p class="empty-state">
+        You don&rsquo;t have any creatures yet.
+        <a href="/shop">The village store</a> has some looking for a home,
+        and one may follow you back from <a href="/explore">exploring</a>.
+    </p>
 <?php else: ?>
     <p class="collection-hint">
         Star one to keep it beside you on every page.
@@ -43,5 +48,5 @@ $this->layout('layout', ['title' => 'Your creatures — Felkyo Creatures']);
 <hr class="rule">
 
 <div class="button-row">
-    <a class="btn btn--secondary" href="/adopt">Adopt a creature</a>
+    <a class="btn btn--secondary" href="/shop">Find another creature</a>
 </div>

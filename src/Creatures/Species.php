@@ -26,7 +26,10 @@ final class Species
         public readonly string $name,
         public readonly ?string $flavourText,
         public readonly bool $isStarter,
+        /** Can a player come to own one of these at all? */
         public readonly bool $isAdoptable,
+        /** What one costs in the shop. */
+        public readonly int $gemPrice = 0,
     ) {
     }
 
@@ -40,6 +43,18 @@ final class Species
             // The database stores booleans as 0/1; cast them back to real bools.
             (bool) $row['is_starter'],
             (bool) $row['is_adoptable'],
+            (int) ($row['gem_price'] ?? 0),
         );
+    }
+
+    /**
+     * The picture of one of these at a given life stage.
+     *
+     * Built from the slug by convention, exactly as item art is, so adding a
+     * species never means typing a path.
+     */
+    public function imagePathFor(string $stage): string
+    {
+        return '/assets/creatures/' . rawurlencode($this->slug) . '/' . rawurlencode($stage) . '.gif';
     }
 }
