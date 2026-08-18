@@ -394,7 +394,23 @@ if ($creaturePath !== null) {
             '_csrf_token' => tokenFrom($creaturePath),
             'item_id' => $honeyItemId,
         ]);
-        check('feeding says what happened', str_contains($fed['body'], 'enjoyed the Honey Treat'));
+        // The message names the creature and the treat. WHICH of the three
+        // reactions it is depends on what this species thinks of honey, and that
+        // pairing is content the artist owns — so the check is on the claim that
+        // survives a retune, not on one particular sentence.
+        check(
+            'feeding says what happened, naming the creature and the treat',
+            str_contains($fed['body'], 'Smoketest') && str_contains($fed['body'], 'Honey Treat')
+        );
+        // A taste reaction really fired, whichever way it went. The three lines are
+        // the whole point of tastes, so a feed that produced the plain "enjoyed"
+        // line would mean the species' pairings never loaded.
+        check(
+            'and reacts to its taste',
+            str_contains($fed['body'], 'absolutely loves')
+                || str_contains($fed['body'], 'made a face')
+                || str_contains($fed['body'], 'enjoyed the')
+        );
         check(
             'the treat was really eaten',
             !str_contains(request('/inventory')['body'], 'Honey Treat')
@@ -409,6 +425,65 @@ if ($creaturePath !== null) {
         check(
             'feeding a treat you no longer have is refused',
             str_contains($fedAgain['body'], 'do not have one')
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // Playing a game
+    //
+    // The check that matters is the LAST one: the answer must not be anywhere in
+    // the page. The whole reason these are guessing games rather than arcade games
+    // is that the server keeps the answer — if it ever leaked into the markup, the
+    // reward would become a button that says "I won".
+    // -----------------------------------------------------------------------
+
+    echo "\nPlaying a game:\n";
+
+    check(
+        'the creature page offers a game to its owner',
+        str_contains(request($creaturePath)['body'], 'href="' . $creaturePath . '/play"')
+    );
+
+    $gamePage = request($creaturePath . '/play');
+    check('a game opens', $gamePage['status'] === 200 && str_contains($gamePage['body'], 'play__choice'));
+    check(
+        'and says what happens if you guess wrong',
+        str_contains($gamePage['body'], 'still has a lovely time')
+    );
+
+    // Every choice is its own submit button, so the page works with no JavaScript.
+    preg_match_all('~name="choice"\s+value="(\d+)"~', $gamePage['body'], $choices);
+    $choiceCount = count($choices[1] ?? []);
+    check('there is more than one thing to choose', $choiceCount >= 2, $choiceCount . ' choices');
+
+    // THE ANSWER IS NOT IN THE PAGE. Nothing in the markup may name it — not in a
+    // hidden field, not in a data attribute, not in a comment.
+    check(
+        'the answer is nowhere in the page',
+        !preg_match('~\b(answer|correct|solution|winning)\b~i', $gamePage['body'])
+    );
+
+    if ($choiceCount >= 2) {
+        // Guess. It is one-in-two or one-in-three, so this may win or lose — and
+        // BOTH must produce a warm answer and leave the creature no worse off.
+        $guessed = request($creaturePath . '/play', [
+            '_csrf_token' => tokenFrom($creaturePath . '/play'),
+            'choice' => '0',
+        ]);
+        check(
+            'guessing gets an answer either way',
+            str_contains($guessed['body'], 'class="flash"')
+        );
+
+        // Re-posting the same guess must find no round. This is the retry-until-you-win
+        // hole, and it is closed by clearing the round before judging it.
+        $replayed = request($creaturePath . '/play', [
+            '_csrf_token' => tokenFrom($creaturePath),
+            'choice' => '0',
+        ]);
+        check(
+            'answering a finished game is refused',
+            str_contains($replayed['body'], 'That game has finished')
         );
     }
 

@@ -103,12 +103,24 @@ $createdLabel = $creature->createdAt !== null
         </div>
 
         <?php if ($canPet): ?>
-            <form method="post" action="/creature/<?= $this->e((string) $creature->id) ?>/pet" class="creature__pet">
-                <?= $this->csrf_field() ?>
-                <button class="btn btn--primary" type="submit">
-                    <span aria-hidden="true">&hearts;</span> Pet <?= $this->e($creature->name) ?>
-                </button>
-            </form>
+            <div class="creature__doings">
+                <form method="post" action="/creature/<?= $this->e((string) $creature->id) ?>/pet" class="creature__pet">
+                    <?= $this->csrf_field() ?>
+                    <button class="btn btn--primary" type="submit">
+                        <span aria-hidden="true">&hearts;</span> Pet <?= $this->e($creature->name) ?>
+                    </button>
+                </form>
+
+                <?php if (!empty($isOwner)): ?>
+                    <?php /* A game, for the owner. A link, because starting one
+                             changes nothing — the round opens on the page you land
+                             on, and the answer stays on the server. */ ?>
+                    <a class="btn btn--secondary"
+                       href="/creature/<?= $this->e((string) $creature->id) ?>/play">
+                        <span aria-hidden="true">&#9670;</span> Play a game
+                    </a>
+                <?php endif; ?>
+            </div>
         <?php else: ?>
             <p class="auth-alt"><a href="/login">Log in</a> to pet <?= $this->e($creature->name) ?>.</p>
         <?php endif; ?>

@@ -72,9 +72,21 @@ $image = '/assets/creatures/' . rawurlencode($species?->slug ?? '')
             </button>
         </form>
 
+        <?php /* A game. A LINK, not a form, because starting one changes nothing —
+                 the round is opened by the page you land on. It cycles through
+                 three games at random, and the server keeps the answer, which is
+                 why it can be trusted (see PlayableGames). */ ?>
         <a class="btn btn--secondary keepsake__btn"
-           href="/creature/<?= $this->e((string) $creature->id) ?>">visit</a>
+           href="/creature/<?= $this->e((string) $creature->id) ?>/play">
+            <span aria-hidden="true">&#9670;</span> play
+        </a>
     </div>
+
+    <p class="keepsake__visit">
+        <a href="/creature/<?= $this->e((string) $creature->id) ?>">
+            visit <?= $this->e($creature->name) ?>
+        </a>
+    </p>
 
     <?php if (!empty($treats)): ?>
         <form class="keepsake__feed" method="post"

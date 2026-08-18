@@ -29,6 +29,7 @@ use Felkyo\Core\PendingMigrations;
 use Felkyo\Creatures\ContentFilter;
 use Felkyo\Creatures\CreaturePurchaseService;
 use Felkyo\Creatures\CreatureBioService;
+use Felkyo\Creatures\CreatureInteractions;
 use Felkyo\Creatures\CreatureMoments;
 use Felkyo\Creatures\CreatureProfileBuilder;
 use Felkyo\Creatures\CreatureRepository;
@@ -37,6 +38,8 @@ use Felkyo\Creatures\GrowthCalculator;
 use Felkyo\Creatures\MoodCalculator;
 use Felkyo\Creatures\PettingRepository;
 use Felkyo\Creatures\PettingService;
+use Felkyo\Creatures\PlayableGames;
+use Felkyo\Creatures\PlayService;
 use Felkyo\Creatures\SpeciesRepository;
 use Felkyo\Creatures\StarterCreatureService;
 use Felkyo\Economy\InventoryRepository;
@@ -77,6 +80,7 @@ use Felkyo\Http\Controllers\SearchController;
 use Felkyo\Http\Controllers\LoginController;
 use Felkyo\Http\Controllers\LogoutController;
 use Felkyo\Http\Controllers\PetController;
+use Felkyo\Http\Controllers\PlayController;
 use Felkyo\Http\Controllers\RegisterController;
 use Felkyo\Http\Controllers\ShopController;
 use Felkyo\Http\Csrf;
@@ -248,10 +252,16 @@ $growthCalculator = new GrowthCalculator(
 // on its own page than it does on the card beside it.
 $moodCalculator = new MoodCalculator($config['gameplay']['mood']);
 
+// The writes that petting, feeding and playing make to a creature: the row
+// lock, the mood, the XP, the play cooldown. One object shared by all three,
+// because every one of those methods has to run inside a transaction that
+// holds the lock — see CreatureInteractions for the whole reasoning.
+$creatureInteractions = new CreatureInteractions($pdo);
+
 $pettingService = new PettingService(
     $pdo,
     $pettingRepository,
-    $creatureRepository,
+    $creatureInteractions,
     $userRepository,
     $moodCalculator,
     $config['gameplay']['petting'] + [
@@ -435,11 +445,23 @@ $bioController = new BioController(
 // Renaming reuses the bio rate limit: both are "the owner changing words on their
 // own creature", they happen about as often, and one number is easier to retune
 // than two that mean the same thing.
+// Playing a game with a creature. THREE GUESSING GAMES, cycled at random, with
+// the answer held on the server — because a game running in the browser cannot be
+// trusted to report its own result, so a reward for winning would really be a
+// reward for asking. Read PlayableGames for the whole reasoning.
+$playableGames = new PlayableGames($config['gameplay']['play']['games']);
+$playController = new PlayController(
+    $templates, $session, $csrf, $creatureRepository,
+    new PlayService($pdo, $creatureInteractions, $playableGames, $moodCalculator, $config['gameplay']['play']),
+    $playableGames,
+    $rateLimiter, $config['security']['rate_limit_play']
+);
+
 // Giving a creature a treat. The service owns every rule about who may feed what
 // (read its docblock); the controller only carries the request in and out.
 $feedController = new FeedController(
     $session, $csrf, $creatureRepository,
-    new FeedingService($pdo, $creatureRepository, $inventoryRepository, $moodCalculator, $speciesRepository),
+    new FeedingService($pdo, $creatureInteractions, $inventoryRepository, $moodCalculator, $speciesRepository),
     $rateLimiter, $config['security']['rate_limit_feed']
 );
 $creatureRenameController = new CreatureRenameController(
@@ -624,6 +646,9 @@ $router->post('/creature/{id}/bio', [$bioController, 'update']);
 $router->post('/creature/{id}/rename', [$creatureRenameController, 'update']);
 // Giving a creature a treat (owner only — you feed your own).
 $router->post('/creature/{id}/feed', [$feedController, 'feed']);
+// Playing a game (owner only). GET opens a round, POST answers it.
+$router->get('/creature/{id}/play', [$playController, 'show']);
+$router->post('/creature/{id}/play', [$playController, 'answer']);
 // The star: making one of your creatures a favourite, or not (owner only).
 $router->post('/creature/{id}/favourite', [$favouriteController, 'toggle']);
 // Signing a creature's guestbook (any logged-in visitor, one entry each).

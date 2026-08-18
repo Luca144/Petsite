@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Felkyo\Tests\Integration;
 
+use Felkyo\Creatures\CreatureInteractions;
 use Felkyo\Creatures\CreatureRepository;
 use Felkyo\Creatures\GrowthCalculator;
 use Felkyo\Creatures\PettingRepository;
@@ -28,6 +29,7 @@ final class PettingServiceTest extends DatabaseTestCase
 {
     private PettingService $petting;
     private CreatureRepository $creatures;
+    private CreatureInteractions $interactions;
     private PettingRepository $pettings;
     private UserRepository $users;
     private int $creatureId;
@@ -54,12 +56,13 @@ final class PettingServiceTest extends DatabaseTestCase
         $this->clearTables('pettings', 'creatures', 'users');
 
         $this->creatures = new CreatureRepository($this->connection);
+        $this->interactions = new CreatureInteractions($this->connection);
         $this->users = new UserRepository($this->connection);
         $this->pettings = new PettingRepository($this->connection);
         $this->petting = new PettingService(
             $this->connection,
             $this->pettings,
-            $this->creatures,
+            $this->interactions,
             $this->users,
             $this->moodCalculator(),
             self::CONFIG,

@@ -1,0 +1,150 @@
+/*
+ * play.css — the three little guessing games.
+ *
+ * WHAT THIS FILE IS: the choice buttons and their small bit of life. Each game
+ * gets its own glyph and its own idle motion through a .play--{slug} class, so a
+ * fourth game added to config can have its own look with a few lines here and no
+ * code anywhere.
+ *
+ * THE MOTION IS DECORATION AND NOTHING DEPENDS ON IT. The games are a form and
+ * three buttons; they play identically with scripting off, with animation off, and
+ * in a screen reader. What rustles is a pseudo-element the reader never sees.
+ *
+ * Every colour comes from theme.css (CLAUDE.md §8).
+ */
+
+.play {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    align-items: center;
+    text-align: center;
+}
+
+.play__prompt {
+    margin: 0;
+    max-width: 32ch;
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 600;
+    text-wrap: balance;
+}
+
+/* One column on a phone so the choices are big and unmistakable; a row once
+   there is space, because seeing them side by side is part of the guess. */
+.play__choices {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    width: 100%;
+    max-width: 34rem;
+}
+
+@media (min-width: 34rem) {
+    .play__choices {
+        flex-direction: row;
+        justify-content: center;
+    }
+
+    .play__choices > .play__choice {
+        flex: 1 1 0;
+    }
+}
+
+/* Each choice IS the submit button — one tap, and nothing to submit blank. */
+.play__choice {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    /* Generously past the 44px minimum: this is the one control on the page and
+       a mis-tap costs you the round. */
+    min-height: 120px;
+    padding: var(--space-4);
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--plum);
+    background: var(--panel);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: 0 6px 14px -10px rgba(61, 43, 79, 0.5);
+    transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.play__choice:hover {
+    transform: translateY(-3px);
+    border-color: var(--gold);
+    box-shadow: 0 10px 20px -8px rgba(201, 162, 39, 0.6);
+}
+
+.play__choice:active {
+    transform: translateY(-1px) scale(0.99);
+}
+
+.play__choice:focus-visible {
+    outline: 3px solid var(--purple);
+    outline-offset: 3px;
+}
+
+/* The glyph. aria-hidden in the markup, so it is safe to be purely pretty — the
+   choice's meaning is in the words underneath it. */
+.play__choice-art {
+    font-size: 2.4rem;
+    line-height: 1;
+    /* A slow, small sway. Each choice starts at a different point in the cycle
+       (below), so the row breathes rather than pulsing in unison. */
+    animation: play-sway 3.6s ease-in-out infinite;
+}
+
+.play__choice:nth-child(3) .play__choice-art { animation-delay: 0.5s; }
+.play__choice:nth-child(4) .play__choice-art { animation-delay: 1.1s; }
+
+@keyframes play-sway {
+    0%, 100% { transform: rotate(-3deg); }
+    50%      { transform: rotate(3deg); }
+}
+
+.play__choice-label {
+    font-size: 0.95rem;
+}
+
+/* ---- One glyph per game, chosen by the game's own slug ----
+   Adding a fourth game to config means adding one block here, or none at all —
+   without one it simply has no glyph and still plays perfectly. */
+
+.play--hide-and-seek .play__choice-art::before { content: "\1F33F"; }      /* herb */
+.play--which-paw .play__choice-art::before { content: "\1F43E"; }         /* paw prints */
+.play--follow-the-beetle .play__choice-art::before { content: "\1F342"; }  /* fallen leaf */
+
+.play__note {
+    margin: 0;
+    max-width: 40ch;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+}
+
+.play__away {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+}
+
+/* Reduced motion: nothing sways. The game is unchanged, because the swaying was
+   never carrying any information — which is the test for whether an effect was
+   decoration in the first place. */
+@media (prefers-reduced-motion: reduce) {
+    .play__choice-art {
+        animation: none;
+    }
+
+    .play__choice {
+        transition: border-color 160ms ease;
+    }
+
+    .play__choice:hover {
+        transform: none;
+        box-shadow: 0 6px 14px -10px rgba(61, 43, 79, 0.5);
+    }
+}

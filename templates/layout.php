@@ -21,50 +21,21 @@
  *
  * Plates escapes values passed in via $this->e(...), so any user-provided text
  * that reaches the layout cannot break the page or inject scripts.
+ *
+ * The whole <head> — title, fonts, every stylesheet — lives in partials/head.php.
+ * The stylesheet list is the fastest-growing thing in this codebase and told you
+ * nothing about how the page is arranged; the shell's SHAPE is what this file is
+ * for.
  */
 
-// The versioned stylesheet addresses below come from this. See the class for
-// why a changed stylesheet needs a changed address.
+// For the versioned addresses of the scripts at the very bottom. See the class for
+// why a changed file needs a changed address.
 use Felkyo\Http\AssetUrl;
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <!-- Mobile-first: use the phone's real width. The site is designed for a
-         ~360px screen first, then refined upward. -->
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?= $this->e($title) ?></title>
-
-    <!-- The browser-tab icon, from the artist's logo set. -->
-    <link rel="icon" href="/assets/art/favicon.png" type="image/png">
-
-    <!-- Web fonts (Fraunces / Nunito / Space Mono). Preconnect speeds up the
-         download; every font stack in theme.css has fallbacks if these fail. -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Nunito:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap">
-
-    <!-- Our styles, split by concern: tokens/base, layout, sidebar, nav, and the
-         per-page stylesheets. Small enough that loading them together is simplest. -->
-    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/theme.css') ?>">
-    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/layout.css') ?>">
-    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/sidebar.css') ?>">
-    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/site-nav.css') ?>">
-    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/components.css') ?>">
-    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/forms.css') ?>">
-    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/creature.css') ?>">
-    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/creature-actions.css') ?>">
-    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/explore.css') ?>">
-    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/economy.css') ?>">
-    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/creature-shop.css') ?>">
-    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/item-detail.css') ?>">
-    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/profile.css') ?>">
-    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/social.css') ?>">
-    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/guestbook.css') ?>">
-    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/community.css') ?>">
-    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/mood.css') ?>">
-    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/keepsake.css') ?>">
+    <?= $this->insert('partials/head', ['title' => $title]) ?>
 </head>
 <body>
     <!-- Keyboard users can jump straight to the content with this link. -->

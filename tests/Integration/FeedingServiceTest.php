@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Felkyo\Tests\Integration;
 
+use Felkyo\Creatures\CreatureInteractions;
 use Felkyo\Creatures\CreatureRepository;
 use Felkyo\Creatures\FeedingService;
 use Felkyo\Creatures\SpeciesRepository;
@@ -30,6 +31,7 @@ final class FeedingServiceTest extends DatabaseTestCase
 {
     private FeedingService $feeding;
     private CreatureRepository $creatures;
+    private CreatureInteractions $interactions;
     private InventoryRepository $inventory;
     private UserRepository $users;
     private SpeciesRepository $species;
@@ -46,12 +48,13 @@ final class FeedingServiceTest extends DatabaseTestCase
         $this->clearTables('inventory', 'pettings', 'creatures', 'users');
 
         $this->creatures = new CreatureRepository($this->connection);
+        $this->interactions = new CreatureInteractions($this->connection);
         $this->inventory = new InventoryRepository($this->connection);
         $this->users = new UserRepository($this->connection);
         $this->species = new SpeciesRepository($this->connection);
         $this->feeding = new FeedingService(
             $this->connection,
-            $this->creatures,
+            $this->interactions,
             $this->inventory,
             $this->moodCalculator(),
             $this->species
@@ -117,7 +120,7 @@ final class FeedingServiceTest extends DatabaseTestCase
      */
     private function makeCreatureNeedy(): void
     {
-        $this->creatures->saveMood($this->creatureId, 40, 20);
+        $this->interactions->saveMood($this->creatureId, 40, 20);
     }
 
     // ---- The good case ----
@@ -161,7 +164,7 @@ final class FeedingServiceTest extends DatabaseTestCase
         // A creature at full happiness accepts a treat and says thank you; the
         // numbers simply do not move. Refusing would mean punishing somebody for
         // having looked after their creature well.
-        $this->creatures->saveMood($this->creatureId, 100, 100);
+        $this->interactions->saveMood($this->creatureId, 100, 100);
         $this->inventory->addItem($this->ownerId, $this->honeyTreatId);
 
         $result = $this->feeding->feed($this->ownerId, $this->creature(), $this->honeyTreatId);
@@ -172,7 +175,7 @@ final class FeedingServiceTest extends DatabaseTestCase
 
     public function testHappinessNeverGoesPastFull(): void
     {
-        $this->creatures->saveMood($this->creatureId, 95, 50);
+        $this->interactions->saveMood($this->creatureId, 95, 50);
         $this->inventory->addItem($this->ownerId, $this->honeyTreatId);
 
         $this->feeding->feed($this->ownerId, $this->creature(), $this->honeyTreatId);
@@ -258,7 +261,7 @@ final class FeedingServiceTest extends DatabaseTestCase
     {
         // Energy is what food does to a body: a chamomile bundle is just as restful
         // whether or not the creature enjoyed it. Taste is an opinion, not digestion.
-        $this->creatures->saveMood($this->creatureId, 40, 20);
+        $this->interactions->saveMood($this->creatureId, 40, 20);
         $this->setTastes(loves: null, dislikes: $this->honeyTreatId);
         $this->inventory->addItem($this->ownerId, $this->honeyTreatId);
 

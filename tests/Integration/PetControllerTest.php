@@ -47,7 +47,7 @@ final class PetControllerTest extends DatabaseTestCase
         $pettingService = new PettingService(
             $this->connection,
             new PettingRepository($this->connection),
-            $this->creatures,
+            new \Felkyo\Creatures\CreatureInteractions($this->connection),
             new UserRepository($this->connection),
             $this->moodCalculator(),
             $config['gameplay']['petting'] + [

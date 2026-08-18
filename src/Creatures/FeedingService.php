@@ -57,7 +57,10 @@ final class FeedingService
 {
     public function __construct(
         private PDO $connection,
-        private CreatureRepository $creatures,
+        // The writes a feed makes: the row lock and the mood. Their own class
+        // because both must run inside the transaction below — read
+        // CreatureInteractions before changing any of this.
+        private CreatureInteractions $interactions,
         private InventoryRepository $inventory,
         private MoodCalculator $mood,
         // Needed for the creature's TASTES: a species adores one treat and would
@@ -100,7 +103,7 @@ final class FeedingService
         try {
             // Queue behind any other request touching this creature, so two taps
             // cannot both apply. Same lock petting uses, for the same reason.
-            $this->creatures->lockForPetting($creature->id);
+            $this->interactions->lockForInteraction($creature->id);
 
             // Take the treat FIRST, and believe the answer. removeOne() returns
             // false when there was nothing left to take, which is exactly what the
@@ -205,7 +208,7 @@ final class FeedingService
             dislikes: $taste === 'dislikes'
         );
 
-        $this->creatures->saveMood(
+        $this->interactions->saveMood(
             $creature->id,
             $this->mood->afterGaining($mood->happiness, $happinessGain),
             $this->mood->afterResting($mood->energy, $item->energyBonus)

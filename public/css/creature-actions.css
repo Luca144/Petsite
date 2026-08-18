@@ -178,3 +178,17 @@
     border-radius: var(--radius-pill);
     white-space: nowrap;
 }
+
+/* Pet and Play side by side. Wraps on a narrow phone so neither is ever squeezed
+   into an unreadable width, and gap rather than margins so the two never
+   double-space or collapse against each other. */
+.creature__doings {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    align-items: center;
+}
+
+.creature__doings .creature__pet {
+    margin: 0;
+}

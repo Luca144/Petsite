@@ -206,6 +206,13 @@ return [
             'max_attempts' => 20,     // at most 20 bio edits...
             'window_seconds' => 3600, // ...per hour, per IP (anti-abuse)
         ],
+        'rate_limit_play' => [
+            'max_attempts' => 120,    // at most 120 guesses...
+            'window_seconds' => 3600, // ...per hour, per IP. Generous, because the
+                                      // real gates are the hidden answer and the
+                                      // per-creature cooldown. This is only here to
+                                      // stop a script hammering the route.
+        ],
         'rate_limit_feed' => [
             'max_attempts' => 120,    // at most 120 treats given...
             'window_seconds' => 3600, // ...per hour, per IP. Generous on purpose:
@@ -252,6 +259,66 @@ return [
             'happiness_per_pet' => 5,
             'energy_per_pet' => 5,
             'xp_per_pet' => 20,
+        ],
+
+        // PLAYING WITH A CREATURE. Three tiny guessing games, cycled at random.
+        //
+        // WHY THEY ARE GUESSING GAMES AND NOT ARCADE GAMES. This is the important
+        // note in this whole block. A game that runs in the browser cannot be
+        // trusted to report its own result: whatever "I won" message the page
+        // sends, anybody can send, so a reward for winning would be a reward for
+        // asking. The only honest arrangement is one where the SERVER holds the
+        // answer and the player guesses — then a cheat would have to guess right,
+        // which is just playing.
+        //
+        // It also means the games work with no JavaScript at all (a form and three
+        // buttons), which is what CLAUDE.md section 8 asks for anyway. The
+        // animation is decoration on top and nothing depends on it.
+        //
+        // LOSING IS NOT PUNISHED. A wrong guess still cheers the creature up, just
+        // less — you played with it either way. There is deliberately no outcome
+        // here that takes anything away (golden rule 10, and 11).
+        //
+        // ADDING A FOURTH GAME IS A CONFIG ENTRY. A game is a prompt, a list of
+        // choices, and two lines of copy; the server picks which choice is right.
+        // Give it a slug, and play.css can style it by that slug if it deserves
+        // its own look. No new code.
+        //
+        // "{name}" becomes the creature's own name in any of the text below.
+        'play' => [
+            // Per creature. Long enough that playing stays a small event rather
+            // than a happiness tap, short enough to be no kind of punishment —
+            // and it never blocks anything except the reward.
+            'cooldown_seconds' => 300,
+
+            'happiness_on_win' => 8,
+            'happiness_on_loss' => 3,
+            // Playing is livelier than being petted, so it costs a little more.
+            'energy_per_play' => 8,
+
+            'games' => [
+                'hide-and-seek' => [
+                    'name' => 'Hide and seek',
+                    'prompt' => '{name} has hidden. Which one is it behind?',
+                    'choices' => ['the mossy log', 'the tall fern', 'the little hedge'],
+                    'won' => 'Found in one go! {name} is delighted to have been looked for.',
+                    'lost' => '{name} was behind a different one, and is extremely pleased with itself.',
+                ],
+                'which-paw' => [
+                    'name' => 'Which paw?',
+                    'prompt' => '{name} is holding something. Which paw is it in?',
+                    'choices' => ['the left paw', 'the right paw'],
+                    'won' => 'Right first time — {name} opens its paw and shows you.',
+                    'lost' => 'The other one, as it turns out. {name} thinks this is very funny.',
+                ],
+                'follow-the-beetle' => [
+                    'name' => 'Follow the beetle',
+                    'prompt' => 'A beetle scuttled under one of the leaves. Where did it go?',
+                    'choices' => ['the left leaf', 'the middle leaf', 'the right leaf'],
+                    'won' => 'There it is! {name} is impressed you kept track.',
+                    'lost' => 'Nothing under that one. The beetle got away, and {name} enjoyed the chase.',
+                ],
+            ],
         ],
 
         // HOW A CREATURE FEELS. Two numbers, both 0–100, both worked out from when

@@ -36,8 +36,8 @@ use PDO;
  *
  * AND WHY THERE IS A TRANSACTION. Recording the pet and paying for it must happen
  * together or not at all, and the whole sequence has to be safe against the same
- * request arriving twice at once — see CreatureRepository::lockForPetting for the
- * full reasoning on that.
+ * request arriving twice at once — see CreatureInteractions for the full reasoning
+ * on that, and on why the lock has to come first.
  *
  * The amounts, the cooldown and the cap all come from config, passed in as one
  * array so this class stays easy to read and to retune.
@@ -58,7 +58,10 @@ final class PettingService
     public function __construct(
         private PDO $connection,
         private PettingRepository $pettings,
-        private CreatureRepository $creatures,
+        // The writes a pet makes: the row lock, the mood, the XP. Their own class
+        // because every one of them has to run inside the transaction below — read
+        // CreatureInteractions before changing any of this.
+        private CreatureInteractions $interactions,
         private UserRepository $users,
         private MoodCalculator $mood,
         private array $pettingConfig,
@@ -81,7 +84,7 @@ final class PettingService
         try {
             // Take the creature's row for the rest of this transaction, so a second
             // copy of this same request waits here instead of racing us.
-            $this->creatures->lockForPetting($creature->id);
+            $this->interactions->lockForInteraction($creature->id);
 
             // The cooldown: the same person cannot pet the same creature again too
             // soon. Checked inside the lock, so it sees any pet that just landed.
@@ -100,7 +103,7 @@ final class PettingService
             // Record the pet, then apply its effects.
             $this->pettings->record($creature->id, $actorUserId);
             $this->applyMood($creature);
-            $this->creatures->addExperience($creature->id, $this->pettingConfig['xp_per_pet']);
+            $this->interactions->addExperience($creature->id, $this->pettingConfig['xp_per_pet']);
 
             $earned = $this->payPetter($actorUserId, $creature);
 
@@ -135,7 +138,7 @@ final class PettingService
             $creature->energyAgeSeconds
         );
 
-        $this->creatures->saveMood(
+        $this->interactions->saveMood(
             $creature->id,
             $this->mood->afterGaining($mood->happiness, $this->pettingConfig['happiness_per_pet']),
             $this->mood->afterSpending($mood->energy, $this->pettingConfig['energy_per_pet'])

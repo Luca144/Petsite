@@ -63,6 +63,8 @@ convention `public/assets/creatures/{slug}/{stage}.gif` (e.g. `.../mossling/baby
 | `flavour_text` | text, NULL | Optional description (used from C.2). |
 | `is_starter` | boolean, NOT NULL, default false | Can be a new player's starter (A.2). |
 | `is_adoptable` | boolean, NOT NULL, default true | Can a player come to own one? Since M2 this decides what the shop sells and what exploring can turn up. |
+| `favourite_item_id` | int unsigned, NULL, FK to items | The treat this species adores: worth double. ON DELETE SET NULL, so retiring an item quietly leaves no favourite. A foreign key rather than a slug (unlike the exploration loot tables) because this is a relation between two tables and the database can enforce that the item exists. |
+| `disliked_item_id` | int unsigned, NULL, FK to items | The treat it would rather not: worth a quarter, floor of 1. **Never a punishment** — the creature eats it, cheers up a little, and pulls a face. |
 | `gem_price` | int unsigned, NOT NULL, default 0 | What one costs in the shop (M2). There is deliberately **no `shop_creatures` table**: there is one place to get a creature and a species has one price, so a join table would model many-shops-many-species, which this site does not have. |
 | `created_at` | timestamp, NOT NULL | |
 
@@ -82,31 +84,41 @@ using thresholds in config (B.2). This keeps a single source of truth.
 | `happiness_at` | timestamp, NULL | When `happiness` was last set. |
 | `energy` | int unsigned, NOT NULL, default 100 | 0–100. How rested the creature was **at `energy_at`**. Spent by interacting, recovers on its own. Never blocks anything. |
 | `energy_at` | timestamp, NULL | When `energy` was last set. |
+| `last_played_at` | timestamp, NULL | When this creature last had a GAME that earned it a bonus. NULL means never. Gates the play reward only — a creature on cooldown still plays. A column and not a table, because only the owner can play and nothing displays a play count, so there is exactly one question to answer. |
+
+| `bio` | text, NULL | Owner-written bio (C.1). |
+| `is_public` | boolean, NOT NULL, default true | Whether logged-out visitors can see it (B.6). |
+| `last_interacted_at` | datetime, NULL | Last petted, fed or played with. |
+| `created_at` | timestamp, NOT NULL | |
+
+Indexes: `is_public` and `created_at` (for public browse / newest-first lists),
+plus the automatic indexes on the two foreign keys.
 
 **Moods are derived, like growth.** The two readings are values plus the moment
 each was true; `MoodCalculator` works out the current figure on read. Nothing runs
 on a schedule to decay them — a scheduled job that failed would silently freeze
-every creature in the game. `CreatureRepository` asks the **database** for the
+every creature in the game. The creature queries ask the **database** for the
 elapsed time (`TIMESTAMPDIFF`) so the clock that wrote the timestamp is the clock
 that measures the gap.
 
 Before M2, `happiness` was an unbounded tally of pets. That count was never lost:
 "times petted" has always been answered from the `pettings` table, which is where
 the question belongs.
-| `bio` | text, NULL | Owner-written bio (C.1). |
-| `is_public` | boolean, NOT NULL, default true | Whether logged-out visitors can see it (B.6). |
-| `last_interacted_at` | datetime, NULL | Last petted; drives the cooldown. |
-| `created_at` | timestamp, NOT NULL | |
 
-Indexes: `is_public` and `created_at` (for public browse / newest-first lists),
-plus the automatic indexes on the two foreign keys.
+**Which code writes what.** `CreatureRepository` reads creatures, makes them, and
+edits their words. The mood columns and `last_played_at` are written only by
+`CreatureInteractions`, whose five methods must run inside a transaction holding
+the creature's row lock — read that class before changing any of them.
 
 ### `pettings` — one row each time a creature is petted
 This event log answers questions a single timestamp could not: *has this person
-petted this creature recently?* (cooldown, B.1), *how many times has this person
-petted lately?* (anti-spam currency cap, B.7), and *how many times has this
-creature been petted?* (the displayed count). A petting earns the **owner**
-currency only when the actor is someone else.
+petted this creature recently?* (cooldown), *how many times has this person been
+paid lately?* (the daily gem cap), and *how many times has this creature been
+petted?* (the displayed count).
+
+Since M2 a petting pays the **person doing the petting**, not the owner, and only
+when the creature belongs to somebody else — so the cap query has to join to
+`creatures` to know whose it was. See `PettingRepository::countPaidPetsBy`.
 
 | Column | Type | Notes |
 | --- | --- | --- |

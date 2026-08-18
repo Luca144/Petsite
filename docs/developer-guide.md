@@ -1661,3 +1661,86 @@ One row in `items` with a `happiness_bonus` and/or `energy_bonus`, a link in
 ### How to add a species to the shop
 
 Set its `is_adoptable` and `gem_price`. It appears in the shop, cheapest first.
+
+### Playing a game (added 2026-08-18)
+
+Three tiny guessing games, cycled at random, reached from a **play** button on the
+keepsake card and on a creature's own page.
+
+**Why guessing games and not arcade games — read this before changing anything
+here.** A game that runs in the browser cannot be trusted to report its own result:
+whatever "I won" the page sends, anybody can send. A reward for winning would
+really be a reward for asking. So the **server holds the answer** and the player
+guesses; a cheat has to guess right, which is just playing.
+
+It also means the whole thing is a form and three buttons, with **no JavaScript at
+all** — which CLAUDE.md section 8 asks for anyway, and which is what makes the
+result trustworthy. The rustling is CSS decoration.
+
+| Piece | Job |
+| --- | --- |
+| `PlayableGames` | The catalogue. Picks a game, knows how many choices it has. Never returns the answer — `PlayableGamesTest` asserts that. |
+| `PlayService` | Starts a round (game + hidden answer) and judges a guess. Knows nothing about HTTP. |
+| `PlayController` | Keeps the answer in the **session**, and clears the round **before** judging it. |
+| `pages/play.php` | Each choice is its own submit button. One tap, nothing to submit blank. |
+
+**Three holes, and what closes each:**
+
+- *Claim a win without playing* — the answer never reaches the page in any form.
+- *Retry until you win* — the controller clears the round before judging, so one
+  round takes exactly one answer. Re-posting is told to start a new game.
+- *Free happiness in a loop*, which would make gem-bought treats pointless — a
+  per-creature cooldown (`creatures.last_played_at`) limits the **reward**. It
+  never limits playing.
+
+**Losing is not punished.** A wrong guess still cheers the creature up, just less.
+There is no outcome anywhere in this feature that takes anything away, and
+`PlayServiceTest` holds that line.
+
+**Adding a fourth game is a config entry.** A game is a name, a prompt, a list of
+choices, and two lines of copy under `gameplay.play.games`. `{name}` becomes the
+creature's name. Give it a slug and `play.css` can style it by that slug; without a
+block there it simply has no glyph and still plays.
+
+### Tastes (added 2026-08-18)
+
+`species.favourite_item_id` and `species.disliked_item_id` — foreign keys, so a
+typo is an error rather than a preference that silently never applies.
+
+A favourite is worth double, a dislike a quarter (rounded **up**, floor of 1). Only
+happiness is adjusted, never energy: a chamomile bundle is just as restful whether
+or not the creature enjoyed it. Taste is an opinion, not digestion.
+
+**A dislike is never a punishment.** The creature eats it, gets a little happier,
+and makes a face — the face is the feature. The chooser marks the favourite with a
+star; the dislike is deliberately unmarked, because discovering it is a small
+delight that costs nothing.
+
+### Where the flash message and the celebration are read
+
+**Once, in `public/index.php`,** and handed to every template via `addData`. The
+layout draws the message.
+
+It used to be per-page: five controllers called `takeFlash()` and eight templates
+drew the paragraph. The home page had no such block — so feeding a creature from
+the keepsake card, which redirects there, said **nothing at all**, and the message
+then surfaced later on whatever unrelated page next asked for one. An eight-place
+duty where any one place can forget is a duty that will be forgotten.
+
+### CreatureInteractions vs CreatureRepository
+
+Split when `CreatureRepository` passed 400 lines, **by subject rather than by
+direction** (a read repository and a write repository would mean every caller
+taking two dependencies to do one job).
+
+- `CreatureInteractions` — the five methods with teeth: `lockForInteraction`,
+  `saveMood`, `addExperience`, `playedRecently`, `markPlayed`. Every one except
+  `addExperience` is part of a read-then-write that **must** run inside a
+  transaction holding the row lock. Stating that once at the top of one class beats
+  repeating it on five methods scattered among read queries.
+- `CreatureRepository` — finding creatures, making them, editing their words.
+  Nothing here needs a lock; every write is a single statement whose WHERE clause
+  carries its own permission check.
+
+`lockForPetting` became `lockForInteraction`: feeding and playing take exactly the
+same lock, and the old name made it look as though they were borrowing something.

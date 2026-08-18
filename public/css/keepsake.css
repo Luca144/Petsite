@@ -178,3 +178,12 @@
         padding: var(--space-4);
     }
 }
+
+/* "visit Biscuit" — a quiet text link under the three buttons rather than a
+   fourth one. Pet, feed and play are things you DO to the creature; visiting is
+   going somewhere else, and it should not compete with them for a thumb. */
+.keepsake__visit {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+}

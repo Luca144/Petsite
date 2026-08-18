@@ -58,30 +58,60 @@ final class AssetVersioningTest extends TestCase
         $this->assertSame('/css/not-here.css?v=0', AssetUrl::versioned('/css/not-here.css'));
     }
 
-    public function testEveryStylesheetInTheLayoutIsVersioned(): void
+    public function testEveryStylesheetAndScriptIsVersioned(): void
     {
-        // The point of failure is the layout, not the helper: somebody adds a
+        // The point of failure is the template, not the helper: somebody adds a
         // stylesheet and writes a plain href out of habit. This reads the real
-        // template and fails on any link that is not versioned.
-        $layout = file_get_contents(dirname(__DIR__, 2) . '/templates/layout.php');
-
-        preg_match_all('~<link rel="stylesheet" href="([^"]*)"~', $layout, $matches);
-
-        // Only our own files. The web-font link points at Google's servers, which
-        // we neither host nor version — their address is their business.
-        $ourStylesheets = array_filter(
-            $matches[1],
-            static fn (string $href): bool => !str_starts_with($href, 'http')
+        // templates and fails on any link that is not versioned.
+        //
+        // EVERY TEMPLATE, not one named file. It used to read layout.php alone —
+        // and then the whole <head> moved into partials/head.php, at which point
+        // the test found no stylesheets and could no longer fail for its real
+        // reason. Scanning the directory means moving markup around cannot
+        // quietly switch this check off, and a stylesheet added to some future
+        // page template is covered too.
+        //
+        // Scripts are included as well: a stale cached script is the same bug as a
+        // stale cached stylesheet, and item-finder.js is linked from two pages.
+        $templates = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator(dirname(__DIR__, 2) . '/templates')
         );
 
-        $this->assertNotEmpty($ourStylesheets, 'No local stylesheets found in the layout at all.');
+        $unversioned = [];
+        $found = 0;
 
-        foreach ($ourStylesheets as $href) {
-            $this->assertStringContainsString(
-                'AssetUrl::versioned',
-                $href,
-                "A stylesheet is linked without a version: {$href}. Returning visitors will keep the old copy."
+        foreach ($templates as $file) {
+            if ($file->isDir() || $file->getExtension() !== 'php') {
+                continue;
+            }
+
+            $markup = (string) file_get_contents($file->getPathname());
+            preg_match_all(
+                '~(?:<link rel="stylesheet" href|<script src)="([^"]*)"~',
+                $markup,
+                $matches
             );
+
+            foreach ($matches[1] as $href) {
+                // Only our own files. The web-font link points at Google's servers,
+                // which we neither host nor version — their address is their business.
+                if (str_starts_with($href, 'http')) {
+                    continue;
+                }
+
+                $found++;
+                if (!str_contains($href, 'AssetUrl::versioned')) {
+                    $unversioned[] = $file->getFilename() . ': ' . $href;
+                }
+            }
         }
+
+        $this->assertGreaterThan(0, $found, 'No local stylesheets or scripts found in any template.');
+        $this->assertSame(
+            [],
+            $unversioned,
+            "Linked without a version, so returning visitors keep the old copy:\n"
+            . implode("\n", $unversioned)
+        );
     }
 }

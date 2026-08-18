@@ -11,31 +11,25 @@ use PDO;
  *
  * @package Felkyo\Creatures
  *
- * WHAT THIS IS: the only place that runs SQL for the creatures table. Even though
- * a new player starts with just one creature, the queries are built for the real
- * one-to-many relationship (a user can own MANY creatures) from the start — so
- * the collection view and the shop needed no rework.
+ * WHAT THIS IS: finding creatures, making them, and editing the words their owner
+ * attached to them. Even though a new player starts with just one creature, the
+ * queries are built for the real one-to-many relationship (a user can own MANY
+ * creatures) from the start — so the collection view and the shop needed no rework.
  *
- * ON ITS LENGTH. This file is over the 300-line guideline in CLAUDE.md section 3,
- * and that is a deliberate, recorded exception rather than a file nobody has got
- * round to splitting.
+ * WHAT IS DELIBERATELY NOT HERE. The writes an INTERACTION makes — the row lock,
+ * the mood, the XP, the play cooldown — live in CreatureInteractions. They moved
+ * out when this file passed 400 lines, and the cut is by subject rather than by
+ * direction (a "read repository" and a "write repository" would have meant every
+ * caller taking two dependencies to do one job).
  *
- * The obvious cut would be reads from writes — a CreatureReadRepository and a
- * CreatureWriteRepository. That would make things worse in two specific ways.
- * Every caller that displays a creature and then changes it (petting, feeding,
- * renaming) would need both, so the constructor lists grow rather than shrink.
- * And the property this class is FOR — "there is exactly one place that knows how
- * creature rows are read and written" — would become two places, which is the
- * beginning of the drift the rule exists to prevent.
+ * The better reason is that those five methods are the ones with teeth: each is
+ * part of a read-then-write that must run inside a transaction holding the
+ * creature's row lock. Scattered among ordinary read queries, that rule had to be
+ * repeated on each of them and could be missed by anybody adding a sixth. Together
+ * in one class, it is stated once at the top and is hard to miss.
  *
- * Roughly half of what is below is comment, because several of these queries
- * carry a permission boundary or a concurrency rule that has to be explained
- * where somebody editing it will read it. Splitting the file to get under a line
- * count would move the comments without making anything simpler.
- *
- * If it grows much further, the honest cut is by SUBJECT, not by direction: the
- * three profile queries (findForProfile, countPrivateForOwner, findFeaturedIds)
- * exist to draw one page and could reasonably become a CreatureProfileQueries.
+ * Nothing in THIS file needs a lock. Every write here is a single statement whose
+ * WHERE clause carries its own permission check.
  */
 final class CreatureRepository
 {
@@ -191,87 +185,6 @@ final class CreatureRepository
             ':id' => $creatureId,
             ':editor_user_id' => $editorUserId,
         ]);
-    }
-
-    /**
-     * Claim this creature for the duration of the current transaction, so that two
-     * pets landing at the same instant are dealt with one after the other.
-     *
-     * WHY THIS EXISTS. Petting is a read-then-write: we ask "has this person petted
-     * this creature recently?" and then, if not, we write a petting row and pay
-     * them. Two copies of the same request arriving together — a double-tapped
-     * button, an impatient refresh, or somebody deliberately firing it twice — can
-     * both read "no, not recently", and both go on to write and both get paid. That
-     * is the currency-duplication problem CLAUDE.md names, and it became worth
-     * exploiting the moment gems started going to the person doing the petting.
-     *
-     * SELECT ... FOR UPDATE takes a lock on this creature's row that lasts until the
-     * transaction ends. The second request simply waits at this line, and by the
-     * time it continues, the first one's petting row is committed and visible — so
-     * its cooldown check now correctly says "yes, recently". No pet is lost and none
-     * is paid for twice.
-     *
-     * It must therefore be called INSIDE a transaction and BEFORE the cooldown
-     * check. Called outside one, the lock is released immediately and protects
-     * nothing.
-     */
-    public function lockForPetting(int $creatureId): void
-    {
-        $statement = $this->connection->prepare(
-            'SELECT id FROM creatures WHERE id = :id FOR UPDATE'
-        );
-        $statement->execute([':id' => $creatureId]);
-        $statement->fetchAll();
-    }
-
-    /**
-     * Write a creature's new mood, and stamp both readings as true from now.
-     *
-     * WHY THE VALUES ARE ABSOLUTE AND NOT "ADD THIS MUCH". Happiness used to be a
-     * tally with no ceiling, so "happiness = happiness + 1" was both correct and
-     * safe under any amount of concurrency. It is now a 0–100 reading that FADES,
-     * so the new value depends on how much has faded since it was last written —
-     * which is arithmetic the database cannot do on its own, and which
-     * MoodCalculator already does properly.
-     *
-     * That makes this a read-then-write, and read-then-write is the pattern
-     * CLAUDE.md warns about. It is safe here for one reason: the only caller runs
-     * inside a transaction that has already taken this creature's row with
-     * lockForPetting(). Do not call this from anywhere that has not.
-     */
-    public function saveMood(int $creatureId, int $happiness, int $energy): void
-    {
-        $statement = $this->connection->prepare(
-            'UPDATE creatures
-                SET happiness = :happiness,
-                    happiness_at = NOW(),
-                    energy = :energy,
-                    energy_at = NOW(),
-                    last_interacted_at = NOW()
-              WHERE id = :id'
-        );
-        $statement->execute([
-            ':happiness' => $happiness,
-            ':energy' => $energy,
-            ':id' => $creatureId,
-        ]);
-    }
-
-    /**
-     * Add experience to a creature.
-     *
-     * Kept as its own method, and as a RELATIVE update, because XP is a different
-     * kind of number from mood: it only ever grows and has no ceiling, so
-     * "xp = xp + :gain" is safe however many pets land at the same instant — no
-     * lock and no reading-first required. Mixing it into saveMood() would have
-     * quietly given it mood's much stricter rules for no reason.
-     */
-    public function addExperience(int $creatureId, int $xpGain): void
-    {
-        $statement = $this->connection->prepare(
-            'UPDATE creatures SET xp = xp + :xp_gain WHERE id = :id'
-        );
-        $statement->execute([':xp_gain' => $xpGain, ':id' => $creatureId]);
     }
 
     /**
