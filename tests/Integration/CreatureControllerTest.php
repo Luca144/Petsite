@@ -53,7 +53,7 @@ final class CreatureControllerTest extends DatabaseTestCase
             $config['gameplay']['growth']['stage_start_levels']
         );
         $profileBuilder = new CreatureProfileBuilder(
-            $species, $users, $growth, new PettingRepository($this->connection)
+            $species, $users, $growth, new PettingRepository($this->connection), $this->moodCalculator()
         );
 
         // The creature page also shows the guestbook, so the controller needs the

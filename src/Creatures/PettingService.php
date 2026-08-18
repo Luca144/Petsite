@@ -48,6 +48,7 @@ final class PettingService
      * @param array{
      *     cooldown_seconds: int,
      *     happiness_per_pet: int,
+     *     energy_per_pet: int,
      *     xp_per_pet: int,
      *     currency_per_pet: int,
      *     currency_daily_cap: int,
@@ -59,6 +60,7 @@ final class PettingService
         private PettingRepository $pettings,
         private CreatureRepository $creatures,
         private UserRepository $users,
+        private MoodCalculator $mood,
         private array $pettingConfig,
         // The currency's display name, from config — never written in this file.
         // What the money is CALLED is content the Product Owner owns, and a
@@ -95,13 +97,10 @@ final class PettingService
                 );
             }
 
-            // Record the pet, then apply its effects: more happiness and some XP.
+            // Record the pet, then apply its effects.
             $this->pettings->record($creature->id, $actorUserId);
-            $this->creatures->applyPetting(
-                $creature->id,
-                $this->pettingConfig['happiness_per_pet'],
-                $this->pettingConfig['xp_per_pet']
-            );
+            $this->applyMood($creature);
+            $this->creatures->addExperience($creature->id, $this->pettingConfig['xp_per_pet']);
 
             $earned = $this->payPetter($actorUserId, $creature);
 
@@ -114,6 +113,33 @@ final class PettingService
         }
 
         return PettingResult::success($this->successMessage($creature, $earned));
+    }
+
+    /**
+     * Cheer the creature up, and tire it out very slightly.
+     *
+     * BOTH READINGS ARE AGED FIRST. A creature nobody has visited for a week has
+     * drifted down toward its floor and fully rested; petting it should top up
+     * from where it ACTUALLY is, not from the number written a week ago. Doing it
+     * the other way would mean a long absence was invisible — and the fading is
+     * the entire point of the mood system.
+     *
+     * Runs inside the transaction, under the row lock taken at the top of pet().
+     */
+    private function applyMood(Creature $creature): void
+    {
+        $mood = $this->mood->moodFor(
+            $creature->happiness,
+            $creature->happinessAgeSeconds,
+            $creature->energy,
+            $creature->energyAgeSeconds
+        );
+
+        $this->creatures->saveMood(
+            $creature->id,
+            $this->mood->afterGaining($mood->happiness, $this->pettingConfig['happiness_per_pet']),
+            $this->mood->afterSpending($mood->energy, $this->pettingConfig['energy_per_pet'])
+        );
     }
 
     /**

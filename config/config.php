@@ -239,15 +239,65 @@ return [
             ],
         ],
 
-        // Petting — the core interaction. Each successful pet raises happiness and
-        // grants XP, and the same person can only pet the same creature again once
-        // the cooldown has passed. Tune these to change how the game feels.
-        // (The cooldown is short by default so the loop is easy to try out; raise
-        // it for a slower, calmer game.)
+        // Petting — the core interaction. Each successful pet raises happiness,
+        // costs a little energy, and grants XP; the same person can only pet the
+        // same creature again once the cooldown has passed. Tune these to change
+        // how the game feels. (The cooldown is short by default so the loop is
+        // easy to try out; raise it for a slower, calmer game.)
         'petting' => [
             'cooldown_seconds' => 30,
-            'happiness_per_pet' => 1,
+            'happiness_per_pet' => 5,
+            'energy_per_pet' => 5,
             'xp_per_pet' => 20,
+        ],
+
+        // HOW A CREATURE FEELS. Two numbers, both 0–100, both worked out from when
+        // they were last set rather than counted down by anything scheduled — the
+        // same approach GrowthCalculator takes with XP. A creature whose mood
+        // depended on whether an hourly job ran would be a creature whose mood
+        // quietly breaks the first time that job doesn't.
+        //
+        // READ THE FLOOR BEFORE CHANGING ANYTHING HERE. Happiness falls slowly and
+        // then STOPS, at happiness_floor. It never reaches zero, a creature is
+        // never sad, sick, or reproachful, and nothing is ever lost by being away.
+        // That is golden rule 10 (never punish absence) applied to the one mechanic
+        // most likely to break it: the whole genre this borrows from is built on
+        // guilt, and we are deliberately not building that. A creature left alone
+        // for a month is sleepy and pleased to see you.
+        //
+        // ENERGY NEVER BLOCKS ANYTHING. It changes what a creature does when you
+        // visit — a stretch and a yawn instead of a bounce — and it is what makes
+        // a treat worth giving. It is not a gate, and "come back later" is not a
+        // sentence this site says.
+        'mood' => [
+            // What a newly hatched, adopted or bought creature starts at. Happy
+            // but with room to become happier, so petting it does something.
+            'starting_happiness' => 80,
+            'starting_energy' => 100,
+
+            // Happiness falls this much per day, and stops at the floor.
+            'happiness_decay_per_day' => 5,
+            'happiness_floor' => 20,
+
+            // Energy comes back on its own at this rate.
+            'energy_recovery_per_hour' => 10,
+
+            // Below this, a creature is resting: different words, different
+            // picture, same buttons. Nothing is refused.
+            'resting_below' => 20,
+
+            // What each happiness range is CALLED. A word, never a bare number —
+            // "very happy" is something you can feel about; "73%" is not. The
+            // bands are listed low to high and the highest one reached wins.
+            //
+            // CONTENT, NOT CODE: reword these freely. Keep them warm. There is
+            // deliberately no band called "sad", "hungry" or "neglected".
+            'happiness_words' => [
+                0 => 'sleepy',
+                40 => 'content',
+                60 => 'happy',
+                85 => 'very happy',
+            ],
         ],
 
         // Daily adoption — a player can adopt one new creature per "day" from the

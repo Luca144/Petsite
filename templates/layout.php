@@ -60,6 +60,7 @@ use Felkyo\Http\AssetUrl;
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/social.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/guestbook.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/community.css') ?>">
+    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/mood.css') ?>">
 </head>
 <body>
     <!-- Keyboard users can jump straight to the content with this link. -->

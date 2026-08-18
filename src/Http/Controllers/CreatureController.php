@@ -75,6 +75,9 @@ final class CreatureController
             'level' => $profile['level'],
             'stage' => $profile['stage'],
             'timesPetted' => $profile['timesPetted'],
+            // How the creature feels right now, worked out from its stored
+            // readings and how old they are (see MoodCalculator).
+            'mood' => $profile['mood'],
             // Any logged-in visitor may pet a creature they can see.
             'canPet' => $this->session->has('user_id'),
             // Only the owner sees the "edit bio" and "rename" forms.

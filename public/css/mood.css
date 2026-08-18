@@ -1,0 +1,114 @@
+/*
+ * mood.css — how a creature's feelings are drawn.
+ *
+ * WHAT THIS FILE IS: the mood sentence and the two bars, used on the creature
+ * page and on the sidebar card. Its own file because both places use it and
+ * neither owns it, and because creature.css is already close to its size limit.
+ *
+ * THE BARS ARE NOT PROGRESS BARS, even though they look like them. A progress bar
+ * means "wait, something is happening". These mean "here is how your creature is",
+ * which is a reading, not a delay — hence role="img" in the markup rather than
+ * <progress>, and hence the calm fill rather than anything that pulses or stripes.
+ *
+ * Every colour comes from theme.css (CLAUDE.md §8). The one inline style in the
+ * markup is the fill width, which is data.
+ */
+
+/* The line that says how the creature feels, in words. Bigger and warmer than
+   the numbers under it, because it is the thing meant to be read first. */
+.creature__mood {
+    margin: var(--space-3) 0 var(--space-2);
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--plum);
+}
+
+.mood-bars {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: 0 0 var(--space-4);
+}
+
+/* Label, bar, number — in one row on every screen size. The label has a fixed
+   width so the two bars line up with each other rather than starting at
+   different places, which reads as sloppy at a glance. */
+.mood-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.mood-bar__label {
+    flex: 0 0 5.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+}
+
+.mood-bar__track {
+    flex: 1;
+    /* A little taller than a hairline: a 4px bar is elegant and unreadable at
+       arm's length on a phone. */
+    height: 10px;
+    border-radius: var(--radius-pill);
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    overflow: hidden;
+}
+
+.mood-bar__fill {
+    display: block;
+    height: 100%;
+    border-radius: var(--radius-pill);
+    /* The width changes between page loads, and the eye should follow it there.
+       This is the reward for petting: you see the bar move. */
+    transition: width 600ms ease-out;
+}
+
+/* The two readings are different colours AND different bars in different rows
+   with their own written labels — the colour is the last of three signals, never
+   the only one, because roughly one man in twelve cannot use it. */
+.mood-bar__fill--happiness {
+    background: var(--purple);
+}
+
+.mood-bar__fill--energy {
+    background: var(--gold);
+}
+
+/* Just after a pet, the happiness bar glows as it grows. Same idea as the stat
+   number's lift on the creature page: without it the change is invisible, because
+   the bar was already there and is simply a little wider. */
+.mood-bar__fill--just-changed {
+    animation: mood-glow 900ms ease-out;
+}
+
+@keyframes mood-glow {
+    0%   { box-shadow: none; }
+    30%  { box-shadow: 0 0 12px 2px var(--gold-lit); }
+    100% { box-shadow: none; }
+}
+
+.mood-bar__value {
+    flex: 0 0 2.2rem;
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+}
+
+/* Reduced motion: the bar arrives at its width instead of sliding to it, and
+   nothing glows. The mood sentence still says how the creature feels in words, so
+   nothing at all is lost — which is the test for whether an effect was decoration
+   to begin with. */
+@media (prefers-reduced-motion: reduce) {
+    .mood-bar__fill {
+        transition: none;
+    }
+
+    .mood-bar__fill--just-changed {
+        animation: none;
+    }
+}

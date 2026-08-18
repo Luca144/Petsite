@@ -49,6 +49,7 @@ final class PetControllerTest extends DatabaseTestCase
             new PettingRepository($this->connection),
             $this->creatures,
             new UserRepository($this->connection),
+            $this->moodCalculator(),
             $config['gameplay']['petting'] + [
                 'currency_per_pet' => $config['gameplay']['currency']['per_pet'],
                 'currency_daily_cap' => $config['gameplay']['currency']['daily_cap'],

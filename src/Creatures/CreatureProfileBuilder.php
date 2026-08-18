@@ -24,13 +24,14 @@ final class CreatureProfileBuilder
         private UserRepository $users,
         private GrowthCalculator $growth,
         private PettingRepository $pettings,
+        private MoodCalculator $mood,
     ) {
     }
 
     /**
      * Build the display data for one creature.
      *
-     * @return array{species: ?Species, owner: ?\Felkyo\Users\User, level: int, stage: string, timesPetted: int}
+     * @return array{species: ?Species, owner: ?\Felkyo\Users\User, level: int, stage: string, timesPetted: int, mood: Mood}
      */
     public function buildFor(Creature $creature): array
     {
@@ -40,7 +41,25 @@ final class CreatureProfileBuilder
             'level' => $this->growth->levelFor($creature->xp),
             'stage' => $this->growth->stageFor($creature->xp),
             'timesPetted' => $this->pettings->countForCreature($creature->id),
+            'mood' => $this->moodOf($creature),
         ];
+    }
+
+    /**
+     * How this creature feels right now.
+     *
+     * Every display path goes through here rather than calling MoodCalculator
+     * directly, so a card, a page and the sidebar can never show one creature
+     * three different moods.
+     */
+    private function moodOf(Creature $creature): Mood
+    {
+        return $this->mood->moodFor(
+            $creature->happiness,
+            $creature->happinessAgeSeconds,
+            $creature->energy,
+            $creature->energyAgeSeconds
+        );
     }
 
     /**
@@ -52,7 +71,7 @@ final class CreatureProfileBuilder
      * from that, instead of querying the database once per creature.
      *
      * @param Creature[] $creatures
-     * @return array<int, array{creature: Creature, species: ?Species, level: int, stage: string}>
+     * @return array<int, array{creature: Creature, species: ?Species, level: int, stage: string, mood: Mood}>
      */
     public function summariesFor(array $creatures): array
     {
@@ -69,6 +88,9 @@ final class CreatureProfileBuilder
                 'species' => $speciesById[$creature->speciesId] ?? null,
                 'level' => $this->growth->levelFor($creature->xp),
                 'stage' => $this->growth->stageFor($creature->xp),
+                // Costs nothing extra: the readings and their ages came back with
+                // the creature, so working out the mood is arithmetic, not a query.
+                'mood' => $this->moodOf($creature),
             ];
         }
 

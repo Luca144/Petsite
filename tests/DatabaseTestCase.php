@@ -25,12 +25,32 @@ abstract class DatabaseTestCase extends TestCase
 {
     protected PDO $connection;
 
+    /**
+     * The real config, so tests can build services with the REAL tuning rather
+     * than numbers invented in the test. A test that makes up its own gameplay
+     * values proves the code works with those values, which is not the question
+     * anybody is asking. Tests that deliberately want different numbers (to reach
+     * a cap in three lines, say) still pass their own — but they do it on purpose.
+     *
+     * @var array<string, mixed>
+     */
+    protected array $config;
+
     protected function setUp(): void
     {
         // config.php reads the database name from the environment, which the test
         // bootstrap forced to felkyo_test — so this connects to the test database.
-        $config = require dirname(__DIR__) . '/config/config.php';
-        $this->connection = Database::connect($config['database']);
+        $this->config = require dirname(__DIR__) . '/config/config.php';
+        $this->connection = Database::connect($this->config['database']);
+    }
+
+    /**
+     * The mood rules, built from real config. Creature displays all need one, so
+     * it is offered here instead of being assembled in six different test files.
+     */
+    protected function moodCalculator(): \Felkyo\Creatures\MoodCalculator
+    {
+        return new \Felkyo\Creatures\MoodCalculator($this->config['gameplay']['mood']);
     }
 
     /**

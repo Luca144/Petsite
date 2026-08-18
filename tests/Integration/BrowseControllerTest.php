@@ -45,7 +45,7 @@ final class BrowseControllerTest extends DatabaseTestCase
             $config['gameplay']['growth']['stage_start_levels']
         );
         $profileBuilder = new CreatureProfileBuilder(
-            $species, $users, $growth, new PettingRepository($this->connection)
+            $species, $users, $growth, new PettingRepository($this->connection), $this->moodCalculator()
         );
 
         $controller = new BrowseController($templates, $creatures, $profileBuilder, 12);

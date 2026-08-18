@@ -75,7 +75,8 @@ final class ProfileControllerTest extends DatabaseTestCase
                 new SpeciesRepository($this->connection),
                 $users,
                 new GrowthCalculator(20, ['baby' => 1, 'juvenile' => 3, 'adult' => 6]),
-                new PettingRepository($this->connection)
+                new PettingRepository($this->connection),
+                $this->moodCalculator()
             ),
             $avatars,
             new RateLimiter(new RateLimitRepository($this->connection)),

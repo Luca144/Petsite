@@ -44,8 +44,51 @@ final class CreatureRepositoryTest extends DatabaseTestCase
         $this->assertSame($this->speciesId, $creature->speciesId);
         $this->assertSame('Biscuit', $creature->name);
         $this->assertSame(0, $creature->xp);
-        $this->assertSame(0, $creature->happiness);
         $this->assertTrue($creature->isPublic);
+    }
+
+    /**
+     * A creature is born happy and wide awake — and the numbers the DATABASE
+     * gives it are the ones CONFIG says it should get.
+     *
+     * WHY THIS TEST IS WORTH ITS LINES. create() deliberately does not pass the
+     * starting mood; it lets the schema supply it, the same way it lets the schema
+     * supply "public" and "no XP". That keeps the three places creatures are made
+     * (hatching, adopting, finding one) from each having to remember. The cost is
+     * that the real starting value lives in a migration while the documented one
+     * lives in config, and two copies of a number drift.
+     *
+     * So this asserts they agree. Change one without the other and this fails and
+     * says which.
+     */
+    public function testANewCreatureStartsAtTheMoodConfigDescribes(): void
+    {
+        $creature = $this->creatures->create($this->ownerId, $this->speciesId, 'Biscuit');
+
+        $this->assertSame(
+            $this->config['gameplay']['mood']['starting_happiness'],
+            $creature->happiness,
+            'The creatures table default and gameplay.mood.starting_happiness disagree.'
+        );
+        $this->assertSame(
+            $this->config['gameplay']['mood']['starting_energy'],
+            $creature->energy,
+            'The creatures table default and gameplay.mood.starting_energy disagree.'
+        );
+    }
+
+    /**
+     * The readings of a creature made this instant are zero seconds old, so
+     * nothing has faded yet. This is what makes the ages in the SELECT worth
+     * having: if they came back as something else, every fresh creature would
+     * appear to have been neglected since before it existed.
+     */
+    public function testANewCreaturesReadingsAreFresh(): void
+    {
+        $creature = $this->creatures->create($this->ownerId, $this->speciesId, 'Biscuit');
+
+        $this->assertLessThan(5, $creature->happinessAgeSeconds);
+        $this->assertLessThan(5, $creature->energyAgeSeconds);
     }
 
     public function testFindByIdReturnsTheCreature(): void

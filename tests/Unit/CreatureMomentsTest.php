@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Felkyo\Tests\Unit;
 
-use Felkyo\Creatures\Creature;
 use Felkyo\Creatures\CreatureMoments;
 use Felkyo\Creatures\Species;
+use Felkyo\Tests\Support\Creatures;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -28,7 +28,7 @@ final class CreatureMomentsTest extends TestCase
     private function summary(int $id, string $name): array
     {
         return [
-            'creature' => new Creature($id, 1, 1, $name, 0, 0, null, null, true, null, null, null),
+            'creature' => Creatures::make(id: $id, name: $name),
             'species' => new Species(1, 'pebblewing', 'Pebblewing', null, true, true),
             'level' => 1,
             'stage' => 'baby',

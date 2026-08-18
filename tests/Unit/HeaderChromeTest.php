@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Felkyo\Tests\Unit;
 
-use Felkyo\Creatures\Creature;
 use Felkyo\Creatures\Species;
+use Felkyo\Tests\Support\Creatures;
 use Felkyo\Users\User;
 use League\Plates\Engine;
 use PHPUnit\Framework\TestCase;
@@ -46,7 +46,7 @@ final class HeaderChromeTest extends TestCase
     {
         return [
             'summary' => [
-                'creature' => new Creature(9, 7, 1, $creatureName, 40, 2, null, null, true, null, null, null),
+                'creature' => Creatures::make(id: 9, name: $creatureName, ownerId: 7, xp: 40),
                 'species' => new Species(1, 'pebblewing', 'Pebblewing', null, true, true),
                 'level' => 3,
                 'stage' => 'juvenile',

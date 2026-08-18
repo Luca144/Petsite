@@ -32,6 +32,7 @@ use Felkyo\Creatures\CreatureMoments;
 use Felkyo\Creatures\CreatureProfileBuilder;
 use Felkyo\Creatures\CreatureRepository;
 use Felkyo\Creatures\GrowthCalculator;
+use Felkyo\Creatures\MoodCalculator;
 use Felkyo\Creatures\PettingRepository;
 use Felkyo\Creatures\PettingService;
 use Felkyo\Creatures\SpeciesRepository;
@@ -198,11 +199,17 @@ $growthCalculator = new GrowthCalculator(
 // happen together, in one transaction (see PettingService for the whole reason).
 // The currency knobs are folded into the petting settings so the service reads
 // one array rather than three separate numbers.
+// How creatures feel, and how that changes with time. One calculator, shared by
+// everything that shows or changes a mood, so a creature can never look happier
+// on its own page than it does on the card beside it.
+$moodCalculator = new MoodCalculator($config['gameplay']['mood']);
+
 $pettingService = new PettingService(
     $pdo,
     $pettingRepository,
     $creatureRepository,
     $userRepository,
+    $moodCalculator,
     $config['gameplay']['petting'] + [
         'currency_per_pet' => $config['gameplay']['currency']['per_pet'],
         'currency_daily_cap' => $config['gameplay']['currency']['daily_cap'],
@@ -211,7 +218,7 @@ $pettingService = new PettingService(
     $config['gameplay']['currency']['name']
 );
 $creatureProfileBuilder = new CreatureProfileBuilder(
-    $speciesRepository, $userRepository, $growthCalculator, $pettingRepository
+    $speciesRepository, $userRepository, $growthCalculator, $pettingRepository, $moodCalculator
 );
 $purchaseService = new PurchaseService(
     $pdo, $shopRepository, $userRepository, $inventoryRepository,

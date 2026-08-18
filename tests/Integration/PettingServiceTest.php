@@ -40,7 +40,8 @@ final class PettingServiceTest extends DatabaseTestCase
     // simulating a hundred pets.
     private const CONFIG = [
         'cooldown_seconds' => 30,
-        'happiness_per_pet' => 1,
+        'happiness_per_pet' => 5,
+        'energy_per_pet' => 5,
         'xp_per_pet' => 20,
         'currency_per_pet' => 1,
         'currency_daily_cap' => 3,
@@ -60,6 +61,7 @@ final class PettingServiceTest extends DatabaseTestCase
             $this->pettings,
             $this->creatures,
             $this->users,
+            $this->moodCalculator(),
             self::CONFIG,
             'gems'
         );
@@ -79,6 +81,21 @@ final class PettingServiceTest extends DatabaseTestCase
     private function creature(): \Felkyo\Creatures\Creature
     {
         return $this->creatures->findById($this->creatureId);
+    }
+
+    /**
+     * What a creature's happiness should be after $pets pets, starting fresh.
+     *
+     * Written from config rather than as a literal, so retuning how much a pet is
+     * worth does not turn every assertion below into a puzzle about where the
+     * number came from. A creature is born at starting_happiness and each pet adds
+     * happiness_per_pet, up to a ceiling of 100.
+     */
+    private function happinessAfter(int $pets): int
+    {
+        $start = $this->config['gameplay']['mood']['starting_happiness'];
+
+        return min(100, $start + ($pets * self::CONFIG['happiness_per_pet']));
     }
 
     /**
@@ -111,7 +128,7 @@ final class PettingServiceTest extends DatabaseTestCase
 
         $this->assertTrue($result->isSuccessful());
         $updated = $this->creature();
-        $this->assertSame(1, $updated->happiness);
+        $this->assertSame($this->happinessAfter(1), $updated->happiness);
         $this->assertSame(20, $updated->xp);
     }
 
@@ -125,7 +142,7 @@ final class PettingServiceTest extends DatabaseTestCase
 
         // ...and the stats did not change a second time.
         $updated = $this->creature();
-        $this->assertSame(1, $updated->happiness);
+        $this->assertSame($this->happinessAfter(1), $updated->happiness);
         $this->assertSame(20, $updated->xp);
     }
 
@@ -136,7 +153,7 @@ final class PettingServiceTest extends DatabaseTestCase
         $this->assertTrue($this->petting->pet($this->otherActorId, $this->creature())->isSuccessful());
 
         $updated = $this->creature();
-        $this->assertSame(2, $updated->happiness);
+        $this->assertSame($this->happinessAfter(2), $updated->happiness);
         $this->assertSame(40, $updated->xp);
     }
 
@@ -193,7 +210,7 @@ final class PettingServiceTest extends DatabaseTestCase
 
         $this->assertSame(0, $this->balanceOf($this->ownerId));
         // It still counts as care — the creature is happier for it.
-        $this->assertSame(1, $this->creature()->happiness);
+        $this->assertSame($this->happinessAfter(1), $this->creature()->happiness);
     }
 
     public function testPettingYourOwnCreatureSaysNothingAboutGems(): void
@@ -250,7 +267,7 @@ final class PettingServiceTest extends DatabaseTestCase
         $result = $this->petting->pet($this->actorId, $capped);
 
         $this->assertTrue($result->isSuccessful());
-        $this->assertSame(1, $this->creatures->findById($capped->id)->happiness);
+        $this->assertSame($this->happinessAfter(1), $this->creatures->findById($capped->id)->happiness);
     }
 
     public function testTheCapIsPerPersonNotPerSite(): void

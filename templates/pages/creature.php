@@ -81,8 +81,18 @@ $createdLabel = $creature->createdAt !== null
             <p class="creature__flavour"><?= $this->e($species->flavourText) ?></p>
         <?php endif; ?>
 
-        <!-- Current state. Level, stage and happiness rise as the creature is
-             petted (increments B.1, B.2). -->
+        <?php /* How the creature is FEELING, in words, above the numbers. This is
+                 the line a player should read first — "Biscuit is very happy" is
+                 something you can feel about, where "87" is a readout. The bars
+                 below carry the same two facts a second way, which is the rule
+                 that nothing important may ride on one signal alone. */ ?>
+        <p class="creature__mood" role="status">
+            <?= $this->e($mood->sentence($creature->name)) ?>
+        </p>
+
+        <?= $this->insert('partials/mood-bars', ['mood' => $mood, 'justPetted' => $justPetted ?? false]) ?>
+
+        <!-- Current state. Level and stage rise as the creature is petted. -->
         <div class="card card--dark creature-stats">
             <div class="creature-stat">
                 <span class="creature-stat__value"><?= $this->e((string) $level) ?></span>
@@ -91,10 +101,6 @@ $createdLabel = $creature->createdAt !== null
             <div class="creature-stat">
                 <span class="creature-stat__value"><?= $this->e($stage) ?></span>
                 <span class="creature-stat__label">stage</span>
-            </div>
-            <div class="creature-stat">
-                <span class="creature-stat__value<?= !empty($justPetted) ? ' creature-stat__value--just-changed' : '' ?>"><?= $this->e((string) $creature->happiness) ?></span>
-                <span class="creature-stat__label">happiness</span>
             </div>
             <div class="creature-stat">
                 <span class="creature-stat__value"><?= $this->e((string) $timesPetted) ?></span>

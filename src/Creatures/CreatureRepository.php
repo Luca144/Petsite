@@ -18,7 +18,25 @@ use PDO;
  */
 final class CreatureRepository
 {
-    private const COLUMNS = 'id, owner_id, species_id, name, xp, happiness, bio, bio_hidden_at, is_public, featured_order, last_interacted_at, created_at';
+    /**
+     * The columns every creature query fetches. Listed one by one, never SELECT *
+     * (CLAUDE.md section 5).
+     *
+     * THE LAST TWO ARE NOT COLUMNS, THEY ARE ARITHMETIC, and doing it here is
+     * deliberate. A creature's happiness and energy are readings taken at a
+     * moment; how long ago that moment was is what turns them into how the
+     * creature feels NOW. Asking the database for that difference means the same
+     * clock that wrote the timestamp measures the gap. Working it out in PHP would
+     * mean trusting the web server's clock and timezone to match the database's —
+     * which they do, until the day somebody moves one of them.
+     *
+     * COALESCE to created_at covers a creature made before the mood columns
+     * existed: its readings are as old as the creature itself, which is true.
+     */
+    private const COLUMNS = 'id, owner_id, species_id, name, xp, happiness, energy,
+             bio, bio_hidden_at, is_public, featured_order, last_interacted_at, created_at,
+             TIMESTAMPDIFF(SECOND, COALESCE(happiness_at, created_at), NOW()) AS happiness_age_seconds,
+             TIMESTAMPDIFF(SECOND, COALESCE(energy_at, created_at), NOW()) AS energy_age_seconds';
 
     public function __construct(private PDO $connection)
     {
@@ -186,24 +204,53 @@ final class CreatureRepository
     }
 
     /**
-     * Apply the effects of one pet to a creature: add to its happiness and XP, and
-     * stamp when it was last interacted with. Doing the additions in the database
-     * (happiness = happiness + :amount) is safe even if two pets land at once.
+     * Write a creature's new mood, and stamp both readings as true from now.
+     *
+     * WHY THE VALUES ARE ABSOLUTE AND NOT "ADD THIS MUCH". Happiness used to be a
+     * tally with no ceiling, so "happiness = happiness + 1" was both correct and
+     * safe under any amount of concurrency. It is now a 0–100 reading that FADES,
+     * so the new value depends on how much has faded since it was last written —
+     * which is arithmetic the database cannot do on its own, and which
+     * MoodCalculator already does properly.
+     *
+     * That makes this a read-then-write, and read-then-write is the pattern
+     * CLAUDE.md warns about. It is safe here for one reason: the only caller runs
+     * inside a transaction that has already taken this creature's row with
+     * lockForPetting(). Do not call this from anywhere that has not.
      */
-    public function applyPetting(int $creatureId, int $happinessGain, int $xpGain): void
+    public function saveMood(int $creatureId, int $happiness, int $energy): void
     {
         $statement = $this->connection->prepare(
             'UPDATE creatures
-                SET happiness = happiness + :happiness_gain,
-                    xp = xp + :xp_gain,
+                SET happiness = :happiness,
+                    happiness_at = NOW(),
+                    energy = :energy,
+                    energy_at = NOW(),
                     last_interacted_at = NOW()
               WHERE id = :id'
         );
         $statement->execute([
-            ':happiness_gain' => $happinessGain,
-            ':xp_gain' => $xpGain,
+            ':happiness' => $happiness,
+            ':energy' => $energy,
             ':id' => $creatureId,
         ]);
+    }
+
+    /**
+     * Add experience to a creature.
+     *
+     * Kept as its own method, and as a RELATIVE update, because XP is a different
+     * kind of number from mood: it only ever grows and has no ceiling, so
+     * "xp = xp + :gain" is safe however many pets land at the same instant — no
+     * lock and no reading-first required. Mixing it into saveMood() would have
+     * quietly given it mood's much stricter rules for no reason.
+     */
+    public function addExperience(int $creatureId, int $xpGain): void
+    {
+        $statement = $this->connection->prepare(
+            'UPDATE creatures SET xp = xp + :xp_gain WHERE id = :id'
+        );
+        $statement->execute([':xp_gain' => $xpGain, ':id' => $creatureId]);
     }
 
     /**
