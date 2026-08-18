@@ -58,6 +58,8 @@ use Felkyo\Http\Controllers\AdoptionController;
 use Felkyo\Http\Controllers\BioController;
 use Felkyo\Http\Controllers\BrowseController;
 use Felkyo\Http\Controllers\CollectionController;
+use Felkyo\Http\Controllers\CommunityController;
+use Felkyo\Http\Controllers\CreatureRenameController;
 use Felkyo\Http\Controllers\CreatureController;
 use Felkyo\Http\Controllers\ExplorationController;
 use Felkyo\Http\Controllers\GuestbookController;
@@ -331,6 +333,11 @@ $petController = new PetController(
 $bioController = new BioController(
     $session, $csrf, $creatureRepository, $creatureBioService, $rateLimiter, $config['security']['rate_limit_bio']
 );
+$creatureRenameController = new CreatureRenameController(
+    $session, $csrf, $creatureRepository, new ContentFilter(), $userValidator, $rateLimiter,
+    $config['security']['rate_limit_bio'],
+    $config['gameplay']['creature_name_max_length']
+);
 $collectionController = new CollectionController(
     $templates, $session, $creatureRepository, $creatureProfileBuilder
 );
@@ -393,6 +400,12 @@ $reportController = new ReportController(
     $config['security']['rate_limit_report']
 );
 
+// The community page: browse creatures and find people from one tab interface.
+$communityController = new CommunityController(
+    $templates, $session, $creatureRepository, $creatureProfileBuilder, $profileRepository,
+    $avatarSet, $config['gameplay']['browse_recent_limit']
+);
+
 // Finding a player. Prefix matching only, a minimum length, a small result cap
 // and a rate limit — four separate answers to the same threat, which is somebody
 // scripting their way to a list of everybody here. There is deliberately no
@@ -419,6 +432,9 @@ $router->get('/', [$homeController, 'show']);
 
 // The public browse page — recent public creatures.
 $router->get('/browse', [$browseController, 'show']);
+
+// The community hub: browse creatures and find players from one place.
+$router->get('/community', [$communityController, 'show']);
 
 // Accounts.
 $router->get('/register', [$registerController, 'show']);
@@ -471,6 +487,8 @@ $router->get('/creature/{id}', [$creatureController, 'show']);
 $router->post('/creature/{id}/pet', [$petController, 'pet']);
 // Saving a creature's bio (owner only).
 $router->post('/creature/{id}/bio', [$bioController, 'update']);
+// Renaming a creature (owner only, rate-limited).
+$router->post('/creature/{id}/rename', [$creatureRenameController, 'update']);
 // Signing a creature's guestbook (any logged-in visitor, one entry each).
 $router->post('/creature/{id}/guestbook', [$guestbookController, 'sign']);
 // Removing a guestbook entry — only the creature's OWNER may do this.

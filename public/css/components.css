@@ -371,5 +371,35 @@ button.tile:hover {
     display: block;
 }
 
+/* Password field with show/hide toggle.
+   The wrapper aligns the password input and the checkbox side-by-side.
+   The checkbox is hidden; only its label is visible. */
+.field__password-wrapper {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.field__password-wrapper .field__input {
+    flex: 1;
+}
+
+.field__show-password {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    user-select: none;
+    white-space: nowrap;
+}
+
+.field__show-password-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
 /* The creature page's own layout lives in its own file (creature.css) to keep
    this components file focused and under its size limit. */

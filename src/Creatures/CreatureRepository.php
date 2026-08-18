@@ -136,6 +136,25 @@ final class CreatureRepository
     }
 
     /**
+     * Rename a creature (change its player-chosen name).
+     *
+     * Same ownership protection as updateBio: the owner_id must match, or nothing changes.
+     * This prevents name changes on creatures the player doesn't own, even if a check
+     * elsewhere is removed or bypassed.
+     */
+    public function updateName(int $creatureId, int $editorUserId, string $name): void
+    {
+        $statement = $this->connection->prepare(
+            'UPDATE creatures SET name = :name WHERE id = :id AND owner_id = :editor_user_id'
+        );
+        $statement->execute([
+            ':name' => $name,
+            ':id' => $creatureId,
+            ':editor_user_id' => $editorUserId,
+        ]);
+    }
+
+    /**
      * Apply the effects of one pet to a creature: add to its happiness and XP, and
      * stamp when it was last interacted with. Doing the additions in the database
      * (happiness = happiness + :amount) is safe even if two pets land at once.

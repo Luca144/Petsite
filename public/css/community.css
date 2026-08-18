@@ -1,0 +1,74 @@
+/* Community page: browse creatures and find people
+   ---
+   Layout: tab navigation, then tab content below.
+   On mobile: tabs stack, each full-width.
+   On desktop: tabs side-by-side, content adjusts per tab.
+*/
+
+.community__header {
+    margin-bottom: 1.5rem;
+}
+
+.community__tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.community__tab {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background-color: var(--panel);
+    color: var(--ink);
+    text-decoration: none;
+    border-radius: 0.5rem;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 150ms ease;
+}
+
+.community__tab:hover {
+    background-color: var(--parchment);
+    border-color: var(--gold);
+}
+
+.community__tab--active {
+    background-color: var(--parchment);
+    border-color: var(--purple);
+    font-weight: 600;
+}
+
+.community__tab:focus-visible {
+    outline: 3px solid var(--purple);
+    outline-offset: 2px;
+}
+
+.community__panel {
+    animation: fadeIn 150ms ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile: ensure tabs are readable and tappable */
+@media (max-width: 599px) {
+    .community__tabs {
+        gap: 0.25rem;
+    }
+
+    .community__tab {
+        flex: 1;
+        text-align: center;
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+}

@@ -335,11 +335,13 @@
 
 .item-card__qty {
     margin-left: auto;
+    padding-left: var(--space-4); /* Space between name and quantity */
     align-self: flex-start;
     font-family: var(--font-mono);
     font-size: 0.8rem;
     font-weight: 700;
     color: var(--ink);
+    flex: 0 0 auto;
 }
 
 /* The inline SVG sprite that holds the category drawings. It defines symbols and

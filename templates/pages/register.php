@@ -40,8 +40,14 @@ $this->layout('layout', ['title' => 'Create an account — Felkyo Creatures']);
 
         <div class="field">
             <label class="field__label" for="password">Password</label>
-            <input class="field__input" type="password" id="password" name="password"
-                   autocomplete="new-password" minlength="8" maxlength="72" required>
+            <div class="field__password-wrapper">
+                <input class="field__input" type="password" id="password" name="password"
+                       autocomplete="new-password" minlength="8" maxlength="72" required>
+                <label class="field__show-password">
+                    <input type="checkbox" class="field__show-password-checkbox" id="show-password">
+                    <span>Show</span>
+                </label>
+            </div>
             <span class="field__hint">At least 8 characters</span>
         </div>
 

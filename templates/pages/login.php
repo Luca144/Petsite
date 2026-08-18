@@ -29,8 +29,14 @@ $this->layout('layout', ['title' => 'Log in — Felkyo Creatures']);
 
         <div class="field">
             <label class="field__label" for="password">Password</label>
-            <input class="field__input" type="password" id="password" name="password"
-                   autocomplete="current-password" required>
+            <div class="field__password-wrapper">
+                <input class="field__input" type="password" id="password" name="password"
+                       autocomplete="current-password" required>
+                <label class="field__show-password">
+                    <input type="checkbox" class="field__show-password-checkbox" id="show-password">
+                    <span>Show</span>
+                </label>
+            </div>
         </div>
 
         <button class="btn btn--primary" type="submit">Log in</button>

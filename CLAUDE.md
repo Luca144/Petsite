@@ -2,7 +2,7 @@
 
 This file is read by Claude Code at the start of every session. **Everything in this file is a rule, not a suggestion.** If a task would require breaking a rule, stop and ask first — do not break the rule silently.
 
-The team is small and mostly composed of coding newcomers (the Product Owner is an artist; the Lead Developer is learning as she goes). The #1 priority is **code that humans can read and understand**. Performance, cleverness, and brevity all come second to clarity. This is not negotiable.
+The team is small and mostly composed of coding newcomers (the Product Owner is an artist; the Lead Developer is learning as she goes). The #1 priority is **code that is readable AND performant**. Readability and smart architecture are co-equal: code must be understandable so it can be maintained, *and* it must be well-structured so it can run efficiently. If you must choose, break the choice by asking: "Does this make the code significantly slower or unmaintainably complex?" If no to both, readability wins. If yes to either, find the balance.
 
 ---
 
@@ -45,14 +45,38 @@ $hash = hash('sha256', $userId . $petName);
 
 ---
 
-## 3. File size and structure
+## 3. Planning and performance architecture
 
-Long files are hard to navigate and hard to understand. Rules:
+Every increment deserves upfront thinking about structure. Before writing code, Claude should:
 
-- **PHP class files: max 300 lines.** If you're approaching this, the class is doing too much. Split it.
+1. **Think about the data flow.** How much data moves where? Are there N+1 queries hiding? Could a JOIN solve this? Could caching help? Write this down (in your thinking, not the code).
+
+2. **Structure for maintainability first, then optimization.** The repository pattern, the service layer, the separation of concerns — these exist to make the code survivable *and* to make performance problems obvious when they arrive. Well-layered code is easier to optimize later than tangled code.
+
+3. **Optimize where it genuinely matters.** NOT "every line must be optimal" — that way lies unreadable code and premature complexity. Instead: 
+   - Database queries (the biggest bottleneck): always think about indexes, JOIN strategy, what columns are fetched
+   - Hot paths (code that runs per request, per creature, per click): worth a second thought
+   - External APIs (every call is slow): cache, batch, or restructure to avoid them
+   - Asset loading (CSS, JS, images): minimize and serve efficiently
+   
+   But NOT: whether a loop or a functional pipeline is 0.001ms faster. Not: whether a local variable gets garbage-collected sooner. Those are noise.
+
+4. **Name the performance goal.** If an optimization changes the code, ask: "What would break if I removed this? Would the feature be unusable, or just 2ms slower?" If it's the latter, plain code wins. If it's the former (e.g., "without this JOIN we'd load 1000 extra queries"), comment it clearly and keep it.
+
+5. **When you plan a substantial feature, say how it scales.** "This works for 100 creatures per player. If it needs to scale to 10,000, we'd need [caching/pagination/denormalization]." Don't build for 10,000 today, but don't surprise people later either.
+
+---
+
+## 4. File size and structure
+
+Long files are hard to navigate and hard to understand. These limits exist to force you to think about what each file is responsible for. Rules:
+
+- **PHP class files: max 300 lines** (flexible if a single, well-named responsibility genuinely needs more). If you're approaching this, the class is probably doing too much. Split it.
 - **Template files: max 200 lines.** If a template is longer, extract partials.
 - **JavaScript files: max 250 lines.** Same rule.
 - **CSS files: max 400 lines.** CSS can get long naturally, but beyond 400 lines, split by concern (layout, components, themes).
+
+**When to break these limits:** if a single, focused class (e.g., a repository with 15 related query methods) would be split awkwardly into smaller files that share no other responsibility, it's okay to go over — but comment why it's one file and not two. This should be rare.
 
 When splitting:
 - **One class per file.** Always. No exceptions.
@@ -65,9 +89,9 @@ If you find yourself wanting to create a file called `Utils.php` or `Helpers.php
 
 ---
 
-## 4. Functions and methods
+## 5. Functions and methods
 
-- **Max 30 lines per function.** If longer, the function is doing too much. Extract.
+- **Max 30 lines per function** (flexible if it's a single clear algorithm, like a loop over many items or a complex calculation). If longer, the function is probably doing too much. Extract.
 - **Max 4 parameters per function.** If more are needed, pass an object or array with named keys.
 - **One level of abstraction per function.** A function that does both "validate the pet name" and "update the database" is mixing levels. Split.
 - **Function names describe what they do, not how.** `savePet()` not `insertIntoPetsTable()`. The latter leaks implementation detail.
@@ -75,7 +99,7 @@ If you find yourself wanting to create a file called `Utils.php` or `Helpers.php
 
 ---
 
-## 5. Database access
+## 6. Database access
 
 - **PDO only. Never `mysqli`. Never raw `mysql_*` functions.**
 - **Prepared statements for every query with variable data. No exceptions.** String concatenation into SQL is a SQL injection waiting to happen.
@@ -83,10 +107,11 @@ If you find yourself wanting to create a file called `Utils.php` or `Helpers.php
 - **Every query has a comment explaining what it fetches and why.** Newcomers reading repository code should understand the intent without having to read the SQL.
 - **Schema changes go through Phinx migrations.** Never edit the schema by hand on any environment.
 - **Never `SELECT *`.** Always list the columns you actually need. This keeps contracts explicit and prevents accidental data leaks.
+- **Think about indexes.** For every `WHERE` clause on a frequently-queried column (creature_id, owner_id, category), there should be an index. Indexes live in migrations, not somewhere to figure out later. Mention in a comment if a query would benefit from an index that doesn't exist yet.
 
 ---
 
-## 6. Security defaults
+## 7. Security defaults
 
 These are baked into the project conventions. Breaking any of them is a bug, not a tradeoff.
 
@@ -122,7 +147,7 @@ If any of the three can't be answered, the increment isn't planned yet. Stop and
 
 ---
 
-## 7. Testing — part of the definition of done
+## 8. Testing — part of the definition of done
 
 A feature is not done until it has tests. "Works on my machine" is not done.
 
@@ -152,7 +177,7 @@ If you're writing code and can't figure out how to test it, that is a signal the
 
 ---
 
-## 8. UI rules — locked by project philosophy
+## 9. UI rules — locked by project philosophy
 
 These come from the Product Owner and are non-negotiable:
 
@@ -201,7 +226,7 @@ These sit above the detailed rules below. When a decision is unclear, decide by 
 10. **Never punish absence, never demand speed.** No mechanic penalises being away, and nothing requires fast reactions or precise clicking.
 11. **When in doubt, gentler.** Between the demanding option and the kind one, this site always picks the kind one.
 
-A screen that satisfies every technical rule below but fails these is not finished.
+A screen that satisfies every technical rule below but fails these is not finished. And build the whole thing to load quickly and run smoothly — a site that's beautiful but slow is not finished either.
 
 ### Accessibility — required, not optional
 
@@ -217,7 +242,7 @@ The site must be usable by people with disabilities. These are hard requirements
 
 ---
 
-## 9. When to ask, when to proceed
+## 10. When to ask, when to proceed
 
 **Proceed without asking when:**
 - The task is unambiguous and matches an existing pattern in the codebase
@@ -237,7 +262,7 @@ The site must be usable by people with disabilities. These are hard requirements
 
 ---
 
-## 10. Naming conventions
+## 11. Naming conventions
 
 - **Classes:** `PascalCase`. `PetRepository`, not `pet_repository`.
 - **Methods and properties:** `camelCase`. `findById()`, not `find_by_id()`.
@@ -252,7 +277,7 @@ No `$x`, `$tmp`, `$data`, `$result` unless the scope is genuinely two lines. Giv
 
 ---
 
-## 11. Dependencies — add sparingly
+## 12. Dependencies — add sparingly
 
 Every Composer package or frontend library added to the project is a commitment. Ask before adding one.
 
@@ -266,7 +291,7 @@ When in doubt, write the small amount of code ourselves rather than pulling a pa
 
 ---
 
-## 12. Git and commits
+## 13. Git and commits
 
 - **Small, focused commits.** One logical change per commit.
 - **Commit messages follow the pattern: `<type>: <short summary>`** where type is one of `feat`, `fix`, `test`, `refactor`, `docs`, `chore`.
@@ -276,12 +301,12 @@ When in doubt, write the small amount of code ourselves rather than pulling a pa
 
 ---
 
-## 13. When you're about to finish a task, check
+## 14. When you're about to finish a task, check
 
 Before considering a task done, run through this checklist:
 
 - [ ] All new functions and methods have educational comments
-- [ ] No file exceeds its line limit (300 PHP class / 200 template / 250 JS / 400 CSS)
+- [ ] No file exceeds its line limit (flexible if justified; see rule 4)
 - [ ] Tests are written for new code and they pass locally
 - [ ] `php bin/smoke-test.php` passes — the site was actually opened and used, not just unit-tested
 - [ ] CSRF tokens are present on new forms
@@ -290,12 +315,14 @@ Before considering a task done, run through this checklist:
 - [ ] No dropdown menus were added
 - [ ] Documentation has been updated to reflect the change
 - [ ] Commit message is clear and follows the pattern
+- [ ] **Performance:** Database queries are indexed where appropriate; N+1 problems avoided; hot paths are efficient
+- [ ] **Architecture:** The code structure makes sense and doesn't hide performance issues or future scaling problems
 
 If any are missing, the task is not done. Go back and finish it before moving on.
 
 ---
 
-## 14. When rules conflict with what you're being asked
+## 15. When rules conflict with what you're being asked
 
 If a human in the loop asks you to do something that contradicts this file — for example, "just quickly add it as a dropdown for now, we'll fix it later" — **stop and flag the conflict**. Do not silently comply. The rules in this file were put here on purpose, and "we'll fix it later" is how codebases decay.
 

@@ -19,19 +19,27 @@
    instance) still have to work, so it is defaulted once here. */
 $currentPath = $currentPath ?? '';
 
-/* The destinations. Guests can only look around — everything else asks them
-   to come in first, and the sidebar offers the door (log in / sign up). */
+/* The destinations. On mobile: just 3 core buttons (shop, explore, myself).
+   On desktop: those 3 plus community (which contains browse creatures & find people).
+   Guests can only look around — everything else asks them to come in first,
+   and the sidebar offers the door (log in / sign up).
+
+   The "myself" link points to the player's profile page when logged in, or
+   to the login page when logged out. */
+$profileLink = !empty($currentUser) ? '/profile/edit' : '/login';
+
 if (!empty($currentUser)) {
+    // Logged-in players: core navigation + community
     $worldLinks = [
         ['/shop', 'shop'],
         ['/explore', 'explore'],
-        ['/adopt', 'adopt'],
-        ['/browse', 'browse creatures'],
-        ['/players', 'find people'],
+        ['/community', 'community'],
     ];
 } else {
+    // Guests: can only shop, explore, and log in
     $worldLinks = [
-        ['/browse', 'browse creatures'],
+        ['/shop', 'shop'],
+        ['/explore', 'explore'],
     ];
 }
 
@@ -51,5 +59,10 @@ $isCurrent = static function (string $href) use ($currentPath): bool {
                 </a>
             </li>
         <?php endforeach; ?>
+        <li>
+            <a href="<?= $this->e($profileLink) ?>"<?= $isCurrent($profileLink) ? ' aria-current="page"' : '' ?>>
+                myself
+            </a>
+        </li>
     </ul>
 </nav>

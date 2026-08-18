@@ -73,7 +73,7 @@
  * pill among the others; on desktop it grows into the framed portrait box.
  */
 .site-side__portrait {
-    display: inline-flex;
+    display: none; /* Hidden on mobile, shown on desktop */
     align-items: center;
     gap: var(--space-2);
     min-height: 44px;
@@ -221,6 +221,7 @@
 
     /* The portrait grows from a pill into the framed box of the mockup. */
     .site-side__portrait {
+        display: inline-flex; /* Show on desktop (hidden on mobile) */
         flex-direction: column;
         gap: var(--space-1);
         padding: var(--space-2);

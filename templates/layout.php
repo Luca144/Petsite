@@ -59,6 +59,7 @@ use Felkyo\Http\AssetUrl;
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/profile.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/social.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/guestbook.css') ?>">
+    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/community.css') ?>">
 </head>
 <body>
     <!-- Keyboard users can jump straight to the content with this link. -->
@@ -153,5 +154,9 @@ use Felkyo\Http\AssetUrl;
             </footer>
         </div>
     </div>
+
+    <!-- Scripts: enhancements that make the site nicer but not required -->
+    <script src="<?= AssetUrl::versioned('/js/password-toggle.js') ?>"></script>
+    <script src="<?= AssetUrl::versioned('/js/item-finder.js') ?>"></script>
 </body>
 </html>
