@@ -45,8 +45,8 @@ time directly on the user because there is exactly one of each per user.
 | `username` | varchar(30), unique, NOT NULL | Login/display name. |
 | `email` | varchar(255), unique, NOT NULL | Account identity (no email is sent in the demo). |
 | `password_hash` | varchar(255), NOT NULL | From `password_hash()` — never plain text. |
-| `currency_balance` | int unsigned, NOT NULL, default 0 | The single in-game currency. |
-| `last_adopted_at` | datetime, NULL | Powers the once-per-day adoption limit (B.4). |
+| `currency_balance` | int unsigned, NOT NULL, default 0 | The single in-game currency (gems). Earned by petting **other people's** creatures, spent on treats and new creatures. |
+| `last_adopted_at` | datetime, NULL | Unused since M2. Powered the once-per-day adoption limit, which was retired when creatures moved into the shop. Left in place rather than dropped: it is harmless, and a column removal is not worth a migration nobody needs. |
 | `last_login_at` | datetime, NULL | When they last logged in. |
 | `created_at` | timestamp, NOT NULL | Set on creation. |
 
@@ -62,7 +62,8 @@ convention `public/assets/creatures/{slug}/{stage}.gif` (e.g. `.../mossling/baby
 | `name` | varchar(60), NOT NULL | Display name. |
 | `flavour_text` | text, NULL | Optional description (used from C.2). |
 | `is_starter` | boolean, NOT NULL, default false | Can be a new player's starter (A.2). |
-| `is_adoptable` | boolean, NOT NULL, default true | Can appear in adoption/exploration pools (B.4, B.5). |
+| `is_adoptable` | boolean, NOT NULL, default true | Can a player come to own one? Since M2 this decides what the shop sells and what exploring can turn up. |
+| `gem_price` | int unsigned, NOT NULL, default 0 | What one costs in the shop (M2). There is deliberately **no `shop_creatures` table**: there is one place to get a creature and a species has one price, so a join table would model many-shops-many-species, which this site does not have. |
 | `created_at` | timestamp, NOT NULL | |
 
 ### `creatures` — the animals players collect
@@ -77,7 +78,21 @@ using thresholds in config (B.2). This keeps a single source of truth.
 | `species_id` | int unsigned, NOT NULL, FK → `species.id` (RESTRICT) | Which kind. |
 | `name` | varchar(40), NOT NULL | The owner's chosen name. |
 | `xp` | int unsigned, NOT NULL, default 0 | Growth's single source of truth. |
-| `happiness` | int unsigned, NOT NULL, default 0 | Interaction stat; a simple counter (no decay). |
+| `happiness` | int unsigned, NOT NULL, default 80 | 0–100. How happy the creature was **at `happiness_at`** — not necessarily now. Rises when petted or fed; fades with time down to `gameplay.mood.happiness_floor` and no further. |
+| `happiness_at` | timestamp, NULL | When `happiness` was last set. |
+| `energy` | int unsigned, NOT NULL, default 100 | 0–100. How rested the creature was **at `energy_at`**. Spent by interacting, recovers on its own. Never blocks anything. |
+| `energy_at` | timestamp, NULL | When `energy` was last set. |
+
+**Moods are derived, like growth.** The two readings are values plus the moment
+each was true; `MoodCalculator` works out the current figure on read. Nothing runs
+on a schedule to decay them — a scheduled job that failed would silently freeze
+every creature in the game. `CreatureRepository` asks the **database** for the
+elapsed time (`TIMESTAMPDIFF`) so the clock that wrote the timestamp is the clock
+that measures the gap.
+
+Before M2, `happiness` was an unbounded tally of pets. That count was never lost:
+"times petted" has always been answered from the `pettings` table, which is where
+the question belongs.
 | `bio` | text, NULL | Owner-written bio (C.1). |
 | `is_public` | boolean, NOT NULL, default true | Whether logged-out visitors can see it (B.6). |
 | `last_interacted_at` | datetime, NULL | Last petted; drives the cooldown. |
@@ -146,10 +161,17 @@ Defines what an item *is*. Ownership and sale are separate tables.
 | `description` | text, NULL | Optional. |
 | `price` | int unsigned, NOT NULL, default 0 | Cost in the in-game currency. |
 | `sell_value` | int unsigned, NOT NULL, default 0 | What a player gets back for selling one. **Must never exceed `price` for an item a shop offers** — otherwise buy-and-sell is a money loop. 0 means "not sellable" (M1.1). |
+| `happiness_bonus` | int unsigned, NOT NULL, default 0 | How much happier a creature is for eating this (M2). |
+| `energy_bonus` | int unsigned, NOT NULL, default 0 | How much more rested a creature is for eating this (M2). |
 | `category_id` | int unsigned, NOT NULL, FK → `item_categories.id` (RESTRICT) | What kind of thing it is. Replaced the old free-text `type` column in M1.2, so there is one answer rather than whatever somebody happened to type. |
 | `created_at` | timestamp, NOT NULL | |
 
 Indexes: unique `slug`, plus the automatic index on the category foreign key.
+
+**What makes something food.** An item is a treat if either bonus above is above
+zero — there is deliberately no `is_treat` column, because a flag could disagree
+with the effects and then somebody would have to think about which one was right.
+`Item::isTreat()` asks the numbers.
 
 **The two numbers.** `price` is what a shop charges; `sell_value` is what a player
 gets back. They are separate on purpose, and a shop must always keep a margin

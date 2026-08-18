@@ -120,67 +120,28 @@ $createdLabel = $creature->createdAt !== null
         <?php endif; ?>
 
         <?php if (!empty($isOwner)): ?>
-            <?php /* The star, right beside the creature it is about. Favourites
-                     used to be chosen only from the profile settings page, out of
-                     a list of names — so saying "this one" meant leaving the thing
-                     you were pointing at. It matters more now: the favourite is
-                     the creature on the keepsake card, which is on every page. */ ?>
+            <?php /* The two things only an owner can do here.
+
+                     THE STAR sits right beside the creature it is about.
+                     Favourites used to be chosen only from the profile settings
+                     page, out of a list of names — so saying "this one" meant
+                     leaving the thing you were pointing at. It matters more now:
+                     the favourite is the creature on the keepsake card, which
+                     appears on every page.
+
+                     FEEDING is in its own partial because it is the longest thing
+                     on this page and it is also used nowhere else — extracting it
+                     kept this template under its 200-line limit without pretending
+                     the two are related. */ ?>
             <?= $this->insert('partials/favourite-star', [
                 'creature' => $creature,
                 'from' => 'creature',
             ]) ?>
-        <?php endif; ?>
 
-        <?php if (!empty($isOwner)): ?>
-            <?php /* Feeding is for the creature's OWNER — you look after your own.
-                     Radio cards rather than a dropdown (CLAUDE.md section 8), and
-                     each one says what it does, because "which treat" is only an
-                     interesting choice if you can see the difference. */ ?>
-            <?php if (!empty($treats)): ?>
-                <form class="creature__feed" method="post"
-                      action="/creature/<?= $this->e((string) $creature->id) ?>/feed">
-                    <?= $this->csrf_field() ?>
-                    <fieldset class="creature__treats">
-                        <legend class="field__label">Give <?= $this->e($creature->name) ?> a treat</legend>
-                        <?php foreach ($treats as $index => $stack): ?>
-                            <label class="creature__treat">
-                                <input type="radio" name="item_id"
-                                       value="<?= $this->e((string) $stack->item->id) ?>"
-                                       <?= $index === 0 ? 'checked' : '' ?>>
-                                <span class="creature__treat-body">
-                                    <span class="creature__treat-name">
-                                        <?= $this->e($stack->item->name) ?>
-                                        <span aria-hidden="true">&times;<?= $this->e((string) $stack->quantity) ?></span>
-                                        <span class="visually-hidden">, <?= $this->e((string) $stack->quantity) ?> owned</span>
-                                    </span>
-                                    <?php /* What it actually does, in words. Both
-                                             numbers are shown when both apply, so
-                                             a restful treat is visibly a different
-                                             KIND of thing from a cheering one. */ ?>
-                                    <span class="creature__treat-effect">
-                                        <?php if ($stack->item->happinessBonus > 0): ?>
-                                            +<?= $this->e((string) $stack->item->happinessBonus) ?> happiness
-                                        <?php endif; ?>
-                                        <?php if ($stack->item->happinessBonus > 0 && $stack->item->energyBonus > 0): ?>
-                                            &middot;
-                                        <?php endif; ?>
-                                        <?php if ($stack->item->energyBonus > 0): ?>
-                                            +<?= $this->e((string) $stack->item->energyBonus) ?> energy
-                                        <?php endif; ?>
-                                    </span>
-                                </span>
-                            </label>
-                        <?php endforeach; ?>
-                    </fieldset>
-                    <button class="btn btn--secondary" type="submit">Feed</button>
-                </form>
-            <?php else: ?>
-                <p class="empty-state">
-                    You have no treats for <?= $this->e($creature->name) ?> just now.
-                    <a href="/shop">The village store</a> sells them, and they turn up
-                    while <a href="/explore">exploring</a>.
-                </p>
-            <?php endif; ?>
+            <?= $this->insert('partials/treat-chooser', [
+                'creature' => $creature,
+                'treats' => $treats ?? [],
+            ]) ?>
         <?php endif; ?>
     </div>
 </article>
@@ -205,32 +166,13 @@ $createdLabel = $creature->createdAt !== null
     <?php endif; ?>
 
     <?php if (!empty($isOwner)): ?>
-        <!-- Only the owner sees this. It lets them write or change the bio. -->
-        <form method="post" action="/creature/<?= $this->e((string) $creature->id) ?>/bio" class="bio-form">
-            <?= $this->csrf_field() ?>
-            <label class="field__label" for="bio">Edit bio</label>
-            <textarea class="field__textarea" id="bio" name="bio" maxlength="500"
-                      placeholder="Tell everyone a little about <?= $this->e($creature->name) ?>…"><?= $this->e($creature->bio ?? '') ?></textarea>
-            <button class="btn btn--secondary" type="submit">Save bio</button>
-        </form>
-
-        <?php /* Renaming, in the same owner-only box as the bio because it is the
-                 same kind of act: changing the words attached to your creature.
-                 The field is pre-filled with the current name so the common case
-                 (a small change) is a small edit, not a retype from nothing. */ ?>
-        <form method="post" action="/creature/<?= $this->e((string) $creature->id) ?>/rename" class="bio-form">
-            <?= $this->csrf_field() ?>
-            <label class="field__label" for="creature-name">Rename <?= $this->e($creature->name) ?></label>
-            <input class="field__input" type="text" id="creature-name" name="name"
-                   value="<?= $this->e($creature->name) ?>"
-                   maxlength="<?= $this->e((string) $nameMaxLength) ?>"
-                   required
-                   aria-describedby="creature-name-hint">
-            <span class="field__hint" id="creature-name-hint">
-                Up to <?= $this->e((string) $nameMaxLength) ?> characters. You can change this whenever you like.
-            </span>
-            <button class="btn btn--secondary" type="submit">Save name</button>
-        </form>
+        <?php /* The name and the bio: the words this creature's owner chooses and
+                 everybody else reads. Their own partial because they are one
+                 thing, and because it keeps this page inside its size limit. */ ?>
+        <?= $this->insert('partials/creature-words', [
+            'creature' => $creature,
+            'nameMaxLength' => $nameMaxLength,
+        ]) ?>
     <?php endif; ?>
 </div>
 

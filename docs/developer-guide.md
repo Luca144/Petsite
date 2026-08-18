@@ -496,10 +496,16 @@ what you own, and one shop to spend in. Deliberately minimal — no trading, no
 player shops — but built data-driven so those are later extensions.
 
 **B.7 — Currency.** A single currency lives as `users.currency_balance`. When
-someone pets a creature they do **not** own, `PettingService` gives the **owner**
-`gameplay.currency.per_pet` coins (`UserRepository::addCurrency`). Petting your own
-creature earns nothing, and the **petting cooldown is what caps the earning** —
-there is no separate anti-farm code. The balance shows as a chip in the header.
+someone pets a creature they do **not** own, `PettingService` pays out
+`gameplay.currency.per_pet`. Petting your own creature earns nothing, and the
+petting cooldown limits how often any one creature can pay. The balance shows as
+a chip in the sidebar.
+
+> **Superseded by M2 — read that section before trusting this one.** The money is
+> now called **gems**, one per pet, and it goes to the **person doing the petting**
+> rather than to the creature's owner. There is also a daily cap, which B.7 did
+> not have. The paragraph above is left as the record of what B.7 built; the
+> current rules are in *M2 — the creature you keep* at the end of this guide.
 
 **B.8 — Inventory.** `inventory` links a user to an item with a quantity.
 `InventoryRepository::findForUser` joins to `items` and returns whole `Item`
@@ -1473,9 +1479,19 @@ parchment panels floating on that sky**:
   `partials/creature-card`, so a favourite looks the same everywhere).
 - **The main panel** holds *the world*: a small server clock, the painted
   banner (now the masthead on every screen size), the world bar
-  (`partials/site-nav.php` — shop · explore · adopt · browse creatures ·
-  find people, flat, no group labels needed at five), the page content, and
-  a footer with an honest old-web "Back to top" anchor.
+  (`partials/site-nav.php`), the page content, and a footer with an honest
+  old-web "Back to top" anchor.
+
+  **The world bar is now four pills — shop · explore · community · myself.**
+  It was five, and on a phone five wrapped into an untidy second row. Browsing
+  creatures and finding people were the same errand ("who else is here?"), so they
+  folded into `community` as two tabs; `adopt` is gone with daily adoption; and
+  `myself` leads to your own page, or to the log-in page when you are logged out.
+  Logged out, the bar reads explore · community · log in.
+
+  **A guest gets no sidebar at all.** It used to greet them with "hello,
+  traveller" and a log-in link, which on a phone put a login box above the banner
+  on every page before anybody had seen what the site was.
 
 **The phone view is the point.** The old phone masthead (a 208px square badge,
 helper line, purse, nine grouped pills) spent half a screen on chrome on every
@@ -1513,3 +1529,135 @@ panel), `sidebar.css` (sidebar), `site-nav.css` (world bar + creature moment).
 `tests/Unit/ArtAssetsTest.php` guards the banner and the background;
 `bin/smoke-test.php` walks every page and checks alt text, ids and heading
 order on the real HTML.
+
+---
+
+## M2 — The creature you keep
+
+**What it delivers:** a creature that has a mood, treats to give it, a card
+holding it on every page, and a shop that sells creatures for gems. Daily
+adoption is gone.
+
+Read `docs/plan/2026-08-18-m2-the-creature-you-keep.md` for *why* each piece is
+shaped the way it is — especially the argument about not punishing absence. This
+section is the map of *where* things are.
+
+### Moods
+
+A creature stores two readings and when each was taken:
+
+| Column | Meaning |
+| --- | --- |
+| `happiness` / `happiness_at` | 0–100, and when it was last set |
+| `energy` / `energy_at` | 0–100, and when it was last set |
+
+`MoodCalculator` turns a reading plus its age into how the creature feels **now**.
+Happiness falls `gameplay.mood.happiness_decay_per_day` and **stops at
+`happiness_floor`** — it never reaches zero, and a creature is never described as
+sad. Energy climbs back at `energy_recovery_per_hour` and never blocks anything.
+
+**Nothing runs on a schedule.** This is the same approach `GrowthCalculator` takes
+with XP: derive on read. A cron job that decayed every creature hourly would be a
+thing that fails quietly, freezing every creature in the game at whatever it felt
+like when the job died.
+
+The **elapsed time is measured by the database**, in the query that fetches the
+creature (`TIMESTAMPDIFF` in `CreatureRepository::COLUMNS`). Working it out in PHP
+would mean trusting the web server's clock and timezone to match the database's.
+
+`CreatureProfileBuilder` is the only thing that builds a `Mood` for display, so a
+card, a page and the sidebar can never disagree about one creature.
+
+### Writing a mood
+
+`CreatureRepository` has two write methods on purpose:
+
+- `saveMood()` — **absolute** values, and only safe under the row lock
+  (`lockForPetting`), because the new value depends on how much has faded.
+- `addExperience()` — **relative** (`xp = xp + n`), safe without a lock, because
+  XP only grows and has no ceiling.
+
+### Treats
+
+An item is food if eating it does something: `items.happiness_bonus` and
+`items.energy_bonus`. There is deliberately **no `is_treat` flag** — a flag could
+disagree with the effects. `Item::isTreat()` asks the numbers.
+
+`FeedingService` owns the rules; its docblock answers the three security
+questions. The one worth knowing: a treat cannot be fed twice, because the whole
+operation is a transaction that takes the creature's row first and then believes
+`InventoryRepository::removeOne()`'s return value.
+
+Treats also drop while exploring — the loot table gained an `item` type, naming
+things by **slug, never by id** (ids differ between a fresh install and a migrated
+one). `ItemRewardGranter` does the lookup; an unknown slug grants nothing and says
+something gentle rather than crashing the page.
+
+**New players are given three treats** with their starter creature
+(`StarterCreatureService`), so feeding is discoverable on the first minute instead
+of behind an errand.
+
+### The keepsake card
+
+`partials/keepsake.php`, styled by `keepsake.css`, inserted by the sidebar when
+the player has a favourite. Shows the creature, its mood in words, the two bars
+(`partials/mood-bars.php` + `mood.css`), a pet button and a treat chooser.
+
+It is shown **on phones too** — it used to be desktop-only, back when it was a
+picture and a link.
+
+Petting and feeding from the card return you where you were, via a **two-entry
+allow-list** in the controllers. Never a redirect target the browser sent.
+
+### The favourite star
+
+`partials/favourite-star.php` on a creature's page and under every collection
+card. `FavouriteController` → `ProfileService::toggleFavourite()`, which works out
+the new list and hands it to `saveFeatured()` — so the cap and the ownership
+filter stay in **one** place.
+
+It is a toggle rather than separate add/remove routes: the server reads the
+current state, so a stale page cannot remove a favourite somebody just added.
+
+### Buying creatures
+
+`species.gem_price` says what one costs; `is_adoptable` says whether it is for
+sale at all. **No `shop_creatures` table** — there is one place to get a creature
+and a species has one price, so a join table would model something this site does
+not have.
+
+`CreaturePurchaseService` is the only place gems leave the game (petting is the
+only place they enter). Both sides are transactions, and the payment goes through
+`UserRepository::deductCurrency()`, whose `UPDATE` carries its own affordability
+condition — so the check and the spend cannot come apart.
+
+The shop's creature section sits **above and outside** the item finder, so
+`item-finder.js` can never hide it.
+
+`/adopt` redirects to `/shop`. `AdoptionService`, `AdoptionController` and
+`pages/adopt.php` are deleted.
+
+### Files
+
+| Layer | Files |
+| --- | --- |
+| Mood | `Mood`, `MoodCalculator`, `CreatureRepository::saveMood/addExperience` |
+| Feeding | `FeedingService`, `FeedingResult`, `FeedController`, `InventoryRepository::findTreatsForUser` |
+| Buying | `CreaturePurchaseService`, `CreaturePurchaseResult`, `ShopController::buyCreature` |
+| Favourites | `FavouriteController`, `ProfileService::toggleFavourite` |
+| Loot | `ItemRewardGranter`, `ExplorationService::grantReward` |
+| Templates | `partials/keepsake.php`, `partials/mood-bars.php`, `partials/favourite-star.php` |
+| CSS | `mood.css`, `keepsake.css`, `creature-actions.css`, `creature-shop.css` |
+| Migrations | `…_add_creature_mood`, `…_add_treat_effects_to_items`, `…_price_species_for_the_shop` |
+| Tests | `MoodCalculatorTest`, `FeedingServiceTest`, `CreaturePurchaseServiceTest`, `FavouriteControllerTest` |
+
+### How to add a treat
+
+One row in `items` with a `happiness_bonus` and/or `energy_bonus`, a link in
+`shop_items` if a shop should sell it, and a drawing at
+`public/assets/items/{slug}.png`. To make it findable while exploring, add an
+`item` entry naming its slug to an area's `loot` in config. No code.
+
+### How to add a species to the shop
+
+Set its `is_adoptable` and `gem_price`. It appears in the shop, cheapest first.

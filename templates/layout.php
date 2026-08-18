@@ -52,6 +52,7 @@ use Felkyo\Http\AssetUrl;
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/sidebar.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/site-nav.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/components.css') ?>">
+    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/forms.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/creature.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/creature-actions.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/explore.css') ?>">
@@ -104,6 +105,24 @@ use Felkyo\Http\AssetUrl;
         ]) ?>
 
         <div class="site-main">
+            <?php if (!empty($creatureMoment)): ?>
+                <?php /* A creature chose this page to pop up on (a rare roll — see
+                         CreatureMoments).
+
+                         IT IS FIRST IN THE PANEL, above the clock and the banner,
+                         which is where the artist's mockup puts it. It used to sit
+                         inside <main>, below the whole header — so on a phone the
+                         creature said hello a scroll after you had arrived, which
+                         is not a greeting.
+
+                         From 900px up the stylesheet lifts it out of the flow and
+                         over the banner as the popup the mockup draws, so its
+                         position here only decides the phone layout and the order
+                         a screen reader reads it in. Both now match what a sighted
+                         phone user sees, which is the point. */ ?>
+                <?= $this->insert('partials/creature-moment', ['moment' => $creatureMoment]) ?>
+            <?php endif; ?>
+
             <?php /* The server clock — the classic petsite "server time" touch.
                      The server's own date(), nothing from the visitor, purely
                      decorative (the page works identically without reading it). */ ?>
@@ -138,13 +157,6 @@ use Felkyo\Http\AssetUrl;
 
             <!-- The page's own content is dropped in here. -->
             <main id="main">
-                <?php if (!empty($creatureMoment)): ?>
-                    <?php /* A creature chose this page to pop up on (a rare roll —
-                             see CreatureMoments). On a phone it sits here, above the
-                             content; from 900px up the stylesheet lifts it over the
-                             banner as the little popup the artist drew. */ ?>
-                    <?= $this->insert('partials/creature-moment', ['moment' => $creatureMoment]) ?>
-                <?php endif; ?>
                 <?= $this->section('content') ?>
             </main>
 

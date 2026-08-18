@@ -1,6 +1,39 @@
 # M2 — The creature you keep
 
-*Written 2026-08-18. The economy half is built; the tamagotchi half is planned.*
+*Written 2026-08-18. **Built 2026-08-18** — all four steps shipped. This document
+is now the record of what was decided and why; `docs/developer-guide.md` under
+"M2 — The creature you keep" is the map of where things live.*
+
+> **What actually shipped, against the plan below:**
+>
+> | Step | Planned | Built |
+> | --- | --- | --- |
+> | Economy | petter earns, 100/day cap, rename to gems | as planned |
+> | Creature stats | happiness + energy, derived not ticked | as planned |
+> | Keepsake card | mood, bars, pet + feed | as planned, **and on phones** |
+> | Treats | three, differing in kind | as planned, **plus a starter gift** |
+> | Shop creatures | species priced, adoption retired | as planned |
+>
+> **Three things changed during the build, all for reasons worth keeping:**
+>
+> 1. **New players are given three treats.** The plan did not notice that treats
+>    cost gems and gems come from petting *other people's* creatures — so a
+>    player's first minute would have been a feeding section explaining that they
+>    had nothing to feed with. A dead end on the first screen.
+> 2. **The favourite star was added** (Skerro asked, and M2 needed it): the
+>    keepsake card only exists once a favourite is chosen, and choosing one meant
+>    opening the profile settings page. A feature reached only through settings is
+>    one most people never find.
+> 3. **Exploring drops treats.** Without it the only way into the mood system was
+>    to buy your way in, and exploring returned nothing 85 times in 100.
+>
+> **One open question from below was answered by building it:** daily adoption is
+> gone rather than kept alongside buying. Two ways to get a creature would have
+> been worse than one.
+>
+> **Still open:** the two art questions at the bottom (a sleepy sprite, and
+> creatures preferring certain treats). Both are cheap to add and neither blocks
+> anything.
 
 M1 gave players a world to walk around. M2 is about giving them **one creature
 they actually care about**, and an economy where the way you earn is the same as
@@ -144,9 +177,16 @@ first would make the shop the only thing gems are for, which is a worse game.
 2. **Should a creature react to treats it "likes"?** Cheap to add (one column,
    one line of copy) and it is the difference between feeding a stat and feeding
    a character.
-3. **What happens to the daily adoption people already use?** Removing it takes
-   something away. Suggestion: it stays for a while and quietly retires once
-   buying works.
+3. ~~**What happens to the daily adoption people already use?**~~ **Answered:**
+   retired outright. Keeping it alongside buying would have meant two ways to get
+   a creature, which is worse than one — and the free route survives, because
+   exploring still turns one up. `/adopt` redirects to the shop rather than
+   404ing, so nobody's bookmark breaks.
+
+For the two questions still open: the site works and looks finished without
+either. A dozing creature currently reads as dozing through its words, its energy
+bar, and a slightly softened sprite — a real sleepy drawing would be nicer, not
+necessary.
 
 ---
 

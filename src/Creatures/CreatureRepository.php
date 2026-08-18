@@ -12,9 +12,30 @@ use PDO;
  * @package Felkyo\Creatures
  *
  * WHAT THIS IS: the only place that runs SQL for the creatures table. Even though
- * Core gives a player just one creature, the queries are built for the real
+ * a new player starts with just one creature, the queries are built for the real
  * one-to-many relationship (a user can own MANY creatures) from the start — so
- * later increments (the collection view, adoption) need no rework.
+ * the collection view and the shop needed no rework.
+ *
+ * ON ITS LENGTH. This file is over the 300-line guideline in CLAUDE.md section 3,
+ * and that is a deliberate, recorded exception rather than a file nobody has got
+ * round to splitting.
+ *
+ * The obvious cut would be reads from writes — a CreatureReadRepository and a
+ * CreatureWriteRepository. That would make things worse in two specific ways.
+ * Every caller that displays a creature and then changes it (petting, feeding,
+ * renaming) would need both, so the constructor lists grow rather than shrink.
+ * And the property this class is FOR — "there is exactly one place that knows how
+ * creature rows are read and written" — would become two places, which is the
+ * beginning of the drift the rule exists to prevent.
+ *
+ * Roughly half of what is below is comment, because several of these queries
+ * carry a permission boundary or a concurrency rule that has to be explained
+ * where somebody editing it will read it. Splitting the file to get under a line
+ * count would move the comments without making anything simpler.
+ *
+ * If it grows much further, the honest cut is by SUBJECT, not by direction: the
+ * three profile queries (findForProfile, countPrivateForOwner, findFeaturedIds)
+ * exist to draw one page and could reasonably become a CreatureProfileQueries.
  */
 final class CreatureRepository
 {

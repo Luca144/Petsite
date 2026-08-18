@@ -63,12 +63,20 @@ description of itself.
 
 **Already used here:** the `reports` table — one report per person per thing.
 
-**A known deviation, recorded honestly:** daily adoption currently uses a rolling
-cooldown (`users.last_adopted_at`) rather than a ledger. That is a different thing
-— "24 hours since you last adopted", not "once per calendar day" — and it is
-deliberate existing behaviour, not an oversight. When the first genuine
-once-per-calendar-day claim is built, it uses the ledger above; adoption is left
-alone unless somebody decides its behaviour should change.
+**A deviation that resolved itself:** daily adoption used a rolling cooldown
+(`users.last_adopted_at`) rather than a ledger, and this section used to record
+that as a known difference. M2 retired adoption entirely — creatures are bought
+with gems now — so the deviation is gone rather than fixed. There is currently no
+once-per-calendar-day claim anywhere in the codebase; the first one built uses the
+ledger above.
+
+**The nearest thing we do have** is the gem earning cap
+(`gameplay.currency.daily_cap`), and it is deliberately *not* a calendar day. It
+counts paid pets in a **rolling** 24 hours
+(`PettingRepository::countPaidPetsBy`), because a calendar cap resets at midnight
+in one timezone and hands somebody a double allowance at the boundary. Nothing
+about it needs to be "once per day" in the human sense — it is a ceiling on
+farming, not a daily ration.
 
 ---
 

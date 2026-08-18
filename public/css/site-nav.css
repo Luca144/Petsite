@@ -96,11 +96,13 @@
    lives in its alt text.
    --------------------------------------------------------------------------- */
 
+/* On a phone this is the FIRST thing in the panel, above the clock and banner
+   (the mockup's placement). The bottom margin separates it from the clock. */
 .creature-moment {
     display: flex;
     align-items: center;
     gap: var(--space-3);
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-4);
     text-decoration: none;
     color: var(--ink);
     /* Arrives gently. The resting state is fully visible, so the global
