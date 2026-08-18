@@ -11,7 +11,6 @@ use Felkyo\Http\Csrf;
 use Felkyo\Http\Request;
 use Felkyo\Http\Response;
 use Felkyo\Security\RateLimiter;
-use Felkyo\Users\UserValidator;
 
 /**
  * Renames a creature (the player-chosen name, like "Biscuit").
@@ -31,7 +30,6 @@ final class CreatureRenameController
         private Csrf $csrf,
         private CreatureRepository $creatures,
         private ContentFilter $filter,
-        private UserValidator $validator,
         private RateLimiter $rateLimiter,
         private array $rateLimitConfig,
         private int $maxNameLength,
@@ -84,11 +82,16 @@ final class CreatureRenameController
         }
         $this->rateLimiter->record('rename', $request->clientIp());
 
-        // Validate the new name (same rules as creation).
+        // Validate the new name: not empty, not too long.
         $newName = trim((string) $request->input('name'));
-        $error = $this->validator->nameError($newName, $this->maxNameLength);
-        if ($error !== null) {
-            $this->session->flash($error);
+        $length = mb_strlen($newName);
+
+        if ($length === 0) {
+            $this->session->flash('A creature needs a name.');
+            return Response::redirect($creaturePath);
+        }
+        if ($length > $this->maxNameLength) {
+            $this->session->flash("The name must be no more than {$this->maxNameLength} characters.");
             return Response::redirect($creaturePath);
         }
 

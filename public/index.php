@@ -334,9 +334,9 @@ $bioController = new BioController(
     $session, $csrf, $creatureRepository, $creatureBioService, $rateLimiter, $config['security']['rate_limit_bio']
 );
 $creatureRenameController = new CreatureRenameController(
-    $session, $csrf, $creatureRepository, new ContentFilter($config['moderation']['blocked_words']), $userValidator, $rateLimiter,
+    $session, $csrf, $creatureRepository, new ContentFilter($config['moderation']['blocked_words']), $rateLimiter,
     $config['security']['rate_limit_bio'],
-    $config['gameplay']['creature_name_max_length']
+    $config['gameplay']['bio_max_length']
 );
 $collectionController = new CollectionController(
     $templates, $session, $creatureRepository, $creatureProfileBuilder
