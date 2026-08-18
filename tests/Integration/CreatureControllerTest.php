@@ -10,6 +10,7 @@ use Felkyo\Creatures\CreatureRepository;
 use Felkyo\Creatures\GrowthCalculator;
 use Felkyo\Creatures\PettingRepository;
 use Felkyo\Creatures\SpeciesRepository;
+use Felkyo\Economy\InventoryRepository;
 use Felkyo\Guestbook\GuestbookMessages;
 use Felkyo\Guestbook\GuestbookPanel;
 use Felkyo\Guestbook\GuestbookRepository;
@@ -67,6 +68,7 @@ final class CreatureControllerTest extends DatabaseTestCase
 
         $controller = new CreatureController(
             $templates, $session, $creatures, $profileBuilder, $guestbookPanel,
+            new InventoryRepository($this->connection),
             $config['gameplay']['creature_name_max_length']
         );
 

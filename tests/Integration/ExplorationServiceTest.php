@@ -6,8 +6,10 @@ namespace Felkyo\Tests\Integration;
 
 use Felkyo\Creatures\CreatureRepository;
 use Felkyo\Creatures\SpeciesRepository;
+use Felkyo\Economy\InventoryRepository;
 use Felkyo\Exploration\ExplorationRepository;
 use Felkyo\Exploration\ExplorationService;
+use Felkyo\Exploration\ItemRewardGranter;
 use Felkyo\Exploration\WeightedPicker;
 use Felkyo\Tests\DatabaseTestCase;
 use Felkyo\Users\UserRepository;
@@ -42,6 +44,7 @@ final class ExplorationServiceTest extends DatabaseTestCase
             new WeightedPicker(),
             $this->creatures,
             new SpeciesRepository($this->connection),
+            new ItemRewardGranter($this->connection, new InventoryRepository($this->connection)),
             ['clicks_per_visit' => 3, 'window_seconds' => 3600, 'creature_names' => ['Pip']]
         );
 
@@ -65,6 +68,48 @@ final class ExplorationServiceTest extends DatabaseTestCase
         $this->assertFalse($result->isLimitReached());
         $this->assertNull($result->creature());
         $this->assertCount(0, $this->creatures->findByOwner($this->userId));
+    }
+
+    public function testAnItemRewardLandsInTheSatchel(): void
+    {
+        // Treats found while exploring are the FREE way into the mood system —
+        // nobody should have to buy their way into looking after a creature. So
+        // this proves the item really arrives, not merely that a message appears.
+        $area = ['loot' => [[
+            'type' => 'item',
+            'item' => 'honey-treat',
+            'weight' => 1,
+            'message' => 'Something sweet, wrapped in a leaf.',
+        ]]];
+
+        $result = $this->exploration->explore($this->userId, self::AREA_SLUG, $area);
+
+        $this->assertFalse($result->isLimitReached());
+        $this->assertStringContainsString('Honey Treat', $result->message());
+
+        $held = (new InventoryRepository($this->connection))->findForUser($this->userId);
+        $this->assertCount(1, $held);
+        $this->assertSame('honey-treat', $held[0]->item->slug);
+    }
+
+    public function testAnItemRewardNamingSomethingThatDoesNotExistFailsGently(): void
+    {
+        // A typo in an area's loot table is a CONTENT mistake, and content
+        // mistakes must not take down the page somebody is standing on. The click
+        // is still spent (it was being spent anyway), nothing is granted, and the
+        // player reads a sentence rather than an error.
+        $area = ['loot' => [[
+            'type' => 'item',
+            'item' => 'no-such-thing',
+            'weight' => 1,
+            'message' => 'You find something impossible.',
+        ]]];
+
+        $result = $this->exploration->explore($this->userId, self::AREA_SLUG, $area);
+
+        $this->assertFalse($result->isLimitReached());
+        $this->assertStringNotContainsString('impossible', $result->message());
+        $this->assertCount(0, (new InventoryRepository($this->connection))->findForUser($this->userId));
     }
 
     public function testTheClickLimitIsEnforced(): void

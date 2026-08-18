@@ -97,12 +97,21 @@ if (empty($currentUser)) {
         </form>
 
         <?php if (!empty($favouriteSummary)): ?>
-            <?php /* The keepsake: your favourite creature, in the same card the
-                     collection uses (gold edge, star, the word "favourite").
-                     Desktop-only by stylesheet — on a phone it would cost scroll
-                     height, and the same creature is one tap away on home. */ ?>
+            <?php /* The keepsake: your favourite creature, how it is feeling, and
+                     two things you can do about it without leaving the page.
+                     It used to be the plain collection card — a picture and a
+                     link, which is a shortcut rather than a companion. Now it is
+                     the creature itself, on every screen.
+
+                     SHOWN ON PHONES TOO (changed in M2). The card was
+                     desktop-only because it cost scroll height and only saved a
+                     tap. Now it is the feature, and a feature you can only reach
+                     on a laptop is not one most players have. */ ?>
             <div class="site-side__favourite">
-                <?= $this->insert('partials/creature-card', ['summary' => $favouriteSummary]) ?>
+                <?= $this->insert('partials/keepsake', [
+                    'summary' => $favouriteSummary,
+                    'treats' => $keepsakeTreats ?? [],
+                ]) ?>
             </div>
         <?php endif; ?>
 </aside>

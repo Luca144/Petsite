@@ -1,0 +1,180 @@
+/*
+ * keepsake.css — your favourite creature, on every page.
+ *
+ * WHAT THIS FILE IS: the little card in the sidebar holding one creature, how it
+ * feels, and the two things you can do to it without leaving the page. The bars
+ * inside it come from mood.css; this file is the frame, the portrait and the
+ * controls.
+ *
+ * THE CARD IS DELIBERATELY QUIET. It appears on every single screen, which means
+ * any noise it makes, it makes constantly — an animation here is not a nice touch,
+ * it is a thing that never stops. So: no ambient motion, no pulsing, no glow. The
+ * only thing that moves is the mood bar, and only when you have just changed it.
+ *
+ * Every colour comes from theme.css (CLAUDE.md §8).
+ */
+
+.keepsake {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    background: var(--parchment);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    /* A gold edge, the same signal the collection card uses for a favourite, so
+       "gold means this is the one you chose" stays one idea site-wide. */
+    box-shadow: inset 0 0 0 2px var(--gold-lit);
+    text-align: center;
+}
+
+.keepsake__heading {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+}
+
+.keepsake__portrait {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    text-decoration: none;
+    color: var(--plum);
+    border-radius: var(--radius-sm);
+}
+
+.keepsake__portrait:focus-visible {
+    outline: 3px solid var(--purple);
+    outline-offset: 3px;
+}
+
+.keepsake__img {
+    width: 96px;
+    height: 96px;
+    object-fit: contain;
+}
+
+/* A dozing creature is drawn a little softer — the picture says the same thing
+   the words above it do. Never the ONLY signal: the mood sentence says "having a
+   doze" in plain text, and the energy bar has its own written label. */
+.keepsake__img--resting {
+    opacity: 0.75;
+}
+
+.keepsake__name {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.keepsake__mood {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--ink);
+}
+
+/* The two everyday actions, side by side and equally weighted — neither is the
+   "main" one, because which matters depends on the creature. */
+.keepsake__actions {
+    display: flex;
+    gap: var(--space-2);
+    width: 100%;
+}
+
+.keepsake__actions > * {
+    flex: 1;
+}
+
+/* Smaller than a page button but still comfortably past the 44px tap target,
+   because these sit close together and a mis-tap here feeds the wrong thing. */
+.keepsake__btn {
+    width: 100%;
+    min-height: 44px;
+    padding: var(--space-2);
+    font-size: 0.85rem;
+}
+
+.keepsake__feed {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+/* Radio cards, never a dropdown (CLAUDE.md §8). With two or three treats a
+   dropdown would hide the choice behind a tap and gain nothing. */
+.keepsake__treats {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.keepsake__treats-legend {
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--ink-soft);
+}
+
+.keepsake__treat {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    padding: var(--space-1) var(--space-2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--panel);
+    cursor: pointer;
+    font-size: 0.8rem;
+    text-align: left;
+}
+
+/* The chosen treat is filled AND outlined, so the selection is a shape as well
+   as a colour. :has() lets the label react to its own radio; browsers without it
+   still show the radio dot itself, which is the fallback and is sufficient. */
+.keepsake__treat:has(input:checked) {
+    background: var(--parchment);
+    border-color: var(--purple);
+    box-shadow: inset 0 -3px 0 var(--gold-lit);
+}
+
+.keepsake__treat:has(input:focus-visible) {
+    outline: 3px solid var(--purple);
+    outline-offset: 2px;
+}
+
+.keepsake__treat-name {
+    flex: 1;
+}
+
+.keepsake__treat-count {
+    font-family: var(--font-mono);
+    color: var(--ink-soft);
+}
+
+/* An empty satchel says where treats come from rather than showing nothing —
+   golden rule 3, never a dead end. */
+.keepsake__no-treats {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+}
+
+/* On the wide layout the card is the bottom of a calm column, so it can breathe
+   a little more than it does in the phone strip. */
+@media (min-width: 900px) {
+    .keepsake {
+        gap: var(--space-3);
+        padding: var(--space-4);
+    }
+}

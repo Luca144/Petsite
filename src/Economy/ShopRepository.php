@@ -38,6 +38,7 @@ final class ShopRepository
      */
     private const ITEM_COLUMNS =
         'items.id, items.slug, items.name, items.description, items.price, items.sell_value,
+         items.happiness_bonus, items.energy_bonus,
          item_categories.id AS category_id,
          item_categories.slug AS category_slug,
          item_categories.name AS category_name,

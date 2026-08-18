@@ -31,6 +31,7 @@ use Felkyo\Creatures\CreatureBioService;
 use Felkyo\Creatures\CreatureMoments;
 use Felkyo\Creatures\CreatureProfileBuilder;
 use Felkyo\Creatures\CreatureRepository;
+use Felkyo\Creatures\FeedingService;
 use Felkyo\Creatures\GrowthCalculator;
 use Felkyo\Creatures\MoodCalculator;
 use Felkyo\Creatures\PettingRepository;
@@ -50,6 +51,7 @@ use Felkyo\Economy\PurchaseService;
 use Felkyo\Economy\ShopRepository;
 use Felkyo\Exploration\ExplorationRepository;
 use Felkyo\Exploration\ExplorationService;
+use Felkyo\Exploration\ItemRewardGranter;
 use Felkyo\Exploration\WeightedPicker;
 use Felkyo\Guestbook\GuestbookMessages;
 use Felkyo\Guestbook\GuestbookPanel;
@@ -63,6 +65,7 @@ use Felkyo\Http\Controllers\CommunityController;
 use Felkyo\Http\Controllers\CreatureRenameController;
 use Felkyo\Http\Controllers\CreatureController;
 use Felkyo\Http\Controllers\ExplorationController;
+use Felkyo\Http\Controllers\FeedController;
 use Felkyo\Http\Controllers\GuestbookController;
 use Felkyo\Http\Controllers\HomeController;
 use Felkyo\Http\Controllers\InventoryController;
@@ -180,7 +183,11 @@ $registrationService = new RegistrationService(
 $authenticator = new Authenticator($userRepository, $passwordHasher);
 $rateLimiter = new RateLimiter($rateLimitRepository);
 $starterCreatureService = new StarterCreatureService(
-    $speciesRepository, $creatureRepository, $config['gameplay']['creature_names']
+    $speciesRepository, $creatureRepository, $config['gameplay']['creature_names'],
+    // The last two give a new player a few treats along with their creature, so
+    // feeding is something they can try on their first minute rather than an
+    // errand they have to earn their way to. See the service for the reasoning.
+    $pdo, $inventoryRepository
 );
 $adoptionService = new AdoptionService(
     $speciesRepository,
@@ -248,6 +255,7 @@ $explorationService = new ExplorationService(
     new WeightedPicker(),
     $creatureRepository,
     $speciesRepository,
+    new ItemRewardGranter($pdo, $inventoryRepository),
     [
         'clicks_per_visit' => $config['gameplay']['exploration']['clicks_per_visit'],
         'window_seconds' => $config['gameplay']['exploration']['window_seconds'],
@@ -275,6 +283,8 @@ $creatureMoment = null;
 $favouriteSummary = null;
 $currentAvatarPath = null;
 $currentAvatarName = null;
+// The treats in the player's satchel, so the keepsake card can offer them.
+$keepsakeTreats = [];
 
 if ($currentUser !== null) {
     // One database trip for the player's creatures serves both displays below:
@@ -299,6 +309,13 @@ if ($currentUser !== null) {
         }
     }
 
+    // Only look up treats when there is a keepsake card to put them on. A player
+    // who has not chosen a favourite has nowhere to use them from here, so the
+    // query would be work nobody asked for on every single page.
+    if ($favouriteSummary !== null) {
+        $keepsakeTreats = $inventoryRepository->findTreatsForUser($currentUser->id);
+    }
+
     // The avatar: stored as a key, turned into a picture only by the AvatarSet
     // allow-list (see that class for why this is a safety boundary, not a lookup).
     $profileForSidebar = $profileRepository->findById($currentUser->id);
@@ -314,6 +331,7 @@ $templates->addData([
     'favouriteSummary' => $favouriteSummary,
     'currentAvatarPath' => $currentAvatarPath,
     'currentAvatarName' => $currentAvatarName,
+    'keepsakeTreats' => $keepsakeTreats,
     'currentPath' => $request->path(),
     // The label for the currency (e.g. "coins"), shown next to the balance.
     'currencyName' => $config['gameplay']['currency']['name'],
@@ -340,6 +358,7 @@ $loginController = new LoginController(
 $logoutController = new LogoutController($session, $csrf);
 $creatureController = new CreatureController(
     $templates, $session, $creatureRepository, $creatureProfileBuilder, $guestbookPanel,
+    $inventoryRepository,
     $config['gameplay']['creature_name_max_length']
 );
 $guestbookController = new GuestbookController(
@@ -355,6 +374,13 @@ $bioController = new BioController(
 // Renaming reuses the bio rate limit: both are "the owner changing words on their
 // own creature", they happen about as often, and one number is easier to retune
 // than two that mean the same thing.
+// Giving a creature a treat. The service owns every rule about who may feed what
+// (read its docblock); the controller only carries the request in and out.
+$feedController = new FeedController(
+    $session, $csrf, $creatureRepository,
+    new FeedingService($pdo, $creatureRepository, $inventoryRepository, $moodCalculator),
+    $rateLimiter, $config['security']['rate_limit_feed']
+);
 $creatureRenameController = new CreatureRenameController(
     $session, $csrf, $creatureRepository, new ContentFilter($config['moderation']['blocked_words']), $rateLimiter,
     $config['security']['rate_limit_bio'],
@@ -522,6 +548,8 @@ $router->post('/creature/{id}/pet', [$petController, 'pet']);
 $router->post('/creature/{id}/bio', [$bioController, 'update']);
 // Renaming a creature (owner only, rate-limited).
 $router->post('/creature/{id}/rename', [$creatureRenameController, 'update']);
+// Giving a creature a treat (owner only — you feed your own).
+$router->post('/creature/{id}/feed', [$feedController, 'feed']);
 // Signing a creature's guestbook (any logged-in visitor, one entry each).
 $router->post('/creature/{id}/guestbook', [$guestbookController, 'sign']);
 // Removing a guestbook entry — only the creature's OWNER may do this.

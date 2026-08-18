@@ -7,6 +7,7 @@ namespace Felkyo\Http\Controllers;
 use Felkyo\Auth\Session;
 use Felkyo\Creatures\CreatureProfileBuilder;
 use Felkyo\Creatures\CreatureRepository;
+use Felkyo\Economy\InventoryRepository;
 use Felkyo\Guestbook\GuestbookPanel;
 use Felkyo\Http\Request;
 use Felkyo\Http\Response;
@@ -30,6 +31,9 @@ final class CreatureController
         private CreatureRepository $creatures,
         private CreatureProfileBuilder $profileBuilder,
         private GuestbookPanel $guestbookPanel,
+        // The owner's treats, so the page can offer them. Looked up only for the
+        // owner — a visitor has nothing to feed this creature with.
+        private InventoryRepository $inventory,
         // The rename field needs the same limit the server enforces, so the box
         // stops you before a submission can fail. One number, from config.
         private int $nameMaxLength,
@@ -60,6 +64,11 @@ final class CreatureController
 
         $profile = $this->profileBuilder->buildFor($creature);
 
+        // Only the owner is offered the feed form, so only the owner's satchel is
+        // looked up. A visitor's treats have nothing to do with this page.
+        $isOwner = $this->viewerOwns($creature->ownerId);
+        $treats = $isOwner ? $this->inventory->findTreatsForUser($creature->ownerId) : [];
+
         // The guestbook needs to know who is looking, so it can show this visitor
         // their own entry as already selected. A guest passes null.
         $viewerId = $this->session->get('user_id');
@@ -80,9 +89,10 @@ final class CreatureController
             'mood' => $profile['mood'],
             // Any logged-in visitor may pet a creature they can see.
             'canPet' => $this->session->has('user_id'),
-            // Only the owner sees the "edit bio" and "rename" forms.
-            'isOwner' => $this->viewerOwns($creature->ownerId),
+            // Only the owner sees the "edit bio", "rename" and "feed" forms.
+            'isOwner' => $isOwner,
             'nameMaxLength' => $this->nameMaxLength,
+            'treats' => $treats,
             // Reporting needs somebody to report TO, so the control is offered
             // only to a logged-in visitor (the owner gets the edit form instead).
             'viewerIsLoggedIn' => is_int($this->session->get('user_id')),

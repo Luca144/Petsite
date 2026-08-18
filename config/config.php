@@ -211,6 +211,14 @@ return [
             'max_attempts' => 20,     // at most 20 bio edits...
             'window_seconds' => 3600, // ...per hour, per IP (anti-abuse)
         ],
+        'rate_limit_feed' => [
+            'max_attempts' => 120,    // at most 120 treats given...
+            'window_seconds' => 3600, // ...per hour, per IP. Generous on purpose:
+                                      // the real limit is that treats run out, and
+                                      // a player tidying up a full satchel should
+                                      // never be told to slow down. This is only
+                                      // here to stop a script hammering the route.
+        ],
         'rate_limit_guestbook' => [
             'max_attempts' => 20,     // at most 20 guestbook signings...
             'window_seconds' => 3600, // ...per hour, per IP (anti-abuse; the
@@ -355,10 +363,27 @@ return [
                         ['x' => 52, 'y' => 78],
                     ],
                     // Weighted rewards. Weights are relative and need not total 100.
-                    // "type" says what is granted: "nothing", or a new "creature".
-                    // (Currency and item rewards can be added here in later increments.)
+                    //
+                    // "type" says what is granted:
+                    //   nothing   — a message and no more.
+                    //   creature  — a new creature of a random adoptable species.
+                    //   item      — one of the item named by "item", which is its
+                    //               SLUG. Never an id: ids differ between a fresh
+                    //               install and a migrated one, and content must
+                    //               mean the same thing everywhere.
+                    //
+                    // WHY FINDING SOMETHING IS THE COMMON CASE NOW. Exploring used
+                    // to return nothing 85 times in 100, which is a long way to go
+                    // for a sentence about leaves. Treats give the click somewhere
+                    // to land, and they are the free way to look after a creature —
+                    // so nobody has to buy their way into the mood system. Coming
+                    // back empty-handed still happens; it is just no longer the
+                    // whole experience.
                     'loot' => [
-                        ['type' => 'nothing', 'weight' => 85, 'message' => 'Only leaves and a soft wind. Nothing this time.'],
+                        ['type' => 'nothing', 'weight' => 45, 'message' => 'Only leaves and a soft wind. Nothing this time.'],
+                        ['type' => 'item', 'item' => 'acorn-treat', 'weight' => 25, 'message' => 'A crunchy little acorn, tucked under a root.'],
+                        ['type' => 'item', 'item' => 'honey-treat', 'weight' => 10, 'message' => 'Something sweet, wrapped in a leaf.'],
+                        ['type' => 'item', 'item' => 'chamomile-bundle', 'weight' => 5, 'message' => 'A bundle of little dried flowers, still faintly scented.'],
                         ['type' => 'creature', 'weight' => 15, 'message' => 'Something small blinks in the undergrowth — a new creature follows you home!'],
                     ],
                 ],

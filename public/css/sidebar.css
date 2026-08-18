@@ -192,8 +192,16 @@
    exact scroll height this redesign gives back, and the same creature is one
    tap away on home. (Hidden visually AND from screen readers — it is a
    duplicate, not information anyone loses.) */
+/* The keepsake card. SHOWN ON PHONES TOO since M2 — it used to be hidden below
+   900px, back when it was a picture and a link and so only saved a tap. It is now
+   the creature itself with things to do to it, and a feature you can only reach
+   on a laptop is not one most players have.
+
+   It takes the full width of the phone strip and sits at the end of it, so the
+   pills above stay where they were and nothing important moved. */
 .site-side__favourite {
-    display: none;
+    width: 100%;
+    margin-top: var(--space-2);
 }
 
 /* ---------------------------------------------------------------------------
@@ -262,8 +270,8 @@
     }
 
     .site-side__favourite {
-        display: block;
         width: 100%;
-        max-width: 200px;
+        max-width: 220px;
+        margin-top: 0;
     }
 }

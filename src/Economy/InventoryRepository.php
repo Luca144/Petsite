@@ -35,6 +35,7 @@ final class InventoryRepository
      */
     private const ITEM_COLUMNS =
         'items.id, items.slug, items.name, items.description, items.price, items.sell_value,
+         items.happiness_bonus, items.energy_bonus,
          item_categories.id AS category_id,
          item_categories.slug AS category_slug,
          item_categories.name AS category_name,
@@ -72,6 +73,41 @@ final class InventoryRepository
         }
 
         return $owned;
+    }
+
+    /**
+     * The treats a user is carrying — the things a creature can actually eat.
+     *
+     * "A treat" is not a category or a flag: it is any item that DOES something
+     * when eaten, which is why the condition is on the effects themselves. Add a
+     * new food by giving an item a bonus, and it appears here with nothing else
+     * to remember. See Item::isTreat().
+     *
+     * Ordered strongest-first so the treat most worth giving is the easiest to
+     * reach, then by name so the order is stable rather than whatever the
+     * database felt like.
+     *
+     * @return array<int, OwnedItemStack>
+     */
+    public function findTreatsForUser(int $userId): array
+    {
+        $statement = $this->connection->prepare(
+            'SELECT ' . self::ITEM_COLUMNS . ', inventory.quantity
+               FROM inventory
+               JOIN items ON items.id = inventory.item_id
+               JOIN item_categories ON item_categories.id = items.category_id
+              WHERE inventory.user_id = :user_id
+                AND (items.happiness_bonus > 0 OR items.energy_bonus > 0)
+              ORDER BY items.happiness_bonus + items.energy_bonus DESC, items.name'
+        );
+        $statement->execute([':user_id' => $userId]);
+
+        $treats = [];
+        foreach ($statement->fetchAll() as $row) {
+            $treats[] = new OwnedItemStack(Item::fromRow($row), (int) $row['quantity']);
+        }
+
+        return $treats;
     }
 
     /**

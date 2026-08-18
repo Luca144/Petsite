@@ -7,8 +7,10 @@ namespace Felkyo\Tests\Integration;
 use Felkyo\Auth\Session;
 use Felkyo\Creatures\CreatureRepository;
 use Felkyo\Creatures\SpeciesRepository;
+use Felkyo\Economy\InventoryRepository;
 use Felkyo\Exploration\ExplorationRepository;
 use Felkyo\Exploration\ExplorationService;
+use Felkyo\Exploration\ItemRewardGranter;
 use Felkyo\Exploration\WeightedPicker;
 use Felkyo\Http\Controllers\ExplorationController;
 use Felkyo\Http\Csrf;
@@ -55,6 +57,7 @@ final class ExplorationControllerTest extends DatabaseTestCase
             new WeightedPicker(),
             new CreatureRepository($this->connection),
             new SpeciesRepository($this->connection),
+            new ItemRewardGranter($this->connection, new InventoryRepository($this->connection)),
             ['clicks_per_visit' => 2, 'window_seconds' => 3600, 'creature_names' => ['Pip']]
         );
         $rateLimiter = new RateLimiter(new RateLimitRepository($this->connection));

@@ -35,6 +35,10 @@ final class Item
         public readonly int $price,
         public readonly int $sellValue,
         public readonly ItemCategory $category,
+        /** How much happier a creature is for eating this. 0 means it is not food. */
+        public readonly int $happinessBonus = 0,
+        /** How much more rested a creature is for eating this. */
+        public readonly int $energyBonus = 0,
     ) {
     }
 
@@ -63,7 +67,22 @@ final class Item
                 $row['category_icon_key'],
                 (int) $row['category_sort_order'],
             ),
+            (int) ($row['happiness_bonus'] ?? 0),
+            (int) ($row['energy_bonus'] ?? 0),
         );
+    }
+
+    /**
+     * Can a creature eat this?
+     *
+     * There is no "is a treat" column, and there should not be: what makes
+     * something food is that eating it does something. An item whose effects are
+     * both zero simply is not food, and there is no way for a flag to disagree
+     * with the effects because there is no flag.
+     */
+    public function isTreat(): bool
+    {
+        return $this->happinessBonus > 0 || $this->energyBonus > 0;
     }
 
     /**

@@ -313,6 +313,107 @@ if ($creaturePath !== null) {
         'name' => '   ',
     ]);
     check('an empty name is refused', str_contains(request($creaturePath)['body'], 'Smoketest'));
+
+    // -----------------------------------------------------------------------
+    // Moods, treats and the keepsake card
+    //
+    // The heart of M2, and the part a unit test cannot vouch for: whether the
+    // buttons a player would actually press are on the page, and whether
+    // pressing them changes what the page then says.
+    // -----------------------------------------------------------------------
+
+    echo "\nMoods and treats:\n";
+
+    check(
+        'the creature page says how the creature feels, in words',
+        str_contains(request($creaturePath)['body'], 'Smoketest is ')
+    );
+    check(
+        'the creature page draws the mood bars',
+        str_contains(request($creaturePath)['body'], 'mood-bar__fill--happiness')
+    );
+
+    // A brand-new player is given a few treats along with their creature, so
+    // feeding is something they can try immediately. That gift is the reason this
+    // section needs no shopping trip — and checking it here is also how we know
+    // the gift actually happens, which is easy to break and invisible if it does.
+    check(
+        'a new player starts with treats to give',
+        str_contains(request('/inventory')['body'], 'Honey Treat')
+    );
+
+    // Which treat is which, read off the page the way a player would.
+    $creaturePage = request($creaturePath)['body'];
+    check(
+        'the creature page offers the treats to its owner',
+        str_contains($creaturePage, 'action="' . $creaturePath . '/feed"')
+    );
+    check(
+        'each treat says what it does',
+        str_contains($creaturePage, 'happiness') && str_contains($creaturePage, 'energy')
+    );
+
+    preg_match_all(
+        '~<label class="creature__treat">.*?value="(\d+)".*?creature__treat-name">\s*([^<]+?)\s*<~s',
+        $creaturePage,
+        $treatMatches,
+        PREG_SET_ORDER
+    );
+    $honeyItemId = null;
+    foreach ($treatMatches as $match) {
+        if (str_contains($match[2], 'Honey Treat')) {
+            $honeyItemId = $match[1];
+            break;
+        }
+    }
+    check('the honey treat is one of the choices', $honeyItemId !== null);
+
+    if ($honeyItemId !== null) {
+        // Feeding is the whole point: the treat must go, and the page must say so.
+        //
+        // The ANSWER TO THE POST is what gets checked, not a page fetched after
+        // it. curl follows the redirect, so the post's own response already is
+        // the creature page — and the flash message is one-time, so a second
+        // request would find it already spent and quietly pass nothing.
+        $fed = request($creaturePath . '/feed', [
+            '_csrf_token' => tokenFrom($creaturePath),
+            'item_id' => $honeyItemId,
+        ]);
+        check('feeding says what happened', str_contains($fed['body'], 'enjoyed the Honey Treat'));
+        check(
+            'the treat was really eaten',
+            !str_contains(request('/inventory')['body'], 'Honey Treat')
+        );
+
+        // Feeding the same treat again must be refused, not silently repeated.
+        // This is the double-tap that would otherwise spend one item twice.
+        $fedAgain = request($creaturePath . '/feed', [
+            '_csrf_token' => tokenFrom($creaturePath),
+            'item_id' => $honeyItemId,
+        ]);
+        check(
+            'feeding a treat you no longer have is refused',
+            str_contains($fedAgain['body'], 'do not have one')
+        );
+    }
+
+    // The shop still sells treats, for the players who run out of the free ones.
+    check('the shop sells treats', str_contains(request('/shop')['body'], 'Honey Treat'));
+
+    // The keepsake card only appears once a favourite has been chosen, so choose
+    // one — through the real form, the way a player would.
+    request('/profile', [
+        '_csrf_token' => tokenFrom('/profile/edit'),
+        'avatar_key' => 'default',
+        'about' => 'A quiet wanderer.',
+        'is_findable' => 'yes',
+        'featured' => [substr($creaturePath, strlen('/creature/'))],
+    ]);
+
+    $home = request('/')['body'];
+    check('choosing a favourite puts the keepsake card on the page', str_contains($home, 'class="keepsake"'));
+    check('the keepsake card offers a pet button', str_contains($home, 'keepsake__actions'));
+    check('the keepsake card shows how the creature feels', str_contains($home, 'keepsake__mood'));
 }
 
 // ---------------------------------------------------------------------------

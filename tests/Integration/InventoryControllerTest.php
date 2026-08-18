@@ -146,7 +146,15 @@ final class InventoryControllerTest extends DatabaseTestCase
 
         $this->assertStringContainsString($owned['dish']->name, $response->body());
         $this->assertStringNotContainsString($owned['sticker']->name, $response->body());
-        $this->assertStringContainsString('Showing 1 of 2', $response->body());
+
+        // "1 of however many you own" — counted rather than written as a literal.
+        // It used to say "1 of 2", which meant that adding a third kind of thing
+        // to the shop broke a test about FILTERING, for no reason connected to
+        // filtering. The claim being made is that one of them survived the filter.
+        $this->assertStringContainsString(
+            'Showing 1 of ' . count($owned),
+            $response->body()
+        );
     }
 
     public function testASearchFindsByPartOfTheName(): void

@@ -21,6 +21,11 @@ use Felkyo\Creatures\SpeciesRepository;
  * It is written to be the reusable pattern for every future area: the areas
  * themselves are just data (see config), and this one service drives them all.
  * Adding an area is a config change, not new code (build plan section 2).
+ *
+ * THE LOOT TABLE'S "type" IS THE EXTENSION POINT. Three kinds exist: "nothing",
+ * "creature", and "item". Adding a fourth means one more branch in grantReward()
+ * and a matching entry in an area's config — everything else about areas, click
+ * limits and weighting already works.
  */
 final class ExplorationService
 {
@@ -32,6 +37,7 @@ final class ExplorationService
         private WeightedPicker $picker,
         private CreatureRepository $creatures,
         private SpeciesRepository $species,
+        private ItemRewardGranter $items,
         private array $config,
     ) {
     }
@@ -78,12 +84,41 @@ final class ExplorationService
         // Spend the click, then grant whatever was rolled.
         $this->visits->recordClick($userId, $areaSlug);
 
-        $creature = null;
-        if (($reward['type'] ?? 'nothing') === 'creature') {
-            $creature = $this->grantRandomCreature($userId);
-        }
+        return $this->grantReward($userId, $reward);
+    }
 
-        return ExplorationResult::reward($reward['message'], $creature);
+    /**
+     * Hand over whatever the dice chose.
+     *
+     * @param array{type?: string, message: string, item?: string} $reward
+     */
+    private function grantReward(int $userId, array $reward): ExplorationResult
+    {
+        $message = $reward['message'];
+
+        switch ($reward['type'] ?? 'nothing') {
+            case 'creature':
+                return ExplorationResult::reward($message, $this->grantRandomCreature($userId));
+
+            case 'item':
+                // The area names the item by SLUG, which is a stable, readable
+                // handle the artist can write in config — ids differ between a
+                // fresh install and a migrated one, so they must never appear in
+                // content. An unknown slug grants nothing and says so plainly
+                // rather than crashing the page somebody is standing on.
+                $granted = $this->items->grant($userId, $reward['item'] ?? '');
+                if ($granted === null) {
+                    return ExplorationResult::reward(
+                        'You spot something in the undergrowth, but it slips away.',
+                        null
+                    );
+                }
+
+                return ExplorationResult::reward($message . ' (' . $granted . ')', null);
+
+            default:
+                return ExplorationResult::reward($message, null);
+        }
     }
 
     /**

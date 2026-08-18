@@ -61,6 +61,7 @@ use Felkyo\Http\AssetUrl;
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/guestbook.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/community.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/mood.css') ?>">
+    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/keepsake.css') ?>">
 </head>
 <body>
     <!-- Keyboard users can jump straight to the content with this link. -->
@@ -89,11 +90,15 @@ use Felkyo\Http\AssetUrl;
         <?= $this->insert('partials/site-side', [
             'currentUser' => $currentUser ?? null,
             'currentPath' => $currentPath ?? '',
-            'currencyName' => $currencyName ?? 'coins',
+            'currencyName' => $currencyName ?? 'gems',
             'registrationOpen' => $registrationOpen ?? false,
             'currentAvatarPath' => $currentAvatarPath ?? null,
             'currentAvatarName' => $currentAvatarName ?? null,
             'favouriteSummary' => $favouriteSummary ?? null,
+            // The treats the player is carrying, so the keepsake card can offer
+            // them. Empty for a guest, and empty for anybody with none — the card
+            // says where to get some rather than hiding the button.
+            'keepsakeTreats' => $keepsakeTreats ?? [],
         ]) ?>
 
         <div class="site-main">

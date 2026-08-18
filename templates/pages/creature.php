@@ -118,6 +118,58 @@ $createdLabel = $creature->createdAt !== null
         <?php else: ?>
             <p class="auth-alt"><a href="/login">Log in</a> to pet <?= $this->e($creature->name) ?>.</p>
         <?php endif; ?>
+
+        <?php if (!empty($isOwner)): ?>
+            <?php /* Feeding is for the creature's OWNER — you look after your own.
+                     Radio cards rather than a dropdown (CLAUDE.md section 8), and
+                     each one says what it does, because "which treat" is only an
+                     interesting choice if you can see the difference. */ ?>
+            <?php if (!empty($treats)): ?>
+                <form class="creature__feed" method="post"
+                      action="/creature/<?= $this->e((string) $creature->id) ?>/feed">
+                    <?= $this->csrf_field() ?>
+                    <fieldset class="creature__treats">
+                        <legend class="field__label">Give <?= $this->e($creature->name) ?> a treat</legend>
+                        <?php foreach ($treats as $index => $stack): ?>
+                            <label class="creature__treat">
+                                <input type="radio" name="item_id"
+                                       value="<?= $this->e((string) $stack->item->id) ?>"
+                                       <?= $index === 0 ? 'checked' : '' ?>>
+                                <span class="creature__treat-body">
+                                    <span class="creature__treat-name">
+                                        <?= $this->e($stack->item->name) ?>
+                                        <span aria-hidden="true">&times;<?= $this->e((string) $stack->quantity) ?></span>
+                                        <span class="visually-hidden">, <?= $this->e((string) $stack->quantity) ?> owned</span>
+                                    </span>
+                                    <?php /* What it actually does, in words. Both
+                                             numbers are shown when both apply, so
+                                             a restful treat is visibly a different
+                                             KIND of thing from a cheering one. */ ?>
+                                    <span class="creature__treat-effect">
+                                        <?php if ($stack->item->happinessBonus > 0): ?>
+                                            +<?= $this->e((string) $stack->item->happinessBonus) ?> happiness
+                                        <?php endif; ?>
+                                        <?php if ($stack->item->happinessBonus > 0 && $stack->item->energyBonus > 0): ?>
+                                            &middot;
+                                        <?php endif; ?>
+                                        <?php if ($stack->item->energyBonus > 0): ?>
+                                            +<?= $this->e((string) $stack->item->energyBonus) ?> energy
+                                        <?php endif; ?>
+                                    </span>
+                                </span>
+                            </label>
+                        <?php endforeach; ?>
+                    </fieldset>
+                    <button class="btn btn--secondary" type="submit">Feed</button>
+                </form>
+            <?php else: ?>
+                <p class="empty-state">
+                    You have no treats for <?= $this->e($creature->name) ?> just now.
+                    <a href="/shop">The village store</a> sells them, and they turn up
+                    while <a href="/explore">exploring</a>.
+                </p>
+            <?php endif; ?>
+        <?php endif; ?>
     </div>
 </article>
 

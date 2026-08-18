@@ -46,7 +46,14 @@ final class PetController
     public function pet(Request $request, array $parameters): Response
     {
         $creatureId = (int) ($parameters['id'] ?? 0);
-        $creaturePath = '/creature/' . $creatureId;
+
+        // Where to go afterwards. The pet button now appears in two places — the
+        // creature's own page and the keepsake card, which is on every page — so
+        // "back where I was" is a real question. It is answered from a short
+        // ALLOW-LIST, never from an address the browser sent: a redirect that
+        // trusts submitted input is an open redirect, and an open redirect on a
+        // site with children on it is somebody being walked to a fake login page.
+        $creaturePath = $request->input('from') === 'home' ? '/' : '/creature/' . $creatureId;
 
         // Must be logged in to pet.
         $userId = $this->session->get('user_id');
