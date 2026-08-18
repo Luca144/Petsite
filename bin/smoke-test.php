@@ -96,7 +96,22 @@ function request(string $path, array $post = []): array
  */
 function tokenFrom(string $path): string
 {
-    preg_match('~name="_csrf_token" value="([^"]+)"~', request($path)['body'], $m);
+    return tokenIn(request($path)['body']);
+}
+
+/**
+ * The CSRF token out of HTML we have already fetched.
+ *
+ * WHY THIS EXISTS SEPARATELY: tokenFrom() makes its own request, and for most
+ * pages that is harmless. It is not harmless for /creature/{id}/play, because
+ * OPENING that page starts a new round — so fetching a token from it threw away
+ * the round under test and replaced it with a different, randomly chosen game.
+ * The hint-game checks were then submitting guesses against a one-shot game and
+ * failing for a reason that had nothing to do with the code.
+ */
+function tokenIn(string $body): string
+{
+    preg_match('~name="_csrf_token" value="([^"]+)"~', $body, $m);
 
     return $m[1] ?? '';
 }
@@ -461,6 +476,53 @@ if ($creaturePath !== null) {
     check(
         'the answer is nowhere in the page',
         !preg_match('~\b(answer|correct|solution|winning)\b~i', $gamePage['body'])
+    );
+
+    // THE HINT GAME, which runs over several turns.
+    //
+    // Which game a round opens is random, and guessing 1 wins one time in twenty,
+    // so this keeps opening rounds until it has actually seen a wrong guess get a
+    // hint. What is being checked is that a genuinely multi-turn mechanic exists
+    // and behaves — not which game you happened to be dealt.
+    $hintGameSeen = false;
+    $sawHint = false;
+    $hintLine = null;
+
+    for ($attempt = 0; $attempt < 40 && !$sawHint; $attempt++) {
+        $page = request($creaturePath . '/play');
+
+        if (!str_contains($page['body'], 'play--kind-narrow')) {
+            continue;
+        }
+
+        if (!$hintGameSeen) {
+            $hintGameSeen = true;
+            check('a hint game says how many guesses are left', str_contains($page['body'], 'guesses left'));
+        }
+
+        // The token comes out of the page we already have. Asking for it again
+        // would open a FRESH round and could hand us a different game entirely —
+        // which is what made this check fail once for reasons unrelated to the code.
+        $answered = request($creaturePath . '/play', [
+            '_csrf_token' => tokenIn($page['body']),
+            'choice' => '0',
+        ]);
+
+        if (str_contains($answered['body'], 'play__hint')) {
+            $sawHint = true;
+            preg_match('~class="play__hint"[^>]*>([^<]+)<~', $answered['body'], $matched);
+            $hintLine = trim($matched[1] ?? '');
+        }
+        // Otherwise that guess won outright and the round is over; the loop opens
+        // another one.
+    }
+
+    check('the hint game turns up at all', $hintGameSeen);
+    check('a wrong guess gets a hint and another go', $sawHint);
+    check(
+        'the hint says a direction and never the number',
+        $sawHint && $hintLine !== null && !preg_match('~\d~', $hintLine),
+        (string) ($hintLine ?? '(no hint seen)')
     );
 
     if ($choiceCount >= 2) {

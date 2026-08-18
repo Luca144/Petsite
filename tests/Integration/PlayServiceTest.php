@@ -255,6 +255,109 @@ final class PlayServiceTest extends DatabaseTestCase
         $this->assertSame($firstStamp, $secondStamp);
     }
 
+    // ---- The hint game, over several turns ----
+
+    /** A service whose only game is the hint game, so a test can drive its turns. */
+    private function hintGame(): PlayService
+    {
+        return new PlayService(
+            $this->connection,
+            $this->interactions,
+            new PlayableGames([
+                'guess-the-number' => [
+                    'kind' => 'narrow',
+                    'name' => 'Higher or lower',
+                    'prompt' => '{name} is thinking of a number between 1 and 20.',
+                    'range' => 20,
+                    'tries' => 3,
+                    'higher' => 'Higher, says {name}.',
+                    'lower' => 'Lower, says {name}.',
+                    'won' => 'That is the one!',
+                    'lost' => 'It was {secret}.',
+                ],
+            ]),
+            $this->moodCalculator(),
+            self::CONFIG
+        );
+    }
+
+    public function testAWrongGuessWithTriesLeftGivesAHintAndChangesNothingYet(): void
+    {
+        // The reward waits for the round to FINISH. A turn in the middle applies
+        // nothing, which is what stops a game in progress being milked for one.
+        $this->makeCreatureNeedy();
+        $before = $this->creature()->happiness;
+
+        // The answer is index 9, so the number 10. Guessing 5 is too low.
+        $result = $this->hintGame()->judge($this->ownerId, $this->creature(), 'guess-the-number', 9, 4, 3);
+
+        $this->assertTrue($result->continues());
+        $this->assertSame(2, $result->triesLeft());
+        $this->assertStringContainsString('Higher', $result->message());
+        $this->assertSame($before, $this->creature()->happiness);
+    }
+
+    public function testTheHintPointsTheRightWay(): void
+    {
+        $game = $this->hintGame();
+
+        $tooLow = $game->judge($this->ownerId, $this->creature(), 'guess-the-number', 9, 2, 3);
+        $tooHigh = $game->judge($this->ownerId, $this->creature(), 'guess-the-number', 9, 15, 3);
+
+        $this->assertStringContainsString('Higher', $tooLow->message());
+        $this->assertStringContainsString('Lower', $tooHigh->message());
+    }
+
+    public function testAHintNeverContainsTheNumber(): void
+    {
+        // The whole game rests on the answer staying on the server. A hint that
+        // leaked it would turn the game into a readout.
+        $result = $this->hintGame()->judge($this->ownerId, $this->creature(), 'guess-the-number', 9, 4, 3);
+
+        $this->assertDoesNotMatchRegularExpression('~\d~', $result->message());
+    }
+
+    public function testTheLastWrongGuessEndsTheRoundAndStillCheersTheCreatureUp(): void
+    {
+        $this->makeCreatureNeedy();
+
+        // One try left: this is the end of it, whatever happens.
+        $result = $this->hintGame()->judge($this->ownerId, $this->creature(), 'guess-the-number', 9, 4, 1);
+
+        $this->assertFalse($result->continues());
+        $this->assertTrue($result->played());
+        $this->assertSame(43, $this->creature()->happiness);
+    }
+
+    public function testTheAnswerIsRevealedWhenTheRoundIsLost(): void
+    {
+        // Index 9 is the number 10. Naming it at the end is the satisfying part.
+        $result = $this->hintGame()->judge($this->ownerId, $this->creature(), 'guess-the-number', 9, 4, 1);
+
+        $this->assertStringContainsString('It was 10.', $result->message());
+    }
+
+    public function testGuessingRightEndsTheRoundEvenWithTriesLeft(): void
+    {
+        $this->makeCreatureNeedy();
+
+        $result = $this->hintGame()->judge($this->ownerId, $this->creature(), 'guess-the-number', 9, 9, 3);
+
+        $this->assertFalse($result->continues());
+        $this->assertTrue($result->playedAndWon());
+        $this->assertSame(48, $this->creature()->happiness);
+    }
+
+    public function testAOneShotGameNeverGivesAHint(): void
+    {
+        // A guess game has one try by definition, so it can never continue — even
+        // if a caller passed it a larger number by mistake.
+        $result = $this->play->judge($this->ownerId, $this->creature(), 'which-paw', 1, 0, 5);
+
+        $this->assertFalse($result->continues());
+        $this->assertTrue($result->played());
+    }
+
     // ---- What it refuses ----
 
     public function testYouCannotPlayWithSomebodyElsesCreature(): void

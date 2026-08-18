@@ -77,7 +77,7 @@ final class PlayService
      * the answer somewhere the browser cannot read (the session) and hands it back
      * to judge() later.
      *
-     * @return array{slug: string, answer: int}
+     * @return array{slug: string, answer: int, tries_left: int}
      */
     public function startRound(): array
     {
@@ -90,18 +90,27 @@ final class PlayService
             // able to predict, and a predictable answer turns the game into a
             // reward button. PHP's cryptographic source costs nothing here.
             'answer' => random_int(0, max(0, $choices - 1)),
+            // One for a guess game; several for a hint game, which runs over turns.
+            'tries_left' => $this->games->triesOf($slug),
         ];
     }
 
     /**
      * Judge a guess against the answer the caller kept, and cheer the creature up.
      *
-     * @param string $slug   The game the round was for.
-     * @param int    $answer The right choice, from startRound().
-     * @param int    $guess  What the player picked.
+     * @param string $slug      The game the round was for.
+     * @param int    $answer    The right choice, from startRound().
+     * @param int    $guess     What the player picked.
+     * @param int    $triesLeft How many goes remain, including this one.
      */
-    public function judge(int $actorUserId, Creature $creature, string $slug, int $answer, int $guess): PlayResult
-    {
+    public function judge(
+        int $actorUserId,
+        Creature $creature,
+        string $slug,
+        int $answer,
+        int $guess,
+        int $triesLeft = 1
+    ): PlayResult {
         if ($creature->ownerId !== $actorUserId) {
             return PlayResult::noRound(
                 'You can only play with your own creatures.'
@@ -115,6 +124,20 @@ final class PlayService
         }
 
         $won = $guess === $answer;
+
+        // A HINT GAME THAT IS NOT OVER YET. Wrong, but there are goes left: say
+        // which way to move and stop. Nothing is applied to the creature, because
+        // nothing has finished happening — the reward waits for the last guess, so
+        // a game in progress cannot be milked for one.
+        //
+        // The hint names a DIRECTION and never the number. That is what keeps the
+        // game honest while still helping somebody think.
+        if (!$won && $this->games->kindOf($slug) === 'narrow' && $triesLeft > 1) {
+            return PlayResult::hint(
+                $this->games->hintLine($slug, $creature->name, tooLow: $guess < $answer),
+                $triesLeft - 1
+            );
+        }
 
         $this->connection->beginTransaction();
 
@@ -142,7 +165,13 @@ final class PlayService
             throw $error;
         }
 
-        $line = $this->games->outcomeLine($slug, $creature->name, $won);
+        // The answer is revealed only now, in the losing line of a hint game ("it
+        // was 13!"). By this point the round is over, so there is nothing left to
+        // give away — and the reveal is the satisfying part of having missed it.
+        // A guess game's choices are words, so their index would mean nothing; only
+        // a narrow game's answer is a number worth naming.
+        $secret = $this->games->kindOf($slug) === 'narrow' ? $answer + 1 : null;
+        $line = $this->games->outcomeLine($slug, $creature->name, $won, $secret);
 
         // A creature that has played very recently says the same warm thing, plus a
         // quiet note that it is worn out — rather than a refusal, which is what

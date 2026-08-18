@@ -65,7 +65,7 @@ final class PlayableGamesTest extends TestCase
     {
         $shown = $this->games()->presentation('which-paw', 'Biscuit');
 
-        $this->assertSame(['slug', 'name', 'prompt', 'choices'], array_keys($shown));
+        $this->assertSame(['slug', 'kind', 'name', 'prompt', 'choices'], array_keys($shown));
         $this->assertSame(['left', 'right'], $shown['choices']);
     }
 
@@ -153,6 +153,98 @@ final class PlayableGamesTest extends TestCase
         $this->expectException(\RuntimeException::class);
 
         $this->games([])->slugForRoll(0);
+    }
+
+    // ---- The hint game ----
+
+    private const WITH_NARROW = [
+        'guess-the-number' => [
+            'kind' => 'narrow',
+            'name' => 'Higher or lower',
+            'prompt' => '{name} is thinking of a number between 1 and 20.',
+            'range' => 20,
+            'tries' => 4,
+            'higher' => 'Higher, says {name}.',
+            'lower' => 'Lower, says {name}.',
+            'won' => 'That is the one!',
+            'lost' => 'It was {secret}. {name} enjoyed watching.',
+        ],
+    ];
+
+    public function testANarrowGamesChoicesAreItsNumbers(): void
+    {
+        // Both kinds render as the same thing — a row of buttons, each its own
+        // submit — so the page needs no idea which kind it is drawing. A number
+        // board is just a longer row.
+        $shown = (new PlayableGames(self::WITH_NARROW))->presentation('guess-the-number', 'Biscuit');
+
+        $this->assertSame('narrow', $shown['kind']);
+        $this->assertCount(20, $shown['choices']);
+        $this->assertSame('1', $shown['choices'][0]);
+        $this->assertSame('20', $shown['choices'][19]);
+    }
+
+    public function testANarrowGameHasSeveralTriesAndAGuessGameHasOne(): void
+    {
+        $this->assertSame(4, (new PlayableGames(self::WITH_NARROW))->triesOf('guess-the-number'));
+        $this->assertSame(1, $this->games()->triesOf('which-paw'));
+    }
+
+    public function testTheHintNamesADirectionAndNeverTheNumber(): void
+    {
+        // THE LINE THE HINT GAME STANDS ON. The page learns "higher" and nothing
+        // else — a hint that leaked the number would turn the game into a readout.
+        $games = new PlayableGames(self::WITH_NARROW);
+
+        $up = $games->hintLine('guess-the-number', 'Biscuit', tooLow: true);
+        $down = $games->hintLine('guess-the-number', 'Biscuit', tooLow: false);
+
+        $this->assertSame('Higher, says Biscuit.', $up);
+        $this->assertSame('Lower, says Biscuit.', $down);
+        foreach ([$up, $down] as $line) {
+            $this->assertDoesNotMatchRegularExpression('~\d~', $line, 'A hint contains a number.');
+        }
+    }
+
+    public function testTheAnswerIsRevealedOnlyInTheLosingLine(): void
+    {
+        // Naming it at the END is the satisfying part of having missed it, and by
+        // then the round is over so there is nothing left to give away.
+        $games = new PlayableGames(self::WITH_NARROW);
+
+        $this->assertStringContainsString(
+            'It was 13.',
+            $games->outcomeLine('guess-the-number', 'Biscuit', false, 13)
+        );
+        // The winning line has no placeholder, so a secret passed in changes nothing.
+        $this->assertSame(
+            'That is the one!',
+            $games->outcomeLine('guess-the-number', 'Biscuit', true, 13)
+        );
+    }
+
+    public function testAKindNobodyRecognisedIsTreatedAsAGuess(): void
+    {
+        // A config typo should produce a playable game, not a broken page.
+        $games = new PlayableGames([
+            'odd' => [
+                'kind' => 'somethingelse',
+                'name' => 'Odd',
+                'prompt' => 'Pick.',
+                'choices' => ['a', 'b'],
+                'won' => 'Yes.',
+                'lost' => 'No.',
+            ],
+        ]);
+
+        $this->assertSame('guess', $games->kindOf('odd'));
+        $this->assertSame(1, $games->triesOf('odd'));
+    }
+
+    public function testAGameWithNoKindAtAllIsAGuess(): void
+    {
+        // Every game predating the two-kind split has no "kind" key.
+        $this->assertSame('guess', $this->games()->kindOf('which-paw'));
     }
 
     // ---- Knowing what exists ----

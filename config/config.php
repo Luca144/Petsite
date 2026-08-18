@@ -279,12 +279,26 @@ return [
         // less — you played with it either way. There is deliberately no outcome
         // here that takes anything away (golden rule 10, and 11).
         //
-        // ADDING A FOURTH GAME IS A CONFIG ENTRY. A game is a prompt, a list of
-        // choices, and two lines of copy; the server picks which choice is right.
-        // Give it a slug, and play.css can style it by that slug if it deserves
-        // its own look. No new code.
+        // THERE ARE TWO KINDS OF GAME, and the difference is the point.
         //
-        // "{name}" becomes the creature's own name in any of the text below.
+        //   kind: guess   One shot. Pick one of the choices; the server hid the
+        //                 answer in one of them. Pure luck, quick, and over in a
+        //                 tap — the "hello, want to play?" shape.
+        //
+        //   kind: narrow  Several turns. The server thinks of a number and says
+        //                 "higher" or "lower" after each guess. Deduction rather
+        //                 than luck: a careful player wins nearly every time, and
+        //                 the reward feels earned rather than won at a coin flip.
+        //
+        // The two exist because three guessing games with different words are one
+        // game wearing three hats. A hint game is a genuinely different thing to do.
+        //
+        // ADDING A GUESS GAME IS A CONFIG ENTRY: a prompt, some choices, two lines
+        // of copy. Adding a NARROW game is a config entry too (a range and a number
+        // of tries). Adding a third KIND means new code — see PlayService::judge.
+        //
+        // "{name}" becomes the creature's own name in any of the text below, and
+        // "{secret}" becomes the answer in a narrow game's losing line.
         'play' => [
             // Per creature. Long enough that playing stays a small event rather
             // than a happiness tap, short enough to be no kind of punishment —
@@ -297,7 +311,26 @@ return [
             'energy_per_play' => 8,
 
             'games' => [
+                // ---- The deduction game ----
+                //
+                // 20 numbers in 4 tries: reachable by halving the range each time,
+                // and missable if you guess wildly. That is the tension worth
+                // having — a game you can be GOOD at, unlike the three below.
+                'guess-the-number' => [
+                    'kind' => 'narrow',
+                    'name' => 'Higher or lower',
+                    'prompt' => '{name} is thinking of a number between 1 and 20.',
+                    'range' => 20,
+                    'tries' => 4,
+                    'higher' => 'Higher, says {name}.',
+                    'lower' => 'Lower, says {name}.',
+                    'won' => 'That is the one! {name} is thoroughly impressed.',
+                    'lost' => 'It was {secret}. {name} enjoyed watching you work at it.',
+                ],
+
+                // ---- The one-shot games ----
                 'hide-and-seek' => [
+                    'kind' => 'guess',
                     'name' => 'Hide and seek',
                     'prompt' => '{name} has hidden. Which one is it behind?',
                     'choices' => ['the mossy log', 'the tall fern', 'the little hedge'],
@@ -305,6 +338,7 @@ return [
                     'lost' => '{name} was behind a different one, and is extremely pleased with itself.',
                 ],
                 'which-paw' => [
+                    'kind' => 'guess',
                     'name' => 'Which paw?',
                     'prompt' => '{name} is holding something. Which paw is it in?',
                     'choices' => ['the left paw', 'the right paw'],
@@ -312,6 +346,7 @@ return [
                     'lost' => 'The other one, as it turns out. {name} thinks this is very funny.',
                 ],
                 'follow-the-beetle' => [
+                    'kind' => 'guess',
                     'name' => 'Follow the beetle',
                     'prompt' => 'A beetle scuttled under one of the leaves. Where did it go?',
                     'choices' => ['the left leaf', 'the middle leaf', 'the right leaf'],

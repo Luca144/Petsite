@@ -77,12 +77,62 @@ final class PlayableGames
     }
 
     /**
+     * Which KIND of game this is: 'guess' (one shot, pick one of a few) or
+     * 'narrow' (several turns, told higher or lower each time).
+     *
+     * The two exist because three guessing games with different words are one game
+     * wearing three hats. A hint game is a genuinely different thing to do: luck
+     * against deduction. Anything unrecognised is treated as a guess, so a config
+     * typo produces a playable game rather than a broken page.
+     */
+    public function kindOf(string $slug): string
+    {
+        $kind = $this->games[$slug]['kind'] ?? 'guess';
+
+        return $kind === 'narrow' ? 'narrow' : 'guess';
+    }
+
+    /**
      * How many things there are to choose between in this game. Used to roll the
      * hidden answer, so it must come from the game itself and never from the page.
+     *
+     * A narrow game's "choices" are the numbers 1..range, so its count is the range.
      */
     public function choiceCountOf(string $slug): int
     {
+        if ($this->kindOf($slug) === 'narrow') {
+            return max(2, (int) ($this->games[$slug]['range'] ?? 20));
+        }
+
         return count($this->games[$slug]['choices'] ?? []);
+    }
+
+    /**
+     * How many tries a narrow game allows before it ends. One, for a guess game —
+     * you pick and that is that.
+     */
+    public function triesOf(string $slug): int
+    {
+        if ($this->kindOf($slug) !== 'narrow') {
+            return 1;
+        }
+
+        return max(1, (int) ($this->games[$slug]['tries'] ?? 4));
+    }
+
+    /**
+     * The nudge after a wrong guess in a narrow game.
+     *
+     * IT SAYS ONLY A DIRECTION, never the number. That is what keeps the game
+     * honest: the page learns "higher" and nothing else, so it can help the player
+     * think without handing them the answer.
+     */
+    public function hintLine(string $slug, string $creatureName, bool $tooLow): string
+    {
+        $game = $this->games[$slug];
+        $line = $tooLow ? ($game['higher'] ?? 'Higher.') : ($game['lower'] ?? 'Lower.');
+
+        return $this->fillIn($line, $creatureName);
     }
 
     /**
@@ -92,28 +142,53 @@ final class PlayableGames
      * The ANSWER IS NOT HERE. A template that could see the answer is a template
      * one careless edit away from printing it.
      *
-     * @return array{slug: string, name: string, prompt: string, choices: array<int, string>}
+     * A narrow game's choices are the numbers in its range, written out — so both
+     * kinds render as the same thing on the page: a row of buttons, each its own
+     * submit. Twenty small buttons is a number board, which is charming, needs no
+     * JavaScript, and cannot be submitted blank.
+     *
+     * @return array{slug: string, kind: string, name: string, prompt: string, choices: array<int, string>}
      */
     public function presentation(string $slug, string $creatureName): array
     {
         $game = $this->games[$slug];
+        $kind = $this->kindOf($slug);
+
+        if ($kind === 'narrow') {
+            $choices = [];
+            for ($number = 1; $number <= $this->choiceCountOf($slug); $number++) {
+                $choices[] = (string) $number;
+            }
+        } else {
+            $choices = array_values($game['choices']);
+        }
 
         return [
             'slug' => $slug,
+            'kind' => $kind,
             'name' => $game['name'],
             'prompt' => $this->fillIn($game['prompt'], $creatureName),
-            'choices' => array_values($game['choices']),
+            'choices' => $choices,
         ];
     }
 
     /**
      * What the creature says about how it went.
+     *
+     * A narrow game's losing line may name the answer with "{secret}" — revealing
+     * it at the END is the satisfying part ("it was 13!"), and by then the round is
+     * over so there is nothing left to give away.
      */
-    public function outcomeLine(string $slug, string $creatureName, bool $won): string
+    public function outcomeLine(string $slug, string $creatureName, bool $won, ?int $secret = null): string
     {
         $game = $this->games[$slug];
+        $line = $this->fillIn($won ? $game['won'] : $game['lost'], $creatureName);
 
-        return $this->fillIn($won ? $game['won'] : $game['lost'], $creatureName);
+        if ($secret !== null) {
+            $line = str_replace('{secret}', (string) $secret, $line);
+        }
+
+        return $line;
     }
 
     /**

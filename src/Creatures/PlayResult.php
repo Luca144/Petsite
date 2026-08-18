@@ -20,7 +20,45 @@ final class PlayResult
         private bool $played,
         private bool $won,
         private string $message,
+        /**
+         * How many tries are left, when the game is not over yet.
+         *
+         * Null means the round finished with this answer. Any other value means the
+         * player guessed wrong but has another go — a hint game like "higher or
+         * lower" runs over several turns, and the round has to survive between them.
+         */
+        private ?int $triesLeft = null,
     ) {
+    }
+
+    /**
+     * Is the round still going? A hint game says "higher" and waits.
+     *
+     * WHY THIS MATTERS TO THE CALLER: it decides whether the round is put back in
+     * the session. A finished round is not, which is what stops somebody answering
+     * it twice — and the reward is only ever handed out when a round finishes, so
+     * a continuing round cannot be milked for one.
+     */
+    public function continues(): bool
+    {
+        return $this->triesLeft !== null;
+    }
+
+    /**
+     * How many tries remain. Only meaningful while continues() is true.
+     */
+    public function triesLeft(): int
+    {
+        return $this->triesLeft ?? 0;
+    }
+
+    /**
+     * A wrong guess in a game that is not over: a hint, and another go. Nothing is
+     * applied to the creature yet, because nothing has finished happening.
+     */
+    public static function hint(string $message, int $triesLeft): self
+    {
+        return new self(false, false, $message, max(1, $triesLeft));
     }
 
     /**

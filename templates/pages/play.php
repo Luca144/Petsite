@@ -25,8 +25,25 @@ $this->layout('layout', ['title' => $game['name'] . ' with ' . $creature->name .
 
 <h2 class="panel-label"><?= $this->e($game['name']) ?></h2>
 
-<section class="play play--<?= $this->e($game['slug']) ?>">
+<section class="play play--<?= $this->e($game['slug']) ?> play--kind-<?= $this->e($game['kind']) ?>">
     <p class="play__prompt"><?= $this->e($game['prompt']) ?></p>
+
+    <?php if (!empty($hint)): ?>
+        <?php /* The nudge after a wrong guess in a hint game. role="status" so a
+                 screen reader hears it without being interrupted — it is the whole
+                 substance of the turn, and it is the only thing the page learns
+                 about the answer. */ ?>
+        <p class="play__hint" role="status"><?= $this->e($hint) ?></p>
+    <?php endif; ?>
+
+    <?php if (($triesLeft ?? 1) > 1): ?>
+        <?php /* Shown only for a game that has more than one go — a one-shot game
+                 saying "1 try left" would read as a warning about nothing. */ ?>
+        <p class="play__tries">
+            <?= $this->e((string) $triesLeft) ?>
+            <?= $triesLeft === 1 ? 'guess' : 'guesses' ?> left
+        </p>
+    <?php endif; ?>
 
     <form class="play__choices" method="post"
           action="/creature/<?= $this->e((string) $creature->id) ?>/play">

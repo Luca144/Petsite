@@ -110,6 +110,66 @@
     font-size: 0.95rem;
 }
 
+/* ---- The hint game ----
+   Twenty numbers, so the choices become a compact board rather than three tall
+   cards. Same markup, same one-tap-per-choice, different shape — which is what
+   makes it feel like a different game rather than the same one relabelled. */
+
+.play--kind-narrow .play__choices {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--space-2);
+    max-width: 22rem;
+}
+
+@media (min-width: 34rem) {
+    /* Undo the row layout the guess games get: a number board stays a board. */
+    .play--kind-narrow .play__choices {
+        flex-direction: unset;
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+.play--kind-narrow .play__choice {
+    /* Still past the 44px tap target, but square and quiet — twenty of these
+       should read as a keypad, not as twenty invitations. */
+    min-height: 48px;
+    padding: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: 1rem;
+}
+
+/* No glyph on a number: the number IS the label. */
+.play--kind-narrow .play__choice-art {
+    display: none;
+}
+
+.play--kind-narrow .play__choice-label {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+/* The nudge. Louder than the prompt, because it is the new information on the
+   page and the thing the player came back for. */
+.play__hint {
+    margin: 0;
+    padding: var(--space-2) var(--space-4);
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--plum);
+    background: var(--panel);
+    border: 1.5px solid var(--gold);
+    border-radius: var(--radius-pill);
+}
+
+.play__tries {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+}
+
 /* ---- One glyph per game, chosen by the game's own slug ----
    Adding a fourth game to config means adding one block here, or none at all —
    without one it simply has no glyph and still plays perfectly. */

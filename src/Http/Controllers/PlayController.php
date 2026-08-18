@@ -87,11 +87,14 @@ final class PlayController
             'creature_id' => $creature->id,
             'slug' => $round['slug'],
             'answer' => $round['answer'],
+            'tries_left' => $round['tries_left'],
         ]);
 
         return Response::html($this->templates->render('pages/play', [
             'creature' => $creature,
             'game' => $this->games->presentation($round['slug'], $creature->name),
+            'triesLeft' => $round['tries_left'],
+            'hint' => null,
         ]));
     }
 
@@ -148,8 +151,33 @@ final class PlayController
             $creature,
             (string) $round['slug'],
             (int) $round['answer'],
-            (int) $request->input('choice')
+            (int) $request->input('choice'),
+            (int) ($round['tries_left'] ?? 1)
         );
+
+        // A HINT GAME THAT IS NOT OVER. Put the round back with one fewer go and
+        // draw the board again, with the nudge above it.
+        //
+        // Re-storing it is what lets the game continue, and it is safe because the
+        // REWARD only ever happens when a round finishes: a round put back has had
+        // nothing applied to the creature, so there is nothing to collect twice. The
+        // round that ends is not put back, which is what stops it being answered
+        // again at all.
+        if ($result->continues()) {
+            $this->session->set(self::ROUND_KEY, [
+                'creature_id' => $creature->id,
+                'slug' => $round['slug'],
+                'answer' => $round['answer'],
+                'tries_left' => $result->triesLeft(),
+            ]);
+
+            return Response::html($this->templates->render('pages/play', [
+                'creature' => $creature,
+                'game' => $this->games->presentation((string) $round['slug'], $creature->name),
+                'triesLeft' => $result->triesLeft(),
+                'hint' => $result->message(),
+            ]));
+        }
 
         $this->session->flash($result->message());
 

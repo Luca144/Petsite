@@ -1697,10 +1697,32 @@ result trustworthy. The rustling is CSS decoration.
 There is no outcome anywhere in this feature that takes anything away, and
 `PlayServiceTest` holds that line.
 
-**Adding a fourth game is a config entry.** A game is a name, a prompt, a list of
-choices, and two lines of copy under `gameplay.play.games`. `{name}` becomes the
-creature's name. Give it a slug and `play.css` can style it by that slug; without a
-block there it simply has no glyph and still plays.
+**There are two KINDS of game, and the difference is the point.**
+
+| kind | Shape | Feel |
+| --- | --- | --- |
+| `guess` | One shot, pick one of a few | Luck, over in a tap |
+| `narrow` | Several turns, told higher or lower | Deduction; you can be good at it |
+
+Three guessing games with different words are one game wearing three hats, which
+is fair criticism of the first version. A hint game is a genuinely different thing
+to do — and it is still fully server-authoritative: the hint names a **direction**
+and never the number, so the page learns enough to help you think and nothing more.
+
+**The reward waits for the round to finish.** A turn in the middle of a hint game
+applies nothing to the creature, so a game in progress cannot be milked. The
+controller re-stores a continuing round and does **not** re-store a finished one —
+which is what keeps "one round, one reward" true across several requests.
+
+Both kinds render identically: a row of buttons, each its own submit. A twenty-
+number board is just a longer row, so the template needs no idea which kind it is
+drawing.
+
+**Adding a `guess` or `narrow` game is a config entry** under
+`gameplay.play.games` — a prompt, some choices (or a range and a number of tries),
+and two lines of copy. `{name}` becomes the creature's name; `{secret}` becomes the
+answer in a narrow game's losing line. Adding a third KIND means new code, in
+`PlayService::judge`.
 
 ### Tastes (added 2026-08-18)
 
