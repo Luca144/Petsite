@@ -1,74 +1,76 @@
-/* Community page: browse creatures and find people
-   ---
-   Layout: tab navigation, then tab content below.
-   On mobile: tabs stack, each full-width.
-   On desktop: tabs side-by-side, content adjusts per tab.
-*/
-
-.community__header {
-    margin-bottom: 1.5rem;
-}
+/*
+ * community.css — the two tabs of the Community page.
+ *
+ * WHAT THIS FILE IS: the styling for the tab strip that switches between the
+ * creatures of Felkyo and the people who keep them. Everything below the strip
+ * (creature cards, the search form, result rows) is already styled by
+ * components.css, creature.css and social.css — this file adds only the tabs.
+ *
+ * THE OPEN TAB IS STYLED FROM aria-current, NOT FROM A SEPARATE CLASS. That is
+ * deliberate: the attribute is what a screen reader announces, so hanging the
+ * look off the same attribute means the two can never drift apart. A tab that
+ * LOOKS open but is not announced as open is exactly the kind of quiet
+ * accessibility bug that survives for years.
+ *
+ * All values come from theme.css; no colour is written here (CLAUDE.md §8).
+ */
 
 .community__tabs {
     display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
+    gap: var(--space-2);
+    margin: 0 0 var(--space-5);
     flex-wrap: wrap;
 }
 
+/* The same pill recipe as the world bar and the sidebar links, so "a pill is a
+   place you can go" stays one single idea across the whole site. */
 .community__tab {
-    display: inline-block;
-    padding: 0.75rem 1.5rem;
-    background-color: var(--panel);
-    color: var(--ink);
+    flex: 1 1 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* Comfortably past the 44px minimum touch target (CLAUDE.md §8). */
+    min-height: 48px;
+    padding: var(--space-2) var(--space-5);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 700;
     text-decoration: none;
-    border-radius: 0.5rem;
-    border: 2px solid transparent;
-    cursor: pointer;
-    transition: all 150ms ease;
+    color: var(--plum);
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-pill);
+    transition: transform 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
 }
 
 .community__tab:hover {
-    background-color: var(--parchment);
-    border-color: var(--gold);
-}
-
-.community__tab--active {
-    background-color: var(--parchment);
-    border-color: var(--purple);
-    font-weight: 600;
+    background: var(--gold-lit);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px -8px rgba(201, 162, 39, 0.7);
 }
 
 .community__tab:focus-visible {
     outline: 3px solid var(--purple);
-    outline-offset: 2px;
+    outline-offset: 3px;
 }
 
-.community__panel {
-    animation: fadeIn 150ms ease;
+/* The open tab: filled AND underlined — a shape as well as a colour, so the
+   signal never rides on colour alone (CLAUDE.md §8, golden rule 6). */
+.community__tab[aria-current="page"] {
+    color: var(--parchment);
+    background: var(--purple);
+    border-color: var(--purple);
+    box-shadow: inset 0 -3px 0 var(--gold-lit);
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-5px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Mobile: ensure tabs are readable and tappable */
-@media (max-width: 599px) {
-    .community__tabs {
-        gap: 0.25rem;
-    }
-
+/* Anyone who asks for reduced motion gets the colour change without the lift. */
+@media (prefers-reduced-motion: reduce) {
     .community__tab {
-        flex: 1;
-        text-align: center;
-        padding: 0.6rem 1rem;
-        font-size: 0.9rem;
+        transition: background-color 160ms ease;
+    }
+
+    .community__tab:hover {
+        transform: none;
+        box-shadow: none;
     }
 }

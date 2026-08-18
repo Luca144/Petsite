@@ -95,9 +95,11 @@ final class CreatureRenameController
             return Response::redirect($creaturePath);
         }
 
-        // Check for unsafe content (slurs, contact details, etc.).
-        $filtered = $this->filter->filter($newName);
-        if ($filtered->isUnsafe()) {
+        // A name is text one player puts in front of every other player, so it goes
+        // through the same blocked-word check a bio does. ContentFilter answers one
+        // question — "does this contain a word we do not allow?" — and that is all
+        // we ask of it here.
+        if ($this->filter->containsBlockedWord($newName)) {
             $this->session->flash('That name contains something not allowed here. Try something else.');
             return Response::redirect($creaturePath);
         }

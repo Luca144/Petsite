@@ -72,4 +72,39 @@ final class PettingRepository
 
         return (int) $statement->fetchColumn();
     }
+
+    /**
+     * How many PAID pets this person has done in the last $withinSeconds seconds.
+     *
+     * WHAT "PAID" MEANS AND WHY THE JOIN IS HERE: petting earns gems only when the
+     * creature belongs to somebody else — petting your own never pays. So the
+     * count that matters for the daily cap is not "how often did they pet", it is
+     * "how often were they paid", and answering that needs to know who owns each
+     * creature. Doing the join in SQL means the answer is one trip to the database
+     * rather than one trip per petting, and it cannot drift from the rule in
+     * PettingService because it encodes the same condition.
+     *
+     * As elsewhere, the number of seconds is cast to an integer and placed straight
+     * into the SQL — safe because it is a value we control, and INTERVAL will not
+     * take a bound parameter.
+     */
+    public function countPaidPetsBy(int $actorUserId, int $withinSeconds): int
+    {
+        $withinSeconds = max(0, $withinSeconds);
+
+        $statement = $this->connection->prepare(
+            'SELECT COUNT(*)
+               FROM pettings
+               JOIN creatures ON creatures.id = pettings.creature_id
+              WHERE pettings.actor_user_id = :actor_user_id
+                AND creatures.owner_id <> :owner_check
+                AND pettings.created_at >= NOW() - INTERVAL ' . $withinSeconds . ' SECOND'
+        );
+        $statement->execute([
+            ':actor_user_id' => $actorUserId,
+            ':owner_check' => $actorUserId,
+        ]);
+
+        return (int) $statement->fetchColumn();
+    }
 }

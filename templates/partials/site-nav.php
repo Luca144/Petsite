@@ -19,27 +19,32 @@
    instance) still have to work, so it is defaulted once here. */
 $currentPath = $currentPath ?? '';
 
-/* The destinations. On mobile: just 3 core buttons (shop, explore, myself).
-   On desktop: those 3 plus community (which contains browse creatures & find people).
-   Guests can only look around — everything else asks them to come in first,
-   and the sidebar offers the door (log in / sign up).
+/* The destinations, kept few enough to read at a glance on a phone (the mockup
+   asks for one short row, not the five pills this used to be). Browsing creatures
+   and finding people are both "who else is here?", so they now live behind one
+   "community" pill as two tabs.
 
-   The "myself" link points to the player's profile page when logged in, or
-   to the login page when logged out. */
-$profileLink = !empty($currentUser) ? '/profile/edit' : '/login';
+   "myself" is always last and always present. Logged in, it is your own page —
+   the same place the sidebar portrait goes, and where the way out now lives.
+   Logged out, it is the door: the log-in page, which offers signing up. That is
+   the ONLY way in now, since the sidebar no longer greets guests with a login
+   box floating over the top of every page. */
+$myselfLink = !empty($currentUser)
+    ? '/player/' . rawurlencode($currentUser->username)
+    : '/login';
 
 if (!empty($currentUser)) {
-    // Logged-in players: core navigation + community
     $worldLinks = [
         ['/shop', 'shop'],
         ['/explore', 'explore'],
         ['/community', 'community'],
     ];
 } else {
-    // Guests: can only shop, explore, and log in
+    // A guest can look around the world, but the community's people tab and
+    // everything personal asks them to come in first.
     $worldLinks = [
-        ['/shop', 'shop'],
         ['/explore', 'explore'],
+        ['/community', 'community'],
     ];
 }
 
@@ -60,8 +65,8 @@ $isCurrent = static function (string $href) use ($currentPath): bool {
             </li>
         <?php endforeach; ?>
         <li>
-            <a href="<?= $this->e($profileLink) ?>"<?= $isCurrent($profileLink) ? ' aria-current="page"' : '' ?>>
-                myself
+            <a href="<?= $this->e($myselfLink) ?>"<?= $isCurrent($myselfLink) ? ' aria-current="page"' : '' ?>>
+                <?= !empty($currentUser) ? 'myself' : 'log in' ?>
             </a>
         </li>
     </ul>

@@ -81,6 +81,7 @@ use Felkyo\Http\Router;
 use Felkyo\Security\RateLimiter;
 use Felkyo\Security\RateLimitRepository;
 use Felkyo\Users\AvatarSet;
+use Felkyo\Users\PlayerFinder;
 use Felkyo\Users\ProfileRepository;
 use Felkyo\Users\ProfileService;
 use Felkyo\Users\UserRepository;
@@ -193,11 +194,21 @@ $growthCalculator = new GrowthCalculator(
     $config['gameplay']['growth']['xp_per_level'],
     $config['gameplay']['growth']['stage_start_levels']
 );
+// Petting needs the connection because paying for a pet and recording it must
+// happen together, in one transaction (see PettingService for the whole reason).
+// The currency knobs are folded into the petting settings so the service reads
+// one array rather than three separate numbers.
 $pettingService = new PettingService(
+    $pdo,
     $pettingRepository,
     $creatureRepository,
     $userRepository,
-    $config['gameplay']['petting'] + ['currency_per_pet' => $config['gameplay']['currency']['per_pet']]
+    $config['gameplay']['petting'] + [
+        'currency_per_pet' => $config['gameplay']['currency']['per_pet'],
+        'currency_daily_cap' => $config['gameplay']['currency']['daily_cap'],
+        'currency_cap_window_seconds' => $config['gameplay']['currency']['daily_cap_window_seconds'],
+    ],
+    $config['gameplay']['currency']['name']
 );
 $creatureProfileBuilder = new CreatureProfileBuilder(
     $speciesRepository, $userRepository, $growthCalculator, $pettingRepository
@@ -321,7 +332,8 @@ $loginController = new LoginController(
 );
 $logoutController = new LogoutController($session, $csrf);
 $creatureController = new CreatureController(
-    $templates, $session, $creatureRepository, $creatureProfileBuilder, $guestbookPanel
+    $templates, $session, $creatureRepository, $creatureProfileBuilder, $guestbookPanel,
+    $config['gameplay']['creature_name_max_length']
 );
 $guestbookController = new GuestbookController(
     $session, $csrf, $creatureRepository, $guestbookService, $guestbookRepository, $rateLimiter,
@@ -333,10 +345,13 @@ $petController = new PetController(
 $bioController = new BioController(
     $session, $csrf, $creatureRepository, $creatureBioService, $rateLimiter, $config['security']['rate_limit_bio']
 );
+// Renaming reuses the bio rate limit: both are "the owner changing words on their
+// own creature", they happen about as often, and one number is easier to retune
+// than two that mean the same thing.
 $creatureRenameController = new CreatureRenameController(
     $session, $csrf, $creatureRepository, new ContentFilter($config['moderation']['blocked_words']), $rateLimiter,
     $config['security']['rate_limit_bio'],
-    $config['gameplay']['bio_max_length']
+    $config['gameplay']['creature_name_max_length']
 );
 $collectionController = new CollectionController(
     $templates, $session, $creatureRepository, $creatureProfileBuilder
@@ -400,20 +415,31 @@ $reportController = new ReportController(
     $config['security']['rate_limit_report']
 );
 
-// The community page: browse creatures and find people from one tab interface.
-$communityController = new CommunityController(
-    $templates, $session, $creatureRepository, $creatureProfileBuilder, $profileRepository,
-    $avatarSet, $config['gameplay']['browse_recent_limit']
-);
-
 // Finding a player. Prefix matching only, a minimum length, a small result cap
 // and a rate limit — four separate answers to the same threat, which is somebody
 // scripting their way to a list of everybody here. There is deliberately no
 // "newest members" listing anywhere on this site.
-$searchController = new SearchController(
-    $templates, $session, $profileRepository, $avatarSet, $rateLimiter,
+//
+// It is ONE object shared by both pages that offer search. That is not a saving,
+// it is the point: when the community page searched players through its own copy
+// of this logic, it shipped without any of the four guards. One door, one set of
+// rules, no second copy to forget.
+$playerFinder = new PlayerFinder(
+    $profileRepository, $avatarSet, $rateLimiter,
     $config['search'],
     $config['security']['rate_limit_search']
+);
+
+$searchController = new SearchController(
+    $templates, $session, $playerFinder, $config['search']['minimum_length']
+);
+
+// The community page: the creatures of Felkyo and the people who keep them,
+// behind two tabs on one page.
+$communityController = new CommunityController(
+    $templates, $session, $creatureRepository, $creatureProfileBuilder, $playerFinder,
+    $config['gameplay']['browse_recent_limit'],
+    $config['search']['minimum_length']
 );
 
 // ---- Routes ----

@@ -330,3 +330,12 @@
         transform: none;
     }
 }
+
+/* The way out, at the very bottom of your own page.
+   Centred and separated by a rule above it, so it reads as an ending rather than
+   as one more thing to do. It is a real form (POST + CSRF), never a link. */
+.profile-logout {
+    margin: var(--space-5) 0 0;
+    display: flex;
+    justify-content: center;
+}

@@ -66,7 +66,8 @@ final class CreatureControllerTest extends DatabaseTestCase
         );
 
         $controller = new CreatureController(
-            $templates, $session, $creatures, $profileBuilder, $guestbookPanel
+            $templates, $session, $creatures, $profileBuilder, $guestbookPanel,
+            $config['gameplay']['creature_name_max_length']
         );
 
         $this->router = new Router();

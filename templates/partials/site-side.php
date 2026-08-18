@@ -13,10 +13,18 @@
  * your purse, your avatar — which is the door to your own page — the links to
  * your things, the way out, and your favourite creature as a keepsake card.
  *
+ * IT DRAWS NOTHING AT ALL FOR A GUEST (changed 2026-08-18). It used to greet a
+ * logged-out visitor with "hello, traveller" and a log-in link, which on a phone
+ * meant a whole parchment panel sitting above the banner before anyone had seen
+ * what the site even was — the first thing you met was a login box floating over
+ * the page. A guest has nothing that is theirs yet, so this panel has nothing to
+ * hold; the way in is the "myself" pill in the world bar, which leads to the
+ * log-in page, and the log-in page offers signing up.
+ *
  * Variables, all provided by the layout: $currentUser, $currentPath,
- * $currencyName, $registrationOpen, $currentAvatarPath, $currentAvatarName,
- * $favouriteSummary (a creature summary array, or null when no favourite is
- * chosen — then the keepsake slot simply stays empty).
+ * $currencyName, $currentAvatarPath, $currentAvatarName, $favouriteSummary (a
+ * creature summary array, or null when no favourite is chosen — then the
+ * keepsake slot simply stays empty).
  */
 
 /* Which link is the current page. Home is an exact match (every path starts
@@ -29,9 +37,14 @@ $isCurrent = static function (string $href) use ($currentPath): bool {
 
     return $currentPath === $href || str_starts_with($currentPath, $href);
 };
+
+/* A guest gets no panel at all — not an empty one. An <aside> with nothing in it
+   would still be a parchment box taking up the top of every page. */
+if (empty($currentUser)) {
+    return;
+}
 ?>
 <aside class="site-side" aria-label="You">
-    <?php if (!empty($currentUser)): ?>
         <div class="site-side__who">
             <p class="site-side__name"><?= $this->e($currentUser->username) ?></p>
 
@@ -73,8 +86,11 @@ $isCurrent = static function (string $href) use ($currentPath): bool {
             </ul>
         </nav>
 
-        <?php /* The way out — deliberately the quietest control here. Log out is
-                 not a destination, so it is a plain word, not a pill. */ ?>
+        <?php /* The way out — deliberately the quietest control here, and DESKTOP
+                 ONLY (see sidebar.css). On a phone the sidebar is a compact strip
+                 right at the top of every page, which put "log out" a mis-tap away
+                 from the links people actually use all day. It lives on your own
+                 page there instead, which is where you go on purpose. */ ?>
         <form method="post" action="/logout" class="site-side__logout">
             <?= $this->csrf_field() ?>
             <button type="submit">log out</button>
@@ -89,18 +105,4 @@ $isCurrent = static function (string $href) use ($currentPath): bool {
                 <?= $this->insert('partials/creature-card', ['summary' => $favouriteSummary]) ?>
             </div>
         <?php endif; ?>
-    <?php else: ?>
-        <div class="site-side__who">
-            <p class="site-side__name">hello, traveller</p>
-        </div>
-
-        <nav class="site-side__nav" aria-label="Your account">
-            <ul class="site-side__links">
-                <li><a href="/login"<?= $isCurrent('/login') ? ' aria-current="page"' : '' ?>>log in</a></li>
-                <?php if (!empty($registrationOpen)): ?>
-                    <li><a href="/register"<?= $isCurrent('/register') ? ' aria-current="page"' : '' ?>>sign up</a></li>
-                <?php endif; ?>
-            </ul>
-        </nav>
-    <?php endif; ?>
 </aside>

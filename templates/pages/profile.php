@@ -24,7 +24,7 @@ $this->layout('layout', ['title' => $profile->username . ' — Felkyo Creatures'
 <header class="profile-header">
     <img class="profile-header__avatar"
          src="<?= $this->e($avatarPath) ?>"
-         alt="<?= $this->e($profile->username . ‘’s avatar: ‘ . $avatarName) ?>"
+         alt="<?= $this->e($profile->username . "'s avatar: " . $avatarName) ?>"
          width="96" height="96">
 
     <div class="profile-header__text">
@@ -150,3 +150,19 @@ $this->layout('layout', ['title' => $profile->username . ' — Felkyo Creatures'
         </p>
     <?php endif; ?>
 </section>
+
+<?php if ($isOwner): ?>
+    <?php /* The way out lives here, at the very bottom of your own page.
+             WHY HERE: on a phone the sidebar is a compact strip at the top of
+             every single page, so "log out" sat one mis-tap away from the links
+             people use all day — and logging out by accident loses your place for
+             no reason (golden rule 9: nothing is lost by accident). Your own page
+             is somewhere you go deliberately, and the bottom of it is somewhere
+             you only reach on purpose. A POST with a CSRF token, never a link, so
+             no other site can log you out on your behalf. */ ?>
+    <hr class="rule">
+    <form method="post" action="/logout" class="profile-logout">
+        <?= $this->csrf_field() ?>
+        <button class="btn btn--secondary" type="submit">Log out</button>
+    </form>
+<?php endif; ?>

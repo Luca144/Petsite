@@ -75,10 +75,17 @@ final class PurchaseServiceTest extends DatabaseTestCase
 
         // The refusal follows the golden rules: it states the exact gap in plain
         // words ("you need 1 more coin", singular because the gap is one) and
-        // points at the one way coins are earned, so a new player with an empty
+        // points at the one way the money is earned, so a new player with an empty
         // purse is never left at a dead end.
+        //
+        // WHAT THAT ONE WAY IS CHANGED on 2026-08-18: petting used to pay the
+        // creature's OWNER, so the advice was "other players pet your creatures"
+        // — something you could only wait for. It now pays the PETTER, so the
+        // advice is something you can go and do. This assertion is here to make
+        // sure the two never drift apart again: if the payment rule moves, this
+        // sentence has to move with it.
         $this->assertStringContainsString('You need 1 more coin ', $result->message());
-        $this->assertStringContainsString('pet your creatures', $result->message());
+        $this->assertStringContainsString("petting other players' creatures", $result->message());
     }
 
     public function testBuyingAnItemThisShopDoesNotSellFails(): void

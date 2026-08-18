@@ -143,6 +143,24 @@ $createdLabel = $creature->createdAt !== null
                       placeholder="Tell everyone a little about <?= $this->e($creature->name) ?>…"><?= $this->e($creature->bio ?? '') ?></textarea>
             <button class="btn btn--secondary" type="submit">Save bio</button>
         </form>
+
+        <?php /* Renaming, in the same owner-only box as the bio because it is the
+                 same kind of act: changing the words attached to your creature.
+                 The field is pre-filled with the current name so the common case
+                 (a small change) is a small edit, not a retype from nothing. */ ?>
+        <form method="post" action="/creature/<?= $this->e((string) $creature->id) ?>/rename" class="bio-form">
+            <?= $this->csrf_field() ?>
+            <label class="field__label" for="creature-name">Rename <?= $this->e($creature->name) ?></label>
+            <input class="field__input" type="text" id="creature-name" name="name"
+                   value="<?= $this->e($creature->name) ?>"
+                   maxlength="<?= $this->e((string) $nameMaxLength) ?>"
+                   required
+                   aria-describedby="creature-name-hint">
+            <span class="field__hint" id="creature-name-hint">
+                Up to <?= $this->e((string) $nameMaxLength) ?> characters. You can change this whenever you like.
+            </span>
+            <button class="btn btn--secondary" type="submit">Save name</button>
+        </form>
     <?php endif; ?>
 </div>
 

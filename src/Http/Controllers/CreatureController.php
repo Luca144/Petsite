@@ -30,6 +30,9 @@ final class CreatureController
         private CreatureRepository $creatures,
         private CreatureProfileBuilder $profileBuilder,
         private GuestbookPanel $guestbookPanel,
+        // The rename field needs the same limit the server enforces, so the box
+        // stops you before a submission can fail. One number, from config.
+        private int $nameMaxLength,
     ) {
     }
 
@@ -74,8 +77,9 @@ final class CreatureController
             'timesPetted' => $profile['timesPetted'],
             // Any logged-in visitor may pet a creature they can see.
             'canPet' => $this->session->has('user_id'),
-            // Only the owner sees the "edit bio" form.
+            // Only the owner sees the "edit bio" and "rename" forms.
             'isOwner' => $this->viewerOwns($creature->ownerId),
+            'nameMaxLength' => $this->nameMaxLength,
             // Reporting needs somebody to report TO, so the control is offered
             // only to a logged-in visitor (the owner gets the edit form instead).
             'viewerIsLoggedIn' => is_int($this->session->get('user_id')),

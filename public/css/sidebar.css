@@ -158,9 +158,15 @@
 /* The way out — deliberately the quietest control on the page: a plain word,
    not a pill. Log out is final, and the most final control should not dress
    like the ones you press all day. */
+/* DESKTOP ONLY. On a phone the sidebar is a compact strip across the top of every
+   page, which put "log out" right beside the links people tap all day — and an
+   accidental log-out loses your place for nothing (golden rule 9). On a phone the
+   way out lives at the bottom of your own page instead, which you reach on
+   purpose. The media query below turns this back on for the wide layout, where
+   the sidebar is a calm column with room to spare. */
 .site-side__logout {
+    display: none;
     margin: 0;
-    display: inline-flex;
 }
 
 .site-side__logout button {
@@ -217,6 +223,12 @@
 
     .site-side__name {
         font-size: 1.7rem;
+    }
+
+    /* The way out returns on the wide layout, where the sidebar is a roomy column
+       rather than a strip of pills at the top of the screen. */
+    .site-side__logout {
+        display: inline-flex;
     }
 
     /* The portrait grows from a pill into the framed box of the mockup. */

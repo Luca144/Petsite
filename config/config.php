@@ -369,16 +369,42 @@ return [
             'search_shown_from' => 9,
         ],
 
-        // The single in-game currency. A creature's OWNER earns this each time
-        // someone ELSE pets their creature (the petting cooldown limits how often,
-        // so it can't be farmed). "name" is only the label shown to players.
+        // The single in-game currency. "name" is only the label shown to players.
+        //
+        // WHO EARNS IT, AND WHY THAT CHANGED (2026-08-18). It used to go to the
+        // creature's OWNER when somebody else petted their creature. It now goes
+        // to the PERSON DOING THE PETTING. The reason is the shape of the game we
+        // want: rewarding the visitor gives everyone a reason to go and look at
+        // other people's creatures, which is the loop the whole site is built on.
+        // Rewarding the owner rewarded standing still.
+        //
+        // WHAT THAT COSTS US, AND HOW IT IS PAID FOR. Paying the petter makes the
+        // alt-account problem CLAUDE.md names by name more attractive, not less:
+        // a second account can pet its own owner's creatures for profit. Three
+        // things limit it, and all three are enforced server-side:
+        //   - petting your OWN creature never pays (checked in PettingService);
+        //   - the per-person, per-creature cooldown means one creature cannot be
+        //     milked in a loop;
+        //   - daily_cap is the ceiling on what ONE account can earn in a day, so
+        //     an extra account is worth at most that much, for real effort.
+        // Deliberately small per pet and generous per day: the honest player who
+        // wanders around never notices the cap, and the farmer hits it quickly.
         'currency' => [
-            'name' => 'coins',
-            'per_pet' => 5,
+            'name' => 'gems',
+            'per_pet' => 1,
+            // The most gems one account may earn from petting in a rolling day.
+            'daily_cap' => 100,
+            // The window the cap is measured over, in seconds (a rolling 24h).
+            'daily_cap_window_seconds' => 86400,
         ],
 
         // The longest a creature's bio (written by its owner) may be.
         'bio_max_length' => 500,
+
+        // The longest a creature's NAME may be. Kept well under the database
+        // column (40 characters) so a name can never be silently truncated on the
+        // way in, and short enough that it still fits a card on a phone.
+        'creature_name_max_length' => 30,
 
         // The guestbook. Visitors sign a creature's guestbook by CHOOSING one of
         // the messages below — there is no free typing anywhere in it. That single

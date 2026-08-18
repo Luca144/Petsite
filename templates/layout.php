@@ -155,8 +155,10 @@ use Felkyo\Http\AssetUrl;
         </div>
     </div>
 
-    <!-- Scripts: enhancements that make the site nicer but not required -->
-    <script src="<?= AssetUrl::versioned('/js/password-toggle.js') ?>"></script>
-    <script src="<?= AssetUrl::versioned('/js/item-finder.js') ?>"></script>
+    <?php /* Site-wide enhancements. Everything here is an ENHANCEMENT: each page
+             works fully without it. Page-specific scripts (item-finder.js) are
+             included by the pages that need them, NOT here — loading one both
+             here and there ran it twice and bound every handler twice over. */ ?>
+    <script src="<?= AssetUrl::versioned('/js/password-toggle.js') ?>" defer></script>
 </body>
 </html>

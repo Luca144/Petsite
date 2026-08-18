@@ -13,6 +13,7 @@ use Felkyo\Security\RateLimiter;
 use Felkyo\Security\RateLimitRepository;
 use Felkyo\Tests\DatabaseTestCase;
 use Felkyo\Users\AvatarSet;
+use Felkyo\Users\PlayerFinder;
 use Felkyo\Users\ProfileRepository;
 use Felkyo\Users\UserRepository;
 use League\Plates\Engine;
@@ -48,11 +49,14 @@ final class SearchControllerTest extends DatabaseTestCase
         $controller = new SearchController(
             $templates,
             new Session(cookieSecure: false),
-            new ProfileRepository($this->connection),
-            new AvatarSet(['default' => ['name' => 'The wandering visitor', 'file' => 'default.png']]),
-            new RateLimiter(new RateLimitRepository($this->connection)),
-            ['minimum_length' => 2, 'result_limit' => 3],
-            ['max_attempts' => 60, 'window_seconds' => 3600]
+            new PlayerFinder(
+                new ProfileRepository($this->connection),
+                new AvatarSet(['default' => ['name' => 'The wandering visitor', 'file' => 'default.png']]),
+                new RateLimiter(new RateLimitRepository($this->connection)),
+                ['minimum_length' => 2, 'result_limit' => 3],
+                ['max_attempts' => 60, 'window_seconds' => 3600]
+            ),
+            2
         );
 
         $this->router = new Router();
@@ -243,11 +247,14 @@ final class SearchControllerTest extends DatabaseTestCase
         $limited = new SearchController(
             new Engine(dirname(__DIR__, 2) . '/templates'),
             new Session(cookieSecure: false),
-            new ProfileRepository($this->connection),
-            new AvatarSet(['default' => ['name' => 'x', 'file' => 'default.png']]),
-            new RateLimiter(new RateLimitRepository($this->connection)),
-            ['minimum_length' => 2, 'result_limit' => 3],
-            ['max_attempts' => 2, 'window_seconds' => 3600]
+            new PlayerFinder(
+                new ProfileRepository($this->connection),
+                new AvatarSet(['default' => ['name' => 'x', 'file' => 'default.png']]),
+                new RateLimiter(new RateLimitRepository($this->connection)),
+                ['minimum_length' => 2, 'result_limit' => 3],
+                ['max_attempts' => 2, 'window_seconds' => 3600]
+            ),
+            2
         );
 
         $router = new Router();

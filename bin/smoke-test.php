@@ -181,6 +181,11 @@ echo "\nEvery page loads:\n";
 $pages = [
     '/', '/creatures', '/adopt', '/explore', '/shop', '/inventory', '/browse',
     '/players', '/players?q=' . substr($name, 0, 4), '/profile/edit', '/player/' . $name,
+    // The community hub and BOTH of its tabs. Loading only the default tab would
+    // have missed the people half entirely — and the people half is the one that
+    // runs a query and the one with the guards on it.
+    '/community', '/community?tab=creatures',
+    '/community?tab=users', '/community?tab=users&q=' . substr($name, 0, 4),
 ];
 $captured = [];
 foreach ($pages as $path) {
@@ -221,6 +226,39 @@ check(
 );
 check('your own page shows your name', str_contains($captured['/player/' . $name], $name));
 
+// The community page is two features behind one address, so both halves are
+// checked for what they are FOR — not merely that the page returned 200.
+check(
+    'the community page shows creatures on its creatures tab',
+    str_contains($captured['/community?tab=creatures'], 'creature-collection')
+        || str_contains($captured['/community?tab=creatures'], 'No creatures to show yet')
+);
+preg_match_all(
+    '~class="search-result__name">([^<]+)<~',
+    $captured['/community?tab=users&q=' . substr($name, 0, 4)],
+    $communityFound
+);
+check(
+    'the community page finds a player on its people tab',
+    in_array($name, $communityFound[1] ?? [], true),
+    'searching a name that definitely exists returned ' . count($communityFound[1] ?? []) . ' results'
+);
+// The guard that was missing when this page was first written. A one-letter
+// query must search nothing at all, or the box is a way to list the playerbase.
+check(
+    'the community people tab refuses a one-letter query',
+    str_contains(
+        request('/community?tab=users&q=' . substr($name, 0, 1))['body'],
+        'at least'
+    )
+);
+// The way out has to be somewhere you can actually reach on a phone, and on a
+// phone that is your own page — the sidebar's copy is desktop-only now.
+check(
+    'your own page offers a way to log out',
+    str_contains($captured['/player/' . $name], 'action="/logout"')
+);
+
 echo "\nForms work:\n";
 request('/profile', [
     '_csrf_token' => tokenFrom('/profile/edit'),
@@ -239,6 +277,43 @@ request('/profile', [
 $afterLink = request('/player/' . $name)['body'];
 check('a link in an about text is refused', !str_contains($afterLink, 'example.com'));
 check('the previous text survives the refusal', str_contains($afterLink, 'A quiet wanderer.'));
+
+// ---------------------------------------------------------------------------
+// Renaming a creature
+//
+// Renaming shipped once as a route with no form anywhere on the site: the
+// endpoint answered perfectly and no player could ever reach it. So the first
+// check here is not "does renaming work" but "is there a box to type in".
+// ---------------------------------------------------------------------------
+
+// The account registered above was given one starter creature; find its page.
+preg_match('~href="(/creature/\d+)"~', request('/creatures')['body'], $creatureLink);
+$creaturePath = $creatureLink[1] ?? null;
+
+check('the new player has a creature to open', $creaturePath !== null);
+
+if ($creaturePath !== null) {
+    $creaturePage = request($creaturePath)['body'];
+
+    check(
+        'the creature page offers a rename box to its owner',
+        str_contains($creaturePage, 'action="' . $creaturePath . '/rename"')
+    );
+
+    request($creaturePath . '/rename', [
+        '_csrf_token' => tokenFrom($creaturePath),
+        'name' => 'Smoketest',
+    ]);
+    check('a creature can be renamed', str_contains(request($creaturePath)['body'], 'Smoketest'));
+
+    // An empty name must be refused and must change nothing — the creature keeps
+    // the name it had rather than ending up nameless.
+    request($creaturePath . '/rename', [
+        '_csrf_token' => tokenFrom($creaturePath),
+        'name' => '   ',
+    ]);
+    check('an empty name is refused', str_contains(request($creaturePath)['body'], 'Smoketest'));
+}
 
 // ---------------------------------------------------------------------------
 // Markup mistakes that are embarrassing to ship

@@ -155,6 +155,37 @@ final class CreatureRepository
     }
 
     /**
+     * Claim this creature for the duration of the current transaction, so that two
+     * pets landing at the same instant are dealt with one after the other.
+     *
+     * WHY THIS EXISTS. Petting is a read-then-write: we ask "has this person petted
+     * this creature recently?" and then, if not, we write a petting row and pay
+     * them. Two copies of the same request arriving together — a double-tapped
+     * button, an impatient refresh, or somebody deliberately firing it twice — can
+     * both read "no, not recently", and both go on to write and both get paid. That
+     * is the currency-duplication problem CLAUDE.md names, and it became worth
+     * exploiting the moment gems started going to the person doing the petting.
+     *
+     * SELECT ... FOR UPDATE takes a lock on this creature's row that lasts until the
+     * transaction ends. The second request simply waits at this line, and by the
+     * time it continues, the first one's petting row is committed and visible — so
+     * its cooldown check now correctly says "yes, recently". No pet is lost and none
+     * is paid for twice.
+     *
+     * It must therefore be called INSIDE a transaction and BEFORE the cooldown
+     * check. Called outside one, the lock is released immediately and protects
+     * nothing.
+     */
+    public function lockForPetting(int $creatureId): void
+    {
+        $statement = $this->connection->prepare(
+            'SELECT id FROM creatures WHERE id = :id FOR UPDATE'
+        );
+        $statement->execute([':id' => $creatureId]);
+        $statement->fetchAll();
+    }
+
+    /**
      * Apply the effects of one pet to a creature: add to its happiness and XP, and
      * stamp when it was last interacted with. Doing the additions in the database
      * (happiness = happiness + :amount) is safe even if two pets land at once.

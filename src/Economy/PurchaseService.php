@@ -53,7 +53,7 @@ final class PurchaseService
             // Take the money only if the player can afford it. If not, nothing is
             // changed and we tell them — and the message follows the golden rules:
             // say the exact gap in plain words ("you need 3 more", not "insufficient
-            // funds"), and never leave a dead end — name the way coins actually
+            // funds"), and never leave a dead end — name the way gems actually
             // arrive, because a brand-new player has zero and no way to know.
             if (!$this->users->deductCurrency($userId, $item->price)) {
                 $this->connection->rollBack();
@@ -68,7 +68,11 @@ final class PurchaseService
 
                 return PurchaseResult::failed(
                     'You need ' . $shortBy . ' more ' . $currencyWord . ' for the ' . $item->name
-                    . ' — ' . $this->currencyName . ' arrive when other players pet your creatures.'
+                    // Where gems come from, as of 2026-08-18: you earn them by
+                    // petting OTHER people's creatures. This sentence has to keep
+                    // matching PettingService — it is the only place a new player
+                    // is told how to get any, so a stale answer here is a dead end.
+                    . ' — you earn ' . $this->currencyName . " by petting other players' creatures."
                 );
             }
 
