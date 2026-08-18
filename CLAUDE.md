@@ -163,6 +163,13 @@ directly, which means the test does the wiring — and it wires things the way t
 person writing it *believed* they worked. A test that hands a controller input it
 could never actually receive will pass forever while the feature is dead.
 
+**And neither test suite can see the deployed database or a stylesheet.** Both run
+against a *local* database that has been migrated, so neither can tell you the live
+schema is behind the code. Both read HTML, so neither can tell you the CSS put the
+whole site in a 250px column. Both of those shipped. When a change touches the
+schema or the layout, the test suites are not the last line — the deployment guide
+and your own eyes at 360px and 1280px are.
+
 This is not hypothetical. The player search read its query from posted form
 values while the form was a GET form; search never worked once, and its test was
 green the whole time.
@@ -315,6 +322,13 @@ Before considering a task done, run through this checklist:
 - [ ] No dropdown menus were added
 - [ ] Documentation has been updated to reflect the change
 - [ ] Commit message is clear and follows the pattern
+- [ ] **If a migration was added, the handover SAYS SO, in the first paragraph.**
+      Code deploys automatically; database structure does not. This checklist had
+      no such line, and three migrations shipped without anybody being told —
+      every page on the live site became `Unknown column 'energy'` from inside a
+      repository. Passing tests and a passing smoke test both said fine, because
+      the local database had been migrated. Saying "run `phinx migrate -e
+      production`" is part of finishing the work, not an optional footnote.
 - [ ] **Performance:** Database queries are indexed where appropriate; N+1 problems avoided; hot paths are efficient
 - [ ] **Architecture:** The code structure makes sense and doesn't hide performance issues or future scaling problems
 

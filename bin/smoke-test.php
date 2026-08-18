@@ -535,6 +535,24 @@ check(
     str_contains(request('/')['body'], 'href="/login"')
 );
 
+// The logged-out shell must not claim to have a sidebar. It has none, and the
+// wide-screen layout is a two-column grid — so a shell that says otherwise puts
+// the whole site inside the narrow sidebar column. That shipped, and it looked
+// like the site had collapsed into a strip beside the wallpaper.
+$loggedOutHome = request('/')['body'];
+check(
+    'the logged-out shell does not ask for a sidebar column',
+    !str_contains($loggedOutHome, 'site-shell--with-side')
+);
+check(
+    'and draws no empty sidebar panel',
+    !str_contains($loggedOutHome, 'class="site-side"')
+);
+check(
+    'the log-in page still renders for a guest',
+    str_contains(request('/login')['body'], 'name="password"')
+);
+
 // ---------------------------------------------------------------------------
 // Nothing was logged that should not have been
 // ---------------------------------------------------------------------------

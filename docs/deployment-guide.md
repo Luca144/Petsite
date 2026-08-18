@@ -326,6 +326,35 @@ php vendor/robmorgan/phinx/bin/phinx migrate -e production
 
 Code deploys automatically; database structure does not.
 
+### What forgetting that looks like
+
+It happened, with three migrations outstanding. Worth knowing the symptom, because
+it does not look like a database problem:
+
+- The site loads fine while logged out.
+- Logging in gives **"this page isn't working"** — a blank browser error, no themed
+  page, nothing that mentions a database.
+- The log says `Unknown column 'energy' in 'field list'` and names a *repository
+  file*, which sends you looking at the wrong thing entirely.
+
+**Since then the app checks for itself.** On every request it compares the
+migration files on disk against the ones Phinx has recorded as run, and if the
+database is behind it serves the "Felkyo is having a quiet moment" page and logs
+the exact command to run (see `src/Core/PendingMigrations.php`). So the symptom is
+now:
+
+- **Every** page shows "having a quiet moment", logged in or not.
+- The log says *"The database is behind the code: 3 migration(s) have not been
+  run. Run: php vendor/robmorgan/phinx/bin/phinx migrate -e production"*.
+
+If you see that, the fix is the line the log gave you. Nothing is broken and
+nothing is lost — the code is simply ahead of its tables.
+
+**Deliberately not automatic.** Running migrations on container start is the
+obvious alternative and it is worse: several containers can boot at once, and a
+migration that fails half way through leaves a half-changed schema, which is a
+much harder afternoon than typing one command.
+
 ### Changing the demo password
 
 Two steps, in this order:

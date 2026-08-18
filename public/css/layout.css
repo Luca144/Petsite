@@ -263,7 +263,13 @@
 
 /* ---- Desktop refinements (added on top of the mobile-first base) ---- */
 @media (min-width: 900px) {
-    .site-shell {
+    /* TWO COLUMNS ONLY WHEN THERE IS A SIDEBAR TO PUT IN ONE.
+       A guest has no sidebar panel, and the grid used to be unconditional — so
+       the main panel became the grid's only child, landed in the first column,
+       and the entire site rendered inside a 250px strip. Making the grid depend
+       on the modifier means the logged-out page is simply one wide panel, which
+       is what it should always have been. */
+    .site-shell--with-side {
         display: grid;
         /* Sidebar at its fixed width; minmax(0, 1fr) lets the main panel
            shrink properly (a plain 1fr refuses to go below its content's
@@ -271,6 +277,13 @@
         grid-template-columns: var(--side-width) minmax(0, 1fr);
         gap: var(--space-6);
         align-items: start;
+    }
+
+    /* The logged-out shell: one panel, narrowed to a comfortable reading width
+       rather than stretched across a wide screen. A welcome and a log-in form do
+       not need 1300px, and the extra sky either side is the point of the design. */
+    .site-shell:not(.site-shell--with-side) {
+        max-width: 46rem;
     }
 
     .site-main {

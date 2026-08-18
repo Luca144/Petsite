@@ -126,6 +126,38 @@ final class LayoutRenderTest extends TestCase
     }
 
     /**
+     * The shell's two-column grid only applies when there IS a sidebar to put in
+     * one of the columns.
+     *
+     * THIS IS THE TEST FOR A REAL OUTAGE. When the guest sidebar was removed, the
+     * wide-screen grid stayed unconditional — so the main panel became the grid's
+     * only child, landed in the first (sidebar-width) column, and the entire
+     * logged-out site rendered inside a 250px strip with the painted sky filling
+     * the rest of the screen. Every automated test passed: the HTML was perfectly
+     * correct, and the mistake was one stylesheet expecting two children where
+     * there was now one.
+     *
+     * The class is what joins the markup to that stylesheet, so it is the thing
+     * worth asserting. Anybody removing it has to come past this comment.
+     */
+    public function testTheGuestShellIsNotAskedToBeATwoColumnGrid(): void
+    {
+        $this->assertStringNotContainsString(
+            'site-shell--with-side',
+            $this->html,
+            'A logged-out page claims to have a sidebar. The wide layout will put '
+            . 'the whole site in the narrow sidebar column.'
+        );
+    }
+
+    public function testAGuestGetsNoSidebarPanelAtAll(): void
+    {
+        // Not an empty one: an <aside> with nothing in it is still a parchment box
+        // taking up the top of every page on a phone.
+        $this->assertStringNotContainsString('class="site-side"', $this->html);
+    }
+
+    /**
      * Enforces CLAUDE.md section 8: no dropdown menus, anywhere, ever. If someone
      * later adds a <select> to a template, this test fails and explains why.
      */

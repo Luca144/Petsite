@@ -88,8 +88,19 @@ use Felkyo\Http\AssetUrl;
         </p>
     <?php endif; ?>
 
-    <!-- id="top" is the target of the footer's "Back to top" link. -->
-    <div class="site-shell" id="top">
+    <?php /* id="top" is the target of the footer's "Back to top" link.
+
+             THE MODIFIER CLASS SAYS WHETHER THERE IS A SIDEBAR, and it has to,
+             because the wide layout is a two-column grid. A guest gets no sidebar
+             panel at all (see partials/site-side.php for why), which left the grid
+             with one child — and a single child lands in the FIRST column, which
+             is sidebar-width. The whole site rendered squeezed into a 250px strip
+             with the painted sky filling the rest.
+
+             A modifier rather than :has(> .site-side): it is obvious when reading
+             either file which case is which, and it cannot be defeated by
+             something else appearing inside the shell later. */ ?>
+    <div class="site-shell<?= !empty($currentUser) ? ' site-shell--with-side' : '' ?>" id="top">
         <?= $this->insert('partials/site-side', [
             'currentUser' => $currentUser ?? null,
             'currentPath' => $currentPath ?? '',

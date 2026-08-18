@@ -25,6 +25,7 @@ use Felkyo\Auth\RegistrationService;
 use Felkyo\Auth\Session;
 use Felkyo\Core\Database;
 use Felkyo\Core\FileLogger;
+use Felkyo\Core\PendingMigrations;
 use Felkyo\Creatures\ContentFilter;
 use Felkyo\Creatures\CreaturePurchaseService;
 use Felkyo\Creatures\CreatureBioService;
@@ -123,6 +124,38 @@ try {
         . '<title>Felkyo Creatures — back shortly</title></head><body>'
         . '<h1>Felkyo is having a quiet moment</h1>'
         . '<p>We can&rsquo;t reach the creatures right now. Please try again in a little while.</p>'
+        . '</body></html>';
+    exit;
+}
+
+// IS THE DATABASE BEHIND THE CODE? Code deploys automatically; database structure
+// does not (docs/deployment-guide.md), so a release with a new migration needs
+// that migration run by hand afterwards. The day that is forgotten, every page
+// becomes a fatal error from inside a repository naming a column nobody was asking
+// about — which is exactly what happened, with three migrations outstanding.
+//
+// So it is checked here instead, once, before anything tries to read a row. The
+// site is still down — nothing here can invent a missing column — but it is down
+// with a sentence a visitor can read and a log line naming the command to run.
+// See PendingMigrations for why it counts files rather than checking columns.
+$pendingMigrations = PendingMigrations::count($pdo, dirname(__DIR__) . '/migrations');
+if ($pendingMigrations > 0) {
+    $logger->error(sprintf(
+        'The database is behind the code: %d migration(s) have not been run. '
+        . 'Run: php vendor/robmorgan/phinx/bin/phinx migrate -e %s',
+        $pendingMigrations,
+        $config['app']['environment'] === 'production' ? 'production' : 'development'
+    ));
+
+    // The same wording as the connection failure above, on purpose: from a
+    // visitor's side these are the same event — the site cannot reach its data —
+    // and inviting them to guess which is not a kindness.
+    http_response_code(503);
+    header('Content-Type: text/html; charset=utf-8');
+    echo '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">'
+        . '<title>Felkyo Creatures — back shortly</title></head><body>'
+        . '<h1>Felkyo is having a quiet moment</h1>'
+        . '<p>We&rsquo;re part-way through some tidying up. Please try again in a little while.</p>'
         . '</body></html>';
     exit;
 }
