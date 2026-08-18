@@ -222,25 +222,25 @@
         position: sticky;
         top: var(--space-4);
 
-        /* THE COLUMN MUST NEVER BE TALLER THAN THE SCREEN, and this is not a
-           nicety — it is what stops the bottom of it being unreachable.
+        /* NO INNER SCROLLBAR, AND NO MAX-HEIGHT. There was one for a day, and it
+           was the wrong fix.
 
-           A sticky element taller than the viewport hangs its overflow below the
-           fold and then stops moving, because sticky pins it. Scrolling does not
-           bring the bottom up; only reaching the end of the whole page does. When
-           M2 added the keepsake card the column grew past a typical laptop screen,
-           and the card — the thing the feature is for — could only be reached by
-           scrolling to the very end of every page.
+           The problem it papered over: a sticky element taller than the viewport
+           hangs its overflow below the fold and then stops moving, because sticky
+           pins it — so the keepsake card at the bottom of the column could only be
+           reached by scrolling to the very end of the page. Capping the height and
+           adding an inner scrollbar made the card reachable, but it made it
+           reachable by finding and using a scrollbar inside a sidebar, which is
+           nobody's idea of a companion sitting beside you.
 
-           Capping the height to the viewport and letting the column scroll inside
-           itself fixes that for any content and any screen. The overflow bar only
-           appears when it is actually needed, so on a tall screen nothing changes.
+           The real cause was that the card had grown too tall: it carried a list of
+           radio cards, one per treat. That list moved to the creature's own page and
+           the card now has three buttons, so the whole column fits a laptop screen
+           again and sticky does what it was meant to do — the creature stays with
+           you as you read, with nothing to scroll and nothing hidden.
 
-           overscroll-behavior stops a flick inside the column carrying on into the
-           page once it reaches its own end, which reads as the page lurching. */
-        max-height: calc(100vh - (2 * var(--space-4)));
-        overflow-y: auto;
-        overscroll-behavior: contain;
+           If it ever outgrows a screen again, the fix is to shorten the column, not
+           to hide the overflow. */
     }
 
     .site-side__who {

@@ -574,6 +574,31 @@ if ($creaturePath !== null) {
         'and plays the celebration on the card',
         str_contains($pettedFromCard['body'], 'mood-bar__fill--just-changed')
     );
+
+    // THE CARD IS SHORT ENOUGH TO SIT IN A COLUMN. It used to carry a radio card
+    // per treat, which made the sidebar taller than a laptop screen — and since the
+    // column is sticky, that put the card itself out of reach until you scrolled to
+    // the very bottom of the page. Feeding from the card is now one button and the
+    // server picks the treat, so the list must not come back.
+    check(
+        'the keepsake card has no treat list in it',
+        !str_contains($home, 'keepsake__treats')
+    );
+    check(
+        'the keepsake card offers pet, feed and play',
+        substr_count($home, 'keepsake__btn') >= 3
+    );
+
+    // Feeding with no treat named: the server chooses. This is the card's button.
+    $fedFromCard = request($creaturePath . '/feed', [
+        '_csrf_token' => tokenFrom('/'),
+        'from' => 'home',
+    ]);
+    check(
+        'feeding from the card picks a treat and says which',
+        str_contains($fedFromCard['body'], 'Treat') || str_contains($fedFromCard['body'], 'Bundle')
+            || str_contains($fedFromCard['body'], 'no treats just now')
+    );
 }
 
 // ---------------------------------------------------------------------------

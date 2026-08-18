@@ -79,16 +79,22 @@
     color: var(--ink);
 }
 
-/* The two everyday actions, side by side and equally weighted — neither is the
-   "main" one, because which matters depends on the creature. */
+/* The three everyday actions, side by side and equally weighted — none is the
+   "main" one, because which matters depends on how the creature is doing. They
+   wrap on a very narrow phone rather than squeezing below a tappable width. */
 .keepsake__actions {
     display: flex;
+    /* Wraps rather than squeezing three buttons below a tappable width on a very
+       narrow phone. Two-and-one is untidy; two unreadable-and-a-half is worse. */
+    flex-wrap: wrap;
     gap: var(--space-2);
     width: 100%;
 }
 
+/* Each takes an equal share, and may shrink to a third of the row but no further
+   — below that they wrap instead (flex-basis is what decides when). */
 .keepsake__actions > * {
-    flex: 1;
+    flex: 1 1 4.5rem;
 }
 
 /* Smaller than a page button but still comfortably past the 44px tap target,
@@ -97,7 +103,10 @@
     width: 100%;
     min-height: 44px;
     padding: var(--space-2);
-    font-size: 0.85rem;
+    font-size: 0.8rem;
+    /* Three words in a row on a narrow card: let the label shrink rather than
+       overflow its button. */
+    gap: 0.3rem;
 }
 
 .keepsake__feed {
@@ -107,68 +116,6 @@
     gap: var(--space-2);
 }
 
-/* Radio cards, never a dropdown (CLAUDE.md §8). With two or three treats a
-   dropdown would hide the choice behind a tap and gain nothing. */
-.keepsake__treats {
-    margin: 0;
-    padding: 0;
-    border: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-}
-
-.keepsake__treats-legend {
-    padding: 0;
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    color: var(--ink-soft);
-}
-
-.keepsake__treat {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    min-height: 44px;
-    padding: var(--space-1) var(--space-2);
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--panel);
-    cursor: pointer;
-    font-size: 0.8rem;
-    text-align: left;
-}
-
-/* The chosen treat is filled AND outlined, so the selection is a shape as well
-   as a colour. :has() lets the label react to its own radio; browsers without it
-   still show the radio dot itself, which is the fallback and is sufficient. */
-.keepsake__treat:has(input:checked) {
-    background: var(--parchment);
-    border-color: var(--purple);
-    box-shadow: inset 0 -3px 0 var(--gold-lit);
-}
-
-.keepsake__treat:has(input:focus-visible) {
-    outline: 3px solid var(--purple);
-    outline-offset: 2px;
-}
-
-.keepsake__treat-name {
-    flex: 1;
-}
-
-.keepsake__treat-count {
-    font-family: var(--font-mono);
-    color: var(--ink-soft);
-}
-
-/* An empty satchel says where treats come from rather than showing nothing —
-   golden rule 3, never a dead end. */
-.keepsake__no-treats {
-    margin: 0;
-    font-size: 0.75rem;
-    color: var(--ink-soft);
-}
 
 /* On the wide layout the card is the bottom of a calm column, so it can breathe
    a little more than it does in the phone strip. */

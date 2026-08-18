@@ -133,6 +133,54 @@ final class FeedingService
     }
 
     /**
+     * The treat this creature would most like, out of what its owner is carrying.
+     *
+     * WHY THIS EXISTS. The keepsake card used to carry a list of radio cards, one
+     * per treat — which made it the tallest thing in the sidebar and pushed the
+     * whole column past the height of a laptop screen, so the card itself became
+     * the part you could not reach. On a card whose whole point is one tap, asking
+     * somebody to pick from a list was the wrong shape anyway.
+     *
+     * So the card has one "feed" button and the SERVER decides which treat: the
+     * creature's favourite if its owner has one, otherwise whichever does the most
+     * good. The full chooser stays on the creature's own page, for when picking is
+     * the thing you actually came to do.
+     *
+     * Returns null when the satchel holds no food at all, which the caller turns
+     * into a sentence about where treats come from rather than a silent refusal.
+     */
+    public function bestTreatFor(int $actorUserId, Creature $creature): ?\Felkyo\Economy\OwnedItemStack
+    {
+        $treats = $this->inventory->findTreatsForUser($actorUserId);
+        if ($treats === []) {
+            return null;
+        }
+
+        $species = $this->species->findById($creature->speciesId);
+
+        // A favourite wins outright, however small its numbers — "give them
+        // something nice" means the thing they like, not the biggest number.
+        foreach ($treats as $stack) {
+            if ($species !== null && $species->adores($stack->item->id)) {
+                return $stack;
+            }
+        }
+
+        // Otherwise the strongest, skipping anything this creature dislikes while
+        // there is something else in the bag. Feeding a creature the one thing it
+        // pulls a face at, when you had alternatives, would be an odd reading of
+        // "give them a treat".
+        $acceptable = array_values(array_filter(
+            $treats,
+            static fn ($stack): bool => $species === null || !$species->dislikes($stack->item->id)
+        ));
+
+        // findTreatsForUser already returns them strongest-first, so the head of
+        // whichever list survives is the answer.
+        return $acceptable[0] ?? $treats[0];
+    }
+
+    /**
      * What this creature thinks of that item: 'adores', 'dislikes', or 'neutral'.
      *
      * A creature whose species has no recorded taste — or whose species has

@@ -60,6 +60,19 @@ $image = '/assets/creatures/' . rawurlencode($species?->slug ?? '')
         'justPetted' => $justPetted ?? false,
     ]) ?>
 
+    <?php /* THREE BUTTONS IN A ROW, AND NOTHING ELSE.
+
+             This used to be two buttons plus a list of radio cards, one per treat.
+             That made the card the tallest thing in the sidebar and pushed the whole
+             column past the height of a laptop screen — so the card itself became
+             the part you had to scroll to the bottom of the page to reach, which is
+             the opposite of what a card on every page is for.
+
+             A list was the wrong shape here anyway. The card's whole promise is one
+             tap; picking a particular treat is something you go to the creature's
+             own page to do, and the full chooser lives there. "feed" here means
+             "give them something nice", and the SERVER chooses — the favourite if
+             you have one (see FeedingService::bestTreatFor). */ ?>
     <div class="keepsake__actions">
         <?php /* Petting your own creature earns no gems (you cannot pay yourself),
                  and that is fine — this button is not about earning. It is the
@@ -72,10 +85,25 @@ $image = '/assets/creatures/' . rawurlencode($species?->slug ?? '')
             </button>
         </form>
 
+        <?php /* No item_id: the server picks. When the satchel is empty it says so
+                 and names where treats come from, rather than the button quietly
+                 not being here (golden rule 3). */ ?>
+        <form method="post" action="/creature/<?= $this->e((string) $creature->id) ?>/feed">
+            <?= $this->csrf_field() ?>
+            <input type="hidden" name="from" value="home">
+            <button class="btn btn--secondary keepsake__btn" type="submit">
+                <span aria-hidden="true">&#9679;</span> feed
+                <?php if (!empty($treats)): ?>
+                    <span class="visually-hidden">
+                        &mdash; <?= $this->e((string) count($treats)) ?> kinds of treat to hand
+                    </span>
+                <?php endif; ?>
+            </button>
+        </form>
+
         <?php /* A game. A LINK, not a form, because starting one changes nothing —
-                 the round is opened by the page you land on. It cycles through
-                 three games at random, and the server keeps the answer, which is
-                 why it can be trusted (see PlayableGames). */ ?>
+                 the round is opened by the page you land on. The server keeps the
+                 answer, which is why the result can be trusted (see PlayableGames). */ ?>
         <a class="btn btn--secondary keepsake__btn"
            href="/creature/<?= $this->e((string) $creature->id) ?>/play">
             <span aria-hidden="true">&#9670;</span> play
@@ -87,38 +115,4 @@ $image = '/assets/creatures/' . rawurlencode($species?->slug ?? '')
             visit <?= $this->e($creature->name) ?>
         </a>
     </p>
-
-    <?php if (!empty($treats)): ?>
-        <form class="keepsake__feed" method="post"
-              action="/creature/<?= $this->e((string) $creature->id) ?>/feed">
-            <?= $this->csrf_field() ?>
-            <input type="hidden" name="from" value="home">
-
-            <fieldset class="keepsake__treats">
-                <legend class="keepsake__treats-legend">give a treat</legend>
-                <?php foreach ($treats as $index => $stack): ?>
-                    <label class="keepsake__treat">
-                        <input type="radio" name="item_id"
-                               value="<?= $this->e((string) $stack->item->id) ?>"
-                               <?= $index === 0 ? 'checked' : '' ?>>
-                        <span class="keepsake__treat-name">
-                            <?= $this->e($stack->item->name) ?>
-                            <span class="keepsake__treat-count" aria-hidden="true">&times;<?= $this->e((string) $stack->quantity) ?></span>
-                            <span class="visually-hidden">, <?= $this->e((string) $stack->quantity) ?> owned</span>
-                        </span>
-                    </label>
-                <?php endforeach; ?>
-            </fieldset>
-
-            <button class="btn btn--secondary keepsake__btn" type="submit">feed</button>
-        </form>
-    <?php else: ?>
-        <?php /* Never a dead end (golden rule 3): an empty satchel says where
-                 treats come from and links there, rather than simply not offering
-                 the button and leaving somebody to wonder. */ ?>
-        <p class="keepsake__no-treats">
-            No treats left. <a href="/shop">The village store</a> sells them,
-            and they turn up while <a href="/explore">exploring</a>.
-        </p>
-    <?php endif; ?>
 </section>

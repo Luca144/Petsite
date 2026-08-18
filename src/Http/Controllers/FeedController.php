@@ -88,7 +88,30 @@ final class FeedController
         }
         $this->rateLimiter->record('feed', $request->clientIp());
 
-        $result = $this->feeding->feed($userId, $creature, (int) $request->input('item_id'));
+        // WHICH TREAT. The creature's own page sends one — you picked it from the
+        // chooser. The keepsake card sends none, because it has a single "feed"
+        // button rather than a list: on a card whose point is one tap, a radio group
+        // was the wrong shape, and it made the card tall enough to push the whole
+        // sidebar past the height of a screen.
+        //
+        // So no item chosen means "give them something nice", and the SERVER decides
+        // which — never the browser. bestTreatFor() prefers the creature's favourite.
+        $itemId = (int) $request->input('item_id');
+        if ($itemId === 0) {
+            $best = $this->feeding->bestTreatFor($userId, $creature);
+
+            if ($best === null) {
+                // Never a dead end (golden rule 3): say where treats come from.
+                $this->session->flash(
+                    'You have no treats just now. The village store sells them, and they turn up while exploring.'
+                );
+                return Response::redirect($backTo);
+            }
+
+            $itemId = $best->item->id;
+        }
+
+        $result = $this->feeding->feed($userId, $creature, $itemId);
         $this->session->flash($result->message());
 
         // A real feed plays the little celebration once, the same way a pet does.

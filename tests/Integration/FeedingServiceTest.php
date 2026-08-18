@@ -281,6 +281,73 @@ final class FeedingServiceTest extends DatabaseTestCase
         $this->assertSame(50, $this->creature()->happiness);
     }
 
+    // ---- "Give them something nice" — the card's one-tap feed ----
+
+    public function testTheFavouriteIsChosenEvenWhenItIsNotTheStrongest(): void
+    {
+        // "Give them something nice" means the thing they LIKE, not the biggest
+        // number. Chamomile is the strongest treat by total effect; honey is the
+        // favourite here, and the favourite wins.
+        $this->setTastes(loves: $this->honeyTreatId, dislikes: null);
+        $this->inventory->addItem($this->ownerId, $this->honeyTreatId);
+        $this->inventory->addItem($this->ownerId, $this->itemIdBySlug('chamomile-bundle'));
+
+        $best = $this->feeding->bestTreatFor($this->ownerId, $this->creature());
+
+        $this->assertSame($this->honeyTreatId, $best->item->id);
+    }
+
+    public function testTheStrongestIsChosenWhenThereIsNoFavourite(): void
+    {
+        $this->inventory->addItem($this->ownerId, $this->honeyTreatId);
+        $this->inventory->addItem($this->ownerId, $this->itemIdBySlug('acorn-treat'));
+
+        $best = $this->feeding->bestTreatFor($this->ownerId, $this->creature());
+
+        // Honey (10 + 20) beats acorn (6 + 10).
+        $this->assertSame($this->honeyTreatId, $best->item->id);
+    }
+
+    public function testADislikedTreatIsAvoidedWhenThereIsAnAlternative(): void
+    {
+        // Feeding a creature the one thing it pulls a face at, while something else
+        // was in the bag, would be an odd reading of "give them a treat".
+        $acornId = $this->itemIdBySlug('acorn-treat');
+        $this->setTastes(loves: null, dislikes: $this->honeyTreatId);
+        $this->inventory->addItem($this->ownerId, $this->honeyTreatId);
+        $this->inventory->addItem($this->ownerId, $acornId);
+
+        $best = $this->feeding->bestTreatFor($this->ownerId, $this->creature());
+
+        $this->assertSame($acornId, $best->item->id);
+    }
+
+    public function testADislikedTreatIsStillChosenWhenItIsAllThereIs(): void
+    {
+        // Something is better than nothing, and a creature offered its least
+        // favourite still cheers up. Refusing to feed at all would be worse.
+        $this->setTastes(loves: null, dislikes: $this->honeyTreatId);
+        $this->inventory->addItem($this->ownerId, $this->honeyTreatId);
+
+        $best = $this->feeding->bestTreatFor($this->ownerId, $this->creature());
+
+        $this->assertSame($this->honeyTreatId, $best->item->id);
+    }
+
+    public function testAnEmptySatchelHasNoBestTreat(): void
+    {
+        // Null, so the caller can say where treats come from rather than the button
+        // silently doing nothing.
+        $this->assertNull($this->feeding->bestTreatFor($this->ownerId, $this->creature()));
+    }
+
+    public function testSomethingThatIsNotFoodIsNeverChosen(): void
+    {
+        $this->inventory->addItem($this->ownerId, $this->stickerId);
+
+        $this->assertNull($this->feeding->bestTreatFor($this->ownerId, $this->creature()));
+    }
+
     // ---- What it refuses ----
 
     public function testYouCannotFeedSomebodyElsesCreature(): void
