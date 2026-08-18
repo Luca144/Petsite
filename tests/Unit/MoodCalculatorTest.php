@@ -33,6 +33,8 @@ final class MoodCalculatorTest extends TestCase
         'happiness_floor' => 20,
         'energy_recovery_per_hour' => 10,
         'resting_below' => 20,
+        'favourite_treat_multiplier' => 2,
+        'disliked_treat_divisor' => 4,
         'happiness_words' => [
             0 => 'sleepy',
             40 => 'content',
@@ -122,6 +124,53 @@ final class MoodCalculatorTest extends TestCase
     {
         $this->assertSame(70, $this->calculator()->afterResting(50, 20));
         $this->assertSame(100, $this->calculator()->afterResting(95, 20));
+    }
+
+    // ---- Tastes ----
+
+    public function testAFavouriteTreatIsWorthDouble(): void
+    {
+        $this->assertSame(20, $this->calculator()->tasteAdjusted(10, adores: true, dislikes: false));
+    }
+
+    public function testADislikedTreatIsWorthAQuarter(): void
+    {
+        $this->assertSame(3, $this->calculator()->tasteAdjusted(10, adores: false, dislikes: true));
+    }
+
+    public function testADislikedTreatNeverDropsToNothing(): void
+    {
+        // THE FLOOR THAT MATTERS. Integer division would take a small effect to
+        // zero, which would read as the creature refusing a gift — and refusing a
+        // gift is not something this game does. Anything that helped at all still
+        // helps at least a little, so a treat is never wasted and never a rebuff.
+        foreach ([1, 2, 3, 4] as $small) {
+            $this->assertGreaterThan(
+                0,
+                $this->calculator()->tasteAdjusted($small, adores: false, dislikes: true),
+                'A small disliked treat was worth nothing at all.'
+            );
+        }
+    }
+
+    public function testTasteNeverMakesAnEffectNegative(): void
+    {
+        // There is deliberately no way to express a treat that harms a creature.
+        // If one ever appears in the data, it arrives here as zero, not as damage.
+        $this->assertSame(0, $this->calculator()->tasteAdjusted(0, adores: false, dislikes: true));
+        $this->assertSame(0, $this->calculator()->tasteAdjusted(-5, adores: false, dislikes: true));
+        $this->assertSame(0, $this->calculator()->tasteAdjusted(-5, adores: true, dislikes: false));
+    }
+
+    public function testATreatWithNoEffectStaysWithoutEffect(): void
+    {
+        // Liking something does not conjure an effect out of nothing.
+        $this->assertSame(0, $this->calculator()->tasteAdjusted(0, adores: true, dislikes: false));
+    }
+
+    public function testNoOpinionLeavesTheEffectAlone(): void
+    {
+        $this->assertSame(10, $this->calculator()->tasteAdjusted(10, adores: false, dislikes: false));
     }
 
     // ---- The words ----

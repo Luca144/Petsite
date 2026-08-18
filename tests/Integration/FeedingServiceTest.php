@@ -32,9 +32,11 @@ final class FeedingServiceTest extends DatabaseTestCase
     private CreatureRepository $creatures;
     private InventoryRepository $inventory;
     private UserRepository $users;
+    private SpeciesRepository $species;
     private int $ownerId;
     private int $strangerId;
     private int $creatureId;
+    private int $speciesId;
     private int $honeyTreatId;
     private int $stickerId;
 
@@ -46,21 +48,47 @@ final class FeedingServiceTest extends DatabaseTestCase
         $this->creatures = new CreatureRepository($this->connection);
         $this->inventory = new InventoryRepository($this->connection);
         $this->users = new UserRepository($this->connection);
+        $this->species = new SpeciesRepository($this->connection);
         $this->feeding = new FeedingService(
             $this->connection,
             $this->creatures,
             $this->inventory,
-            $this->moodCalculator()
+            $this->moodCalculator(),
+            $this->species
         );
 
-        $species = new SpeciesRepository($this->connection);
         $this->ownerId = $this->users->create('owner', 'owner@example.com', 'hash')->id;
         $this->strangerId = $this->users->create('stranger', 'stranger@example.com', 'hash')->id;
-        $this->creatureId = $this->creatures->create($this->ownerId, $species->findStarters()[0]->id, 'Biscuit')->id;
+        $this->speciesId = $this->species->findStarters()[0]->id;
+        $this->creatureId = $this->creatures->create($this->ownerId, $this->speciesId, 'Biscuit')->id;
 
         // Two seeded items: one that is food, one that plainly is not.
         $this->honeyTreatId = $this->itemIdBySlug('honey-treat');
         $this->stickerId = $this->itemIdBySlug('gold-star-sticker');
+
+        // The tests below decide for themselves what this creature's species
+        // thinks of a treat, so they start from a species with NO opinions —
+        // otherwise every assertion about a plain treat would quietly depend on
+        // whichever pairing the migration happened to seed.
+        $this->setTastes(loves: null, dislikes: null);
+    }
+
+    /**
+     * Set (or clear) what this creature's species adores and dislikes.
+     *
+     * Restored by setUp() on every test, since setUp() clears them again — so a
+     * test that sets a taste cannot leak it into the next one.
+     */
+    private function setTastes(?int $loves, ?int $dislikes): void
+    {
+        $statement = $this->connection->prepare(
+            'UPDATE species SET favourite_item_id = :loves, disliked_item_id = :dislikes WHERE id = :id'
+        );
+        $statement->execute([
+            ':loves' => $loves,
+            ':dislikes' => $dislikes,
+            ':id' => $this->speciesId,
+        ]);
     }
 
     private function itemIdBySlug(string $slug): int
@@ -150,6 +178,104 @@ final class FeedingServiceTest extends DatabaseTestCase
         $this->feeding->feed($this->ownerId, $this->creature(), $this->honeyTreatId);
 
         $this->assertSame(100, $this->creature()->happiness);
+    }
+
+    // ---- Tastes ----
+
+    public function testAFavouriteTreatIsWorthMore(): void
+    {
+        $this->makeCreatureNeedy();
+        $this->setTastes(loves: $this->honeyTreatId, dislikes: null);
+        $this->inventory->addItem($this->ownerId, $this->honeyTreatId);
+
+        $this->feeding->feed($this->ownerId, $this->creature(), $this->honeyTreatId);
+
+        // Honey is +10 happiness; a favourite doubles it. 40 + 20.
+        $this->assertSame(60, $this->creature()->happiness);
+    }
+
+    public function testAFavouriteTreatSaysSo(): void
+    {
+        // The numbers are small and nobody counts them. What somebody remembers is
+        // that their creature ADORED the honey, so the message is the feature.
+        $this->setTastes(loves: $this->honeyTreatId, dislikes: null);
+        $this->inventory->addItem($this->ownerId, $this->honeyTreatId);
+
+        $message = $this->feeding->feed($this->ownerId, $this->creature(), $this->honeyTreatId)->message();
+
+        $this->assertStringContainsString('loves', $message);
+        $this->assertStringContainsString('favourite', $message);
+    }
+
+    public function testADislikedTreatIsWorthLessButStillHelps(): void
+    {
+        $this->makeCreatureNeedy();
+        $this->setTastes(loves: null, dislikes: $this->honeyTreatId);
+        $this->inventory->addItem($this->ownerId, $this->honeyTreatId);
+
+        $this->feeding->feed($this->ownerId, $this->creature(), $this->honeyTreatId);
+
+        // Honey is +10; a quarter of that, rounded up, is 3. 40 + 3.
+        $this->assertSame(43, $this->creature()->happiness);
+    }
+
+    public function testADislikedTreatIsNeverAPunishment(): void
+    {
+        // THE LINE THIS WHOLE FEATURE MUST NOT CROSS. A creature offered something
+        // it does not care for eats it, cheers up a little, and pulls a face. It is
+        // never made less happy, and the player is never worse off for having tried
+        // to be kind. Golden rule 11: when in doubt, gentler.
+        $this->makeCreatureNeedy();
+        $before = $this->creature()->happiness;
+        $this->setTastes(loves: null, dislikes: $this->honeyTreatId);
+        $this->inventory->addItem($this->ownerId, $this->honeyTreatId);
+
+        $result = $this->feeding->feed($this->ownerId, $this->creature(), $this->honeyTreatId);
+
+        $this->assertTrue($result->isSuccessful());
+        $this->assertGreaterThan(
+            $before,
+            $this->creature()->happiness,
+            'A disliked treat made a creature less happy. Nothing in this game may do that.'
+        );
+    }
+
+    public function testADislikedTreatSaysSoWithoutBeingSad(): void
+    {
+        $this->setTastes(loves: null, dislikes: $this->honeyTreatId);
+        $this->inventory->addItem($this->ownerId, $this->honeyTreatId);
+
+        $message = $this->feeding->feed($this->ownerId, $this->creature(), $this->honeyTreatId)->message();
+
+        // It happened, and it was funny rather than a telling-off.
+        $this->assertStringContainsString('made a face', $message);
+        foreach (['sorry', 'refused', 'wasted', 'sad', 'upset'] as $unkind) {
+            $this->assertStringNotContainsStringIgnoringCase($unkind, $message);
+        }
+    }
+
+    public function testTasteChangesHappinessButNotRest(): void
+    {
+        // Energy is what food does to a body: a chamomile bundle is just as restful
+        // whether or not the creature enjoyed it. Taste is an opinion, not digestion.
+        $this->creatures->saveMood($this->creatureId, 40, 20);
+        $this->setTastes(loves: null, dislikes: $this->honeyTreatId);
+        $this->inventory->addItem($this->ownerId, $this->honeyTreatId);
+
+        $this->feeding->feed($this->ownerId, $this->creature(), $this->honeyTreatId);
+
+        // Honey's +20 energy arrives in full despite the face. 20 + 20.
+        $this->assertSame(40, $this->creature()->energy);
+    }
+
+    public function testACreatureWithNoOpinionsIsUnaffected(): void
+    {
+        $this->makeCreatureNeedy();
+        $this->inventory->addItem($this->ownerId, $this->honeyTreatId);
+
+        $this->feeding->feed($this->ownerId, $this->creature(), $this->honeyTreatId);
+
+        $this->assertSame(50, $this->creature()->happiness);
     }
 
     // ---- What it refuses ----

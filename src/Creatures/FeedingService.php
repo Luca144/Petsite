@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Felkyo\Creatures;
 
 use Felkyo\Economy\InventoryRepository;
+use Felkyo\Economy\Item;
 use PDO;
 
 /**
@@ -59,6 +60,10 @@ final class FeedingService
         private CreatureRepository $creatures,
         private InventoryRepository $inventory,
         private MoodCalculator $mood,
+        // Needed for the creature's TASTES: a species adores one treat and would
+        // rather not have another, which changes both the effect and what the
+        // message says. See applyTreat().
+        private SpeciesRepository $species,
     ) {
     }
 
@@ -109,7 +114,8 @@ final class FeedingService
                 );
             }
 
-            $this->applyTreat($creature, $stack->item->happinessBonus, $stack->item->energyBonus);
+            $taste = $this->tasteFor($creature, $stack->item->id);
+            $this->applyTreat($creature, $stack->item, $taste);
 
             $this->connection->commit();
         } catch (\Throwable $error) {
@@ -119,18 +125,72 @@ final class FeedingService
         }
 
         return FeedingResult::success(
-            $creature->name . ' enjoyed the ' . $stack->item->name . '!'
+            $this->reactionTo($creature->name, $stack->item->name, $taste)
         );
     }
 
     /**
-     * Apply a treat's kindness to the creature.
+     * What this creature thinks of that item: 'adores', 'dislikes', or 'neutral'.
+     *
+     * A creature whose species has no recorded taste — or whose species has
+     * somehow gone missing — is simply neutral. A missing species must not stop
+     * somebody feeding their creature.
+     */
+    private function tasteFor(Creature $creature, int $itemId): string
+    {
+        $species = $this->species->findById($creature->speciesId);
+
+        if ($species === null) {
+            return 'neutral';
+        }
+
+        if ($species->adores($itemId)) {
+            return 'adores';
+        }
+
+        if ($species->dislikes($itemId)) {
+            return 'dislikes';
+        }
+
+        return 'neutral';
+    }
+
+    /**
+     * What the creature does about it, in words.
+     *
+     * THE FACE IS THE FEATURE. The numbers behind a taste are small and nobody
+     * will notice them; what somebody remembers is that their creature adored the
+     * honey and was distinctly unimpressed by the chamomile. So the reaction is
+     * written to be read, and the dislike is written to be funny rather than sad —
+     * a creature that eats something it does not care for and gets on with it, not
+     * a creature being let down.
+     */
+    private function reactionTo(string $creatureName, string $itemName, string $taste): string
+    {
+        return match ($taste) {
+            // A real em dash, not an HTML entity: this string is escaped on the way
+            // to the page, so "&mdash;" would arrive as those eight characters.
+            'adores' => $creatureName . ' absolutely loves the ' . $itemName
+                . ' — that one is a favourite!',
+            'dislikes' => $creatureName . ' ate the ' . $itemName
+                . ', but made a face about it. Noted.',
+            default => $creatureName . ' enjoyed the ' . $itemName . '!',
+        };
+    }
+
+    /**
+     * Apply a treat's kindness to the creature, adjusted for what it thinks of it.
      *
      * Both readings are aged first, for the same reason petting ages them: a
      * creature nobody has visited for a week has drifted, and a treat should top
      * up from where it actually is rather than from a number written last Tuesday.
+     *
+     * ONLY HAPPINESS IS ADJUSTED BY TASTE. Energy is what the food does to a body,
+     * and a chamomile bundle is just as restful whether or not the creature enjoyed
+     * it — a creature that dislikes something and eats it anyway is not less fed.
+     * Taste is an opinion, not digestion.
      */
-    private function applyTreat(Creature $creature, int $happinessBonus, int $energyBonus): void
+    private function applyTreat(Creature $creature, Item $item, string $taste): void
     {
         $mood = $this->mood->moodFor(
             $creature->happiness,
@@ -139,10 +199,16 @@ final class FeedingService
             $creature->energyAgeSeconds
         );
 
+        $happinessGain = $this->mood->tasteAdjusted(
+            $item->happinessBonus,
+            adores: $taste === 'adores',
+            dislikes: $taste === 'dislikes'
+        );
+
         $this->creatures->saveMood(
             $creature->id,
-            $this->mood->afterGaining($mood->happiness, $happinessBonus),
-            $this->mood->afterResting($mood->energy, $energyBonus)
+            $this->mood->afterGaining($mood->happiness, $happinessGain),
+            $this->mood->afterResting($mood->energy, $item->energyBonus)
         );
     }
 }

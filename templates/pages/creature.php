@@ -135,6 +135,9 @@ $createdLabel = $creature->createdAt !== null
             <?= $this->insert('partials/treat-chooser', [
                 'creature' => $creature,
                 'treats' => $treats ?? [],
+                // Marks this species' favourite in the list. The dislike is
+                // deliberately not passed — that one is a surprise.
+                'favouriteItemId' => $species?->favouriteItemId,
             ]) ?>
         <?php endif; ?>
     </div>

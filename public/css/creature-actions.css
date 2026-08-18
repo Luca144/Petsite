@@ -158,3 +158,23 @@
 .favourite-star__button--on .favourite-star__glyph {
     color: var(--gold);
 }
+
+/* A creature's favourite treat, marked in the chooser. Gold on a dark chip — the
+   one place gold text is allowed, because on parchment its contrast is too low
+   to read (CLAUDE.md §8). The star is beside the word, never instead of it. */
+.creature__treat-loved {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-left: var(--space-2);
+    padding: 0.1rem var(--space-2);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--gold-lit);
+    background: var(--plum-deep);
+    border-radius: var(--radius-pill);
+    white-space: nowrap;
+}

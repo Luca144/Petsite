@@ -30,7 +30,33 @@ final class Species
         public readonly bool $isAdoptable,
         /** What one costs in the shop. */
         public readonly int $gemPrice = 0,
+        /** The item this species adores, if it has one. */
+        public readonly ?int $favouriteItemId = null,
+        /**
+         * The item this species would rather not, if it has one.
+         *
+         * A DISLIKE NEVER TAKES ANYTHING AWAY. The creature eats it, gets a little
+         * happier, and makes a face — the face is the whole point. Nothing here can
+         * leave a creature worse off than before it was fed.
+         */
+        public readonly ?int $dislikedItemId = null,
     ) {
+    }
+
+    /**
+     * Does this species adore that item?
+     */
+    public function adores(int $itemId): bool
+    {
+        return $this->favouriteItemId !== null && $this->favouriteItemId === $itemId;
+    }
+
+    /**
+     * Would this species rather not have that item?
+     */
+    public function dislikes(int $itemId): bool
+    {
+        return $this->dislikedItemId !== null && $this->dislikedItemId === $itemId;
     }
 
     public static function fromRow(array $row): self
@@ -44,6 +70,8 @@ final class Species
             (bool) $row['is_starter'],
             (bool) $row['is_adoptable'],
             (int) ($row['gem_price'] ?? 0),
+            isset($row['favourite_item_id']) ? (int) $row['favourite_item_id'] : null,
+            isset($row['disliked_item_id']) ? (int) $row['disliked_item_id'] : null,
         );
     }
 

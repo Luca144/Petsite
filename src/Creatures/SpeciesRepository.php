@@ -17,7 +17,8 @@ use PDO;
  */
 final class SpeciesRepository
 {
-    private const COLUMNS = 'id, slug, name, flavour_text, is_starter, is_adoptable, gem_price';
+    private const COLUMNS = 'id, slug, name, flavour_text, is_starter, is_adoptable, gem_price,
+             favourite_item_id, disliked_item_id';
 
     public function __construct(private PDO $connection)
     {

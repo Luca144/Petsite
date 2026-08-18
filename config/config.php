@@ -289,6 +289,18 @@ return [
             // picture, same buttons. Nothing is refused.
             'resting_below' => 20,
 
+            // TASTES. A creature's favourite treat is worth more to it, and one it
+            // dislikes is worth less — but NEVER nothing, and never a loss. A
+            // disliked treat is still food: the creature eats it, cheers up a
+            // little, and pulls a face, and the face is the entire point.
+            //
+            // These are whole-number divisions rather than decimals so the results
+            // are predictable and easy to reason about: a favourite is worth twice
+            // as much, a dislike a quarter (rounded UP, so a treat that helped at
+            // all still helps at least a little).
+            'favourite_treat_multiplier' => 2,
+            'disliked_treat_divisor' => 4,
+
             // What each happiness range is CALLED. A word, never a bare number —
             // "very happy" is something you can feel about; "73%" is not. The
             // bands are listed low to high and the highest one reached wins.

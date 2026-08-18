@@ -50,6 +50,8 @@ final class MoodCalculator
      *     happiness_floor: int,
      *     energy_recovery_per_hour: int,
      *     resting_below: int,
+     *     favourite_treat_multiplier: int,
+     *     disliked_treat_divisor: int,
      *     happiness_words: array<int, string>
      * } $config The "gameplay.mood" section.
      */
@@ -128,6 +130,36 @@ final class MoodCalculator
     public function afterResting(int $currentEnergy, int $recovery): int
     {
         return $this->clamp($currentEnergy + $recovery, 0, 100);
+    }
+
+    /**
+     * How much a treat's effect is worth to a creature that adores it, dislikes
+     * it, or has no opinion.
+     *
+     * THE FLOOR OF 1 IS THE IMPORTANT LINE. A disliked treat's effect is divided
+     * down, and integer division would take a small effect to zero — which would
+     * mean a creature refusing a gift outright, which is not a thing this game
+     * does. Anything that helped at all still helps at least a little, so feeding
+     * is never a wasted item and never a rebuff.
+     *
+     * A base of zero stays zero: a treat with no happiness effect does not become
+     * one just because the creature likes it.
+     */
+    public function tasteAdjusted(int $baseEffect, bool $adores, bool $dislikes): int
+    {
+        if ($baseEffect <= 0) {
+            return 0;
+        }
+
+        if ($adores) {
+            return $baseEffect * $this->config['favourite_treat_multiplier'];
+        }
+
+        if ($dislikes) {
+            return max(1, (int) ceil($baseEffect / $this->config['disliked_treat_divisor']));
+        }
+
+        return $baseEffect;
     }
 
     /**

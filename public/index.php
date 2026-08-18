@@ -439,7 +439,7 @@ $bioController = new BioController(
 // (read its docblock); the controller only carries the request in and out.
 $feedController = new FeedController(
     $session, $csrf, $creatureRepository,
-    new FeedingService($pdo, $creatureRepository, $inventoryRepository, $moodCalculator),
+    new FeedingService($pdo, $creatureRepository, $inventoryRepository, $moodCalculator, $speciesRepository),
     $rateLimiter, $config['security']['rate_limit_feed']
 );
 $creatureRenameController = new CreatureRenameController(
