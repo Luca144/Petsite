@@ -178,14 +178,29 @@ check('registration logs you in', str_contains(request('/')['body'], $name));
 // ---------------------------------------------------------------------------
 
 echo "\nEvery page loads:\n";
+
+/*
+ * The prefix used to search for this run's own account.
+ *
+ * It is the name minus its last character, not the first four. "smok" WAS the
+ * first four, and it broke: every run leaves its account behind on purpose, so
+ * after twenty runs "smok" matched twenty accounts, hit the result cap, and this
+ * run's own name was no longer among them. The test failed while search worked
+ * perfectly — a false alarm, which is the second-worst kind of test.
+ *
+ * A near-complete prefix is still a genuine prefix search (it proves matching on
+ * a partial name works) and stays unique however many accounts pile up.
+ */
+$searchPrefix = substr($name, 0, -1);
+
 $pages = [
     '/', '/creatures', '/adopt', '/explore', '/shop', '/inventory', '/browse',
-    '/players', '/players?q=' . substr($name, 0, 4), '/profile/edit', '/player/' . $name,
+    '/players', '/players?q=' . $searchPrefix, '/profile/edit', '/player/' . $name,
     // The community hub and BOTH of its tabs. Loading only the default tab would
     // have missed the people half entirely — and the people half is the one that
     // runs a query and the one with the guards on it.
     '/community', '/community?tab=creatures',
-    '/community?tab=users', '/community?tab=users&q=' . substr($name, 0, 4),
+    '/community?tab=users', '/community?tab=users&q=' . $searchPrefix,
 ];
 $captured = [];
 foreach ($pages as $path) {
@@ -212,7 +227,7 @@ echo "\nPages actually do their job:\n";
 // of the very mistake this script exists to catch.
 preg_match_all(
     '~class="search-result__name">([^<]+)<~',
-    $captured['/players?q=' . substr($name, 0, 4)],
+    $captured['/players?q=' . $searchPrefix],
     $found
 );
 check(
@@ -222,7 +237,7 @@ check(
 );
 check(
     'search remembers what was typed',
-    str_contains($captured['/players?q=' . substr($name, 0, 4)], 'value="' . substr($name, 0, 4) . '"')
+    str_contains($captured['/players?q=' . $searchPrefix], 'value="' . $searchPrefix . '"')
 );
 check('your own page shows your name', str_contains($captured['/player/' . $name], $name));
 
@@ -235,7 +250,7 @@ check(
 );
 preg_match_all(
     '~class="search-result__name">([^<]+)<~',
-    $captured['/community?tab=users&q=' . substr($name, 0, 4)],
+    $captured['/community?tab=users&q=' . $searchPrefix],
     $communityFound
 );
 check(
@@ -400,15 +415,24 @@ if ($creaturePath !== null) {
     // The shop still sells treats, for the players who run out of the free ones.
     check('the shop sells treats', str_contains(request('/shop')['body'], 'Honey Treat'));
 
-    // The keepsake card only appears once a favourite has been chosen, so choose
-    // one — through the real form, the way a player would.
-    request('/profile', [
-        '_csrf_token' => tokenFrom('/profile/edit'),
-        'avatar_key' => 'default',
-        'about' => 'A quiet wanderer.',
-        'is_findable' => 'yes',
-        'featured' => [substr($creaturePath, strlen('/creature/'))],
+    // The keepsake card only appears once a favourite has been chosen, and the
+    // star on the creature's own page is how a player would choose one. Pressing
+    // it here is also how we know the star is REACHABLE — favourites used to be
+    // set only from the profile settings page, which most people never opened.
+    check(
+        'the creature page offers the favourite star to its owner',
+        str_contains(request($creaturePath)['body'], 'action="' . $creaturePath . '/favourite"')
+    );
+
+    $starred = request($creaturePath . '/favourite', [
+        '_csrf_token' => tokenFrom($creaturePath),
+        'from' => 'creature',
     ]);
+    check('starring says what happened', str_contains($starred['body'], 'one of your favourites'));
+    check(
+        'the star now shows as pressed',
+        str_contains(request($creaturePath)['body'], 'aria-pressed="true"')
+    );
 
     $home = request('/')['body'];
     check('choosing a favourite puts the keepsake card on the page', str_contains($home, 'class="keepsake"'));

@@ -1,0 +1,160 @@
+/*
+ * creature-actions.css — the controls a creature's OWNER gets.
+ *
+ * WHAT THIS FILE IS: the treat chooser and the favourite star. Both appeared in
+ * M2, both are owner-only, and both are FORMS rather than links because they
+ * change something — which is why neither could live inside the creature card,
+ * and why they are styled together here rather than in creature.css.
+ *
+ * It is its own file because creature.css reached its 400-line limit
+ * (CLAUDE.md §3) and these two are one clear concern: things you do to a
+ * creature you own.
+ *
+ * Every colour comes from theme.css.
+ */
+/* ---------------------------------------------------------------------------
+   Feeding: the owner's treat chooser on a creature's own page.
+
+   Radio cards, never a dropdown (CLAUDE.md §8). Each card says what the treat
+   DOES, because that is what makes choosing one a small decision rather than
+   picking a name off a list.
+   --------------------------------------------------------------------------- */
+
+.creature__feed {
+    margin-top: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    align-items: flex-start;
+}
+
+.creature__treats {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    width: 100%;
+}
+
+.creature__treats > legend {
+    padding: 0 0 var(--space-2);
+}
+
+.creature__treat {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    /* Past the 44px minimum, with room either side — these sit next to each
+       other and feeding the wrong thing costs a real item. */
+    min-height: 56px;
+    padding: var(--space-2) var(--space-3);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--panel);
+    cursor: pointer;
+}
+
+/* The chosen treat is filled AND underlined — a shape as well as a colour, so
+   the selection never rides on colour alone. */
+.creature__treat:has(input:checked) {
+    background: var(--parchment);
+    border-color: var(--purple);
+    box-shadow: inset 0 -3px 0 var(--gold-lit);
+}
+
+.creature__treat:has(input:focus-visible) {
+    outline: 3px solid var(--purple);
+    outline-offset: 3px;
+}
+
+.creature__treat-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.creature__treat-name {
+    font-weight: 700;
+}
+
+.creature__treat-effect {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--ink-soft);
+}
+
+/* ---------------------------------------------------------------------------
+   The favourite star.
+
+   A real button in a real form (starring changes data), sitting beside the card
+   it belongs to rather than inside it — a form nested in a link is invalid HTML.
+   --------------------------------------------------------------------------- */
+
+/* Card and star as one tile in the collection grid. */
+.creature-collection__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.collection-hint {
+    margin: 0 0 var(--space-4);
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+}
+
+.favourite-star {
+    margin: var(--space-2) 0 0;
+}
+
+.favourite-star__button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    /* Past the 44px tap target even though it looks like a small control —
+       it sits under a card and must not be fiddly on a phone. */
+    min-height: 44px;
+    padding: var(--space-1) var(--space-3);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    color: var(--ink-soft);
+    background: transparent;
+    border: 1.5px solid transparent;
+    border-radius: var(--radius-pill);
+    transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+.favourite-star__button:hover {
+    background: var(--panel);
+    border-color: var(--border);
+    color: var(--plum);
+}
+
+.favourite-star__button:focus-visible {
+    outline: 3px solid var(--purple);
+    outline-offset: 2px;
+}
+
+/* A creature that IS a favourite. Three signals, not one: a filled star instead
+   of a hollow one (a different shape), gold instead of grey (a colour), and the
+   word changes from "make favourite" to "favourite" (text, which never fails
+   anybody). aria-pressed carries the same state to a screen reader. */
+.favourite-star__button--on {
+    color: var(--plum);
+    background: var(--panel);
+    border-color: var(--gold);
+}
+
+.favourite-star__glyph {
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+.favourite-star__button--on .favourite-star__glyph {
+    color: var(--gold);
+}

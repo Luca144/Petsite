@@ -131,4 +131,50 @@ final class ProfileService
                 : 'Your featured creatures have been saved.'
         );
     }
+
+    /**
+     * Add or remove ONE creature from a player's favourites, from wherever they
+     * happen to be looking at it.
+     *
+     * WHY THIS DELEGATES RATHER THAN WRITING ITS OWN QUERY. Choosing favourites
+     * already has rules: only creatures you own count, duplicates collapse, and
+     * there is a cap. Those rules live in saveFeatured() above, and a second way
+     * of setting favourites that wrote to the table directly would be a second
+     * place for them to be forgotten — which is exactly how the community page
+     * shipped without any of the search guards. So this works out the new LIST and
+     * hands it to the method that already knows the rules.
+     *
+     * WHY IT IS A TOGGLE AND NOT SEPARATE ADD/REMOVE ROUTES. The star on a
+     * creature's page shows its current state, so the only thing a player can mean
+     * by pressing it is "the other one". Two routes would mean the browser telling
+     * us which — and a stale page would then be able to remove a favourite the
+     * player had just added. The server reading the current state is the only
+     * version of this that cannot get out of step.
+     *
+     * @param string $creatureName Only for the message; the id is what is trusted.
+     */
+    public function toggleFavourite(int $userId, int $creatureId, string $creatureName): ProfileResult
+    {
+        $current = $this->creatures->findFeaturedIds($userId);
+        $wasFavourite = in_array($creatureId, $current, true);
+
+        $next = $wasFavourite
+            ? array_values(array_filter($current, static fn (int $id): bool => $id !== $creatureId))
+            : [...$current, $creatureId];
+
+        $result = $this->saveFeatured($userId, $next);
+
+        // A refusal is passed straight through: the only one possible here is the
+        // cap, and its wording ("you can feature up to six at once") is already
+        // exactly what somebody needs to read.
+        if (!$result->isSuccessful()) {
+            return $result;
+        }
+
+        return ProfileResult::saved(
+            $wasFavourite
+                ? $creatureName . ' is no longer one of your favourites.'
+                : $creatureName . ' is now one of your favourites.'
+        );
+    }
 }

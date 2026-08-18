@@ -65,6 +65,7 @@ use Felkyo\Http\Controllers\CommunityController;
 use Felkyo\Http\Controllers\CreatureRenameController;
 use Felkyo\Http\Controllers\CreatureController;
 use Felkyo\Http\Controllers\ExplorationController;
+use Felkyo\Http\Controllers\FavouriteController;
 use Felkyo\Http\Controllers\FeedController;
 use Felkyo\Http\Controllers\GuestbookController;
 use Felkyo\Http\Controllers\HomeController;
@@ -424,17 +425,28 @@ $itemController = new ItemController(
 // A player's page. The avatar set and the profile repository are built near the
 // top of this file (the sidebar needs them on every page); the profile limits
 // are content/config, so changing how much someone may write needs no code change.
+//
+// ONE ProfileService, shared by the profile form and the favourite star. Both
+// change which creatures a player features, and the cap on how many is a rule
+// that must not exist in two places — see toggleFavourite() for why.
+$profileService = new ProfileService(
+    $profileRepository,
+    $creatureRepository,
+    $avatarSet,
+    $textGuard,
+    $config['profile']
+);
+
 $profileController = new ProfileController(
-    $templates, $session, $csrf, $profileRepository,
-    new ProfileService(
-        $profileRepository,
-        $creatureRepository,
-        $avatarSet,
-        $textGuard,
-        $config['profile']
-    ),
+    $templates, $session, $csrf, $profileRepository, $profileService,
     $creatureRepository, $creatureProfileBuilder, $avatarSet, $rateLimiter,
     $config['profile'],
+    $config['security']['rate_limit_profile']
+);
+
+// The star on a creature, which is the other way to choose a favourite.
+$favouriteController = new FavouriteController(
+    $session, $csrf, $creatureRepository, $profileService, $rateLimiter,
     $config['security']['rate_limit_profile']
 );
 
@@ -550,6 +562,8 @@ $router->post('/creature/{id}/bio', [$bioController, 'update']);
 $router->post('/creature/{id}/rename', [$creatureRenameController, 'update']);
 // Giving a creature a treat (owner only — you feed your own).
 $router->post('/creature/{id}/feed', [$feedController, 'feed']);
+// The star: making one of your creatures a favourite, or not (owner only).
+$router->post('/creature/{id}/favourite', [$favouriteController, 'toggle']);
 // Signing a creature's guestbook (any logged-in visitor, one entry each).
 $router->post('/creature/{id}/guestbook', [$guestbookController, 'sign']);
 // Removing a guestbook entry — only the creature's OWNER may do this.

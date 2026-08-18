@@ -120,6 +120,18 @@ $createdLabel = $creature->createdAt !== null
         <?php endif; ?>
 
         <?php if (!empty($isOwner)): ?>
+            <?php /* The star, right beside the creature it is about. Favourites
+                     used to be chosen only from the profile settings page, out of
+                     a list of names — so saying "this one" meant leaving the thing
+                     you were pointing at. It matters more now: the favourite is
+                     the creature on the keepsake card, which is on every page. */ ?>
+            <?= $this->insert('partials/favourite-star', [
+                'creature' => $creature,
+                'from' => 'creature',
+            ]) ?>
+        <?php endif; ?>
+
+        <?php if (!empty($isOwner)): ?>
             <?php /* Feeding is for the creature's OWNER — you look after your own.
                      Radio cards rather than a dropdown (CLAUDE.md section 8), and
                      each one says what it does, because "which treat" is only an
