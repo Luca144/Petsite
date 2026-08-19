@@ -235,9 +235,12 @@
 
 .item-grid {
     display: grid;
-    /* Two comfortable columns on a small phone, more as there is room. The cards
-       never become so narrow that a long item name has nowhere to go. */
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    /* ONE comfortable column on a phone, more as there is room. This was 150px —
+       two columns at 360 — and 150px is not enough card for "Acorn Treat" plus
+       its artwork plus its count: the name wrapped mid-word and the count chip
+       sat on top of it. A card that cannot hold its own name is too small to be
+       a card. 200px keeps every seeded name on one line with the corner free. */
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: var(--space-3);
     margin-top: var(--space-3);
 }
@@ -333,15 +336,33 @@
     flex: 0 0 auto;
 }
 
+/* THE COUNT IS A CHIP IN THE CORNER, NOT A NEIGHBOUR OF THE NAME.
+
+   It used to sit in the flex row beside the name, and on a narrow card a
+   two-word name wraps — so the count landed glued to the end of the FIRST line
+   and the card read "Acorn2 Treat". Padding could not fix that, because the
+   problem was sharing a line with text that wraps, not the size of the gap.
+
+   Anchored to the card's corner it can never touch the name at any width. The
+   dark chip is the same recipe as the favourite badge and the price chip, so
+   "a small dark pill holds a number" stays one idea site-wide. The body below
+   reserves the corner so a long name slides under nothing. */
 .item-card__qty {
-    margin-left: auto;
-    padding-left: var(--space-4); /* Space between name and quantity */
-    align-self: flex-start;
+    position: absolute;
+    top: var(--space-2);
+    right: var(--space-2);
+    padding: 1px var(--space-2);
     font-family: var(--font-mono);
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     font-weight: 700;
-    color: var(--ink);
-    flex: 0 0 auto;
+    color: var(--gold-lit);
+    background: var(--plum);
+    border-radius: var(--radius-pill);
+}
+
+/* Keep the first line of the name clear of the corner chip. */
+.item-card__body {
+    padding-right: var(--space-6);
 }
 
 /* The inline SVG sprite that holds the category drawings. It defines symbols and

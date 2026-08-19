@@ -82,31 +82,27 @@
 /* The three everyday actions, side by side and equally weighted — none is the
    "main" one, because which matters depends on how the creature is doing. They
    wrap on a very narrow phone rather than squeezing below a tappable width. */
+/* THREE EQUAL COLUMNS, ALWAYS. This was a wrapping flex row, and on the desktop
+   sidebar (a 220px card) the third button wrapped alone onto its own line — a
+   2-and-1 arrangement that read as an accident, because it was one. A grid keeps
+   the three the same width at every card size, and minmax(0, 1fr) lets each cell
+   shrink below its label's natural width instead of overflowing the card. */
 .keepsake__actions {
-    display: flex;
-    /* Wraps rather than squeezing three buttons below a tappable width on a very
-       narrow phone. Two-and-one is untidy; two unreadable-and-a-half is worse. */
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--space-2);
     width: 100%;
 }
 
-/* Each takes an equal share, and may shrink to a third of the row but no further
-   — below that they wrap instead (flex-basis is what decides when). */
-.keepsake__actions > * {
-    flex: 1 1 4.5rem;
-}
-
 /* Smaller than a page button but still comfortably past the 44px tap target,
-   because these sit close together and a mis-tap here feeds the wrong thing. */
+   because these sit close together and a mis-tap here feeds the wrong thing.
+   The tight horizontal padding is what lets "feed" fit a third of a 220px card. */
 .keepsake__btn {
     width: 100%;
     min-height: 44px;
-    padding: var(--space-2);
-    font-size: 0.8rem;
-    /* Three words in a row on a narrow card: let the label shrink rather than
-       overflow its button. */
-    gap: 0.3rem;
+    padding: var(--space-2) var(--space-1);
+    font-size: 0.78rem;
+    gap: 0.25rem;
 }
 
 .keepsake__feed {

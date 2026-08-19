@@ -32,10 +32,14 @@ $this->layout('layout', ['title' => 'Your things — Felkyo Creatures']);
 <h2 class="panel-label">Your things</h2>
 
 <?php if (empty($groups) && !$isFiltered): ?>
+    <?php /* The shop is a link inside the sentence, not a button underneath it.
+             The sentence already points at the store; a button restating it below
+             was the "floating at the bottom" furniture the Product Owner asked to
+             have taken away. Golden rule 3 only needs the door to EXIST. */ ?>
     <p class="empty-state">
-        You don&rsquo;t own anything yet — but the village store is warm and Ruinily is in.
+        You don&rsquo;t own anything yet &mdash; but
+        <a href="/shop">the village store</a> is warm and Ruinily is in.
     </p>
-    <div class="button-row"><a class="btn btn--secondary" href="/shop">Visit the shop</a></div>
 <?php else: ?>
 
     <?= $this->insert('partials/item-finder', ['finder' => $finder]) ?>

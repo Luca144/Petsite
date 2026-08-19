@@ -110,6 +110,10 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    /* Centred, because on a phone the three pills do not quite fit one line and
+       wrap 2-and-1. Centred, that reads as an arrangement; left-aligned it read
+       as a line that broke. (The desktop column overrides this to stretch.) */
+    justify-content: center;
     gap: var(--space-2);
     margin: 0;
     padding: 0;

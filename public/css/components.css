@@ -259,3 +259,10 @@ button.tile:hover {
 /* Form fields live in forms.css; the creature page's own layout lives in
    creature.css. Both were split out to keep this file focused and under its
    size limit. */
+
+/* The welcome card's doors (guest home). Space above separates them from the
+   sentence that introduces them without exiling them below a rule — an
+   invitation and its door belong in the same card. */
+.hello__doors {
+    margin-top: var(--space-5);
+}

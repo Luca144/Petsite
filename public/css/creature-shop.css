@@ -87,3 +87,9 @@
     background: var(--plum-deep);
     border-radius: var(--radius-pill);
 }
+
+/* Breathing room above the section: the purse line ("You're carrying 8 gems")
+   used to sit hard against this heading, and the two read as one cramped block. */
+.creature-shop {
+    margin-top: var(--space-5);
+}

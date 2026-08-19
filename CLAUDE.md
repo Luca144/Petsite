@@ -232,6 +232,7 @@ These sit above the detailed rules below. When a decision is unclear, decide by 
 9. **Nothing is lost by accident.** Destructive actions confirm; wherever it's affordable, they're reversible.
 10. **Never punish absence, never demand speed.** No mechanic penalises being away, and nothing requires fast reactions or precise clicking.
 11. **When in doubt, gentler.** Between the demanding option and the kind one, this site always picks the kind one.
+12. **Every milestone ends pixel-tidy, verified by eye.** Before an M is called done, the GUI is brought to a state fit to hand to an artist who notices single pixels: nothing floating, nothing cut off, nothing wrapping mid-word, nothing overlapping — checked by **looking at real renders** of every changed page at 360px and 1280px (`php bin/gui-shots.php` produces them), not by reasoning about the CSS. Tests cannot see a stylesheet; only eyes can. A milestone whose features all work but whose screens look unfinished is an unfinished milestone.
 
 A screen that satisfies every technical rule below but fails these is not finished. And build the whole thing to load quickly and run smoothly — a site that's beautiful but slow is not finished either.
 
@@ -331,6 +332,10 @@ Before considering a task done, run through this checklist:
       production`" is part of finishing the work, not an optional footnote.
 - [ ] **Performance:** Database queries are indexed where appropriate; N+1 problems avoided; hot paths are efficient
 - [ ] **Architecture:** The code structure makes sense and doesn't hide performance issues or future scaling problems
+- [ ] **The screens were LOOKED AT** (golden rule 12): every page this change touched
+      was rendered at 360px and 1280px (`php bin/gui-shots.php`) and inspected by
+      eye. Neither test suite reads a stylesheet — a layout collapsed into a strip
+      and a count glued to a wrapped name both shipped with everything green.
 
 If any are missing, the task is not done. Go back and finish it before moving on.
 

@@ -50,6 +50,11 @@ $summaries = $summaries ?? [];
          deployed demo registration is closed, so inviting them to make an account
          would only lead to a "sorry, not today" page. We point them at the
          creatures instead. -->
+    <?php /* The doors are INSIDE the welcome card, right under the sentence that
+             explains them — not stranded after a rule at the bottom of the panel,
+             where they read as furniture left behind ("take the buttons off the
+             bottom of the page", and he was right). An invitation and its door
+             belong in the same breath. */ ?>
     <section class="card">
         <h2>Welcome to <?= $this->e($appName) ?></h2>
         <?php if (!empty($registrationOpen)): ?>
@@ -63,17 +68,15 @@ $summaries = $summaries ?? [];
                 meet the ones who already live here &mdash; the kettle&rsquo;s on.
             </p>
         <?php endif; ?>
+
+        <div class="button-row hello__doors">
+            <?php if (!empty($registrationOpen)): ?>
+                <a class="btn btn--primary" href="/register">Create an account</a>
+            <?php else: ?>
+                <a class="btn btn--primary" href="/browse">Browse the creatures</a>
+            <?php endif; ?>
+            <a class="btn btn--secondary" href="/login">Log in</a>
+        </div>
     </section>
-
-    <hr class="rule">
-
-    <div class="button-row">
-        <?php if (!empty($registrationOpen)): ?>
-            <a class="btn btn--primary" href="/register">Create an account</a>
-        <?php else: ?>
-            <a class="btn btn--primary" href="/browse">Browse the creatures</a>
-        <?php endif; ?>
-        <a class="btn btn--secondary" href="/login">Log in</a>
-    </div>
 
 <?php endif; ?>

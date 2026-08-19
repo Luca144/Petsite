@@ -32,3 +32,6 @@ Thumbs.db
 
 # Backup of php.ini we made while setting up (local machine only).
 *.felkyo-bak
+
+# Rendered GUI screenshots (bin/gui-shots.php) — regenerated on demand, never committed.
+/gui-shots/

@@ -23,8 +23,14 @@ $this->layout('layout', ['title' => 'Your creatures — Felkyo Creatures']);
         and one may follow you back from <a href="/explore">exploring</a>.
     </p>
 <?php else: ?>
+    <?php /* The way to MORE creatures lives in this sentence, not as a button at
+             the bottom of the page. A lone button stranded after the grid read as
+             floating furniture (the Product Owner said so, and he was right) — and
+             a link inside the line about your creatures is where somebody
+             wondering about another one is actually looking. */ ?>
     <p class="collection-hint">
-        Star one to keep it beside you on every page.
+        Star one to keep it beside you on every page &mdash; and
+        <a href="/shop">the village store</a> has more looking for a home.
     </p>
 
     <div class="creature-collection">
@@ -45,8 +51,3 @@ $this->layout('layout', ['title' => 'Your creatures — Felkyo Creatures']);
     </div>
 <?php endif; ?>
 
-<hr class="rule">
-
-<div class="button-row">
-    <a class="btn btn--secondary" href="/shop">Find another creature</a>
-</div>

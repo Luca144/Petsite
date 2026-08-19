@@ -1766,3 +1766,31 @@ taking two dependencies to do one job).
 
 `lockForPetting` became `lockForInteraction`: feeding and playing take exactly the
 same lock, and the old name made it look as though they were borrowing something.
+
+---
+
+## The pixel pass — looking at the screens (golden rule 12)
+
+Every milestone ends with the GUI checked **by eye** at 360px and 1280px, in a
+state fit to hand to an artist who notices single pixels. This is a golden rule
+because it caught what nothing else could: the logged-out site rendering inside a
+250px strip, and the inventory reading "Acorn2 Treat" — both shipped while every
+test was green, because **neither test suite can see a stylesheet**.
+
+```
+C:\xampp\php\php.exe bin/gui-shots.php
+```
+
+renders every key page as PNGs into `gui-shots/` (gitignored), fetched as a real
+logged-in player so owner-only components are in shot. Then open them and look —
+the looking is the entire point. What to look for: anything floating, cut off,
+overlapping, wrapping mid-word, or cramped against its neighbour.
+
+**Two headless-browser traps the script already handles** (do not re-learn them):
+Edge's new headless mode will not lay out below ~480px wide — it crops the
+screenshot instead, which looks exactly like the site overflowing sideways. Phone
+shots therefore render inside a 360px `<iframe>`, which is a real layout viewport.
+And screenshots fire before animations and images settle unless
+`--virtual-time-budget` is passed — a half-faded shell photographs as a ghost page.
+
+When a milestone adds a page, add it to the `PAGES` list at the top of the script.

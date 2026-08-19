@@ -279,6 +279,22 @@
         align-items: start;
     }
 
+    /* PLACED BY NAME, NOT BY DOCUMENT ORDER. The main panel comes FIRST in the
+       markup so that a phone (which stacks in document order) opens with the
+       world rather than with your own name — see layout.php. Auto-placement
+       would therefore put the main panel in the narrow first column, which is
+       exactly the collapsed-into-a-strip bug this grid once had. Naming the
+       columns pins each panel where it belongs whatever order they arrive in. */
+    .site-shell--with-side > .site-side {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .site-shell--with-side > .site-main {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
     /* The logged-out shell: one panel, narrowed to a comfortable reading width
        rather than stretched across a wide screen. A welcome and a log-in form do
        not need 1300px, and the extra sky either side is the point of the design. */

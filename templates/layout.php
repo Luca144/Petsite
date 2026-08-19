@@ -8,13 +8,17 @@
  * redesign (docs/plan/2026-08-14-the-new-face.md) the shell is TWO parchment
  * panels floating on the artist's painted starfield:
  *
- *   - a sidebar (partials/site-side.php) holding everything that is YOURS —
- *     name, purse, avatar, personal links, log out, favourite creature;
  *   - the main panel holding THE WORLD — the painted banner, the row of
- *     world destinations (partials/site-nav.php), the page content, the footer.
+ *     world destinations (partials/site-nav.php), the page content, the footer;
+ *   - a sidebar (partials/site-side.php) holding everything that is YOURS —
+ *     name, purse, avatar, personal links, log out, favourite creature.
  *
- * On a phone the two panels simply stack, sidebar first as a compact strip.
- * The side-by-side arrangement appears from 900px up (see layout.css).
+ * On a phone the two panels simply stack in document order: THE WORLD FIRST,
+ * then your own panel. It used to be the other way round, and every page opened
+ * with your own name and keepsake card while the banner arrived a screen later —
+ * a site should greet you with the world, not with yourself. From 900px up the
+ * grid places the sidebar on the left BY NAME, so the wide layout is unaffected
+ * by the markup order (see layout.css).
  *
  * HOW IT FITS TOGETHER: a page template calls $this->layout('layout', [...]) and
  * defines a "content" section; this file wraps that content in the shared shell.
@@ -72,20 +76,19 @@ use Felkyo\Http\AssetUrl;
              either file which case is which, and it cannot be defeated by
              something else appearing inside the shell later. */ ?>
     <div class="site-shell<?= !empty($currentUser) ? ' site-shell--with-side' : '' ?>" id="top">
-        <?= $this->insert('partials/site-side', [
-            'currentUser' => $currentUser ?? null,
-            'currentPath' => $currentPath ?? '',
-            'currencyName' => $currencyName ?? 'gems',
-            'registrationOpen' => $registrationOpen ?? false,
-            'currentAvatarPath' => $currentAvatarPath ?? null,
-            'currentAvatarName' => $currentAvatarName ?? null,
-            'favouriteSummary' => $favouriteSummary ?? null,
-            // The treats the player is carrying, so the keepsake card can offer
-            // them. Empty for a guest, and empty for anybody with none — the card
-            // says where to get some rather than hiding the button.
-            'keepsakeTreats' => $keepsakeTreats ?? [],
-        ]) ?>
+        <?php /* THE MAIN PANEL COMES FIRST IN THE MARKUP, the sidebar after it.
 
+                 On a phone the panels simply stack in document order, and what
+                 stacked first used to be the sidebar — so every page opened with
+                 your own name, your pills and your keepsake card, and the banner
+                 (the thing that says where you ARE) arrived a full screen later.
+                 The artist's mockup opens with the banner, and he was right to be
+                 cross: a site should greet you with the world, not with yourself.
+
+                 The wide layout is unaffected: the grid places each panel by name
+                 (see layout.css), so the sidebar still sits on the left there.
+                 Screen readers get the better end of this too — the actual content
+                 now comes before the chrome that is the same on every page. */ ?>
         <div class="site-main">
             <?php if (!empty($creatureMoment)): ?>
                 <?php /* A creature chose this page to pop up on (a rare roll — see
@@ -171,6 +174,20 @@ use Felkyo\Http\AssetUrl;
                 </span>
             </footer>
         </div>
+
+        <?= $this->insert('partials/site-side', [
+            'currentUser' => $currentUser ?? null,
+            'currentPath' => $currentPath ?? '',
+            'currencyName' => $currencyName ?? 'gems',
+            'registrationOpen' => $registrationOpen ?? false,
+            'currentAvatarPath' => $currentAvatarPath ?? null,
+            'currentAvatarName' => $currentAvatarName ?? null,
+            'favouriteSummary' => $favouriteSummary ?? null,
+            // The treats the player is carrying, so the keepsake card can offer
+            // them. Empty for a guest, and empty for anybody with none — the card
+            // says where to get some rather than hiding the button.
+            'keepsakeTreats' => $keepsakeTreats ?? [],
+        ]) ?>
     </div>
 
     <?php /* Site-wide enhancements. Everything here is an ENHANCEMENT: each page
