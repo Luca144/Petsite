@@ -112,10 +112,13 @@ final class RegisterController
         }
 
         // 4. Success: give the new player their starter creature, count the
-        // sign-up against the limit, log them in, and go home.
+        // sign-up against the limit, log them in (fresh session id AND fresh
+        // CSRF token — a token from before login must not survive it), and
+        // go home.
         $this->starterCreatures->grantStarterTo($result->user());
         $this->rateLimiter->record('register', $request->clientIp());
         $this->session->regenerateId();
+        $this->csrf->rotate();
         $this->session->set('user_id', $result->user()->id);
 
         return Response::redirect('/');

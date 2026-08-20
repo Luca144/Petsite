@@ -93,9 +93,12 @@ final class LoginController
             );
         }
 
-        // 4. Success: start a logged-in session (with a fresh id) and record the
-        // login time. A successful login is NOT counted against the limit.
+        // 4. Success: start a logged-in session (with a fresh id and a fresh
+        // CSRF token — a token from before login must not survive it; see
+        // Csrf::rotate()) and record the login time. A successful login is
+        // NOT counted against the limit.
         $this->session->regenerateId();
+        $this->csrf->rotate();
         $this->session->set('user_id', $user->id);
         $this->users->updateLastLogin($user->id);
 

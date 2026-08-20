@@ -50,6 +50,22 @@ final class Csrf
     }
 
     /**
+     * Throw the current token away and mint a fresh one. Called when someone
+     * LOGS IN (alongside the session id regeneration): a token handed out
+     * before authentication must not stay valid after it, or a token an
+     * attacker captured from the logged-out pages would still work against
+     * the logged-in account. Cheap hardening the admin panel (M2.1) should
+     * not run without — and every account benefits equally.
+     */
+    public function rotate(): string
+    {
+        $token = bin2hex(random_bytes(32));
+        $this->session->set(self::SESSION_KEY, $token);
+
+        return $token;
+    }
+
+    /**
      * Check a submitted token against the one in the session. Returns true only
      * if they match exactly. We use hash_equals(), which compares in constant
      * time so an attacker cannot learn the token by timing our responses.
