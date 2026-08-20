@@ -86,6 +86,15 @@ $isCurrent = static function (string $href) use ($currentPath): bool {
             <li>
                 <a href="/inventory"<?= $isCurrent('/inventory') ? ' aria-current="page"' : '' ?>>inventory</a>
             </li>
+            <?php if (!empty($showPanelLink)): ?>
+                <?php /* Staff only (M2.1): the phone's way into the creator's
+                         panel, since this row is what the sidebar's links
+                         become at phone width. Convenience, not security —
+                         the AdminGate re-checks roles on every request. */ ?>
+                <li>
+                    <a href="/admin"<?= $isCurrent('/admin') ? ' aria-current="page"' : '' ?>>the panel</a>
+                </li>
+            <?php endif; ?>
         </ul>
     <?php endif; ?>
 </nav>

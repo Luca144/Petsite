@@ -171,6 +171,43 @@ foreach (PAGES as $pageName => $path) {
     $save($pageName, $fetch($path));
 }
 
+// ---- The creator's panel (M2.1) ----
+// These pages sit behind role + door + second factor, so the walk mirrors the
+// smoke test: found the account as an owner with the CLI script, pass the
+// door, enrol (computing the TOTP code with the site's own RFC-pinned class),
+// and photograph every screen along the way.
+shell_exec(
+    escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__DIR__ . '/grant-role.php')
+    . ' ' . escapeshellarg($name) . ' owner 2>&1'
+);
+
+$doorPage = $fetch('/admin/door');
+$save('admin-door', $doorPage);
+
+$enrolPage = $fetch('/admin/door', [
+    '_csrf_token' => $token($doorPage),
+    'password' => 'a-long-enough-password',
+]);
+$save('admin-enrol', $enrolPage);
+
+preg_match('~admin-enrol__secret[^>]*>([A-Z2-7]+)<~', $enrolPage, $secretMatch);
+$recoveryPage = $fetch('/admin/enrol', [
+    '_csrf_token' => $token($enrolPage),
+    'code' => (new Felkyo\Admin\Totp())->codeAt($secretMatch[1] ?? '', time()),
+]);
+$save('admin-recovery-codes', $recoveryPage);
+
+// Grant a second role so the roles screen shows a holder with several chips.
+$fetch('/admin/roles/grant', [
+    '_csrf_token' => $token($fetch('/admin/roles')),
+    'username' => $name,
+    'role' => 'artist',
+]);
+
+$save('admin-home', $fetch('/admin'));
+$save('admin-roles', $fetch('/admin/roles'));
+$save('admin-audit', $fetch('/admin/audit'));
+
 // ---- Render ----
 echo "Rendering with " . basename($browser) . "...\n";
 $shoot = static function (string $file, string $size, string $png) use ($browser, $outDir): void {

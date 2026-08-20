@@ -53,6 +53,13 @@ final class SchemaTest extends TestCase
             'shop_items',
             'rate_limit_hits',
             'guestbook_entries',
+            'reports',
+            // The admin foundation (M2.1): roles, the audit log, and second
+            // factors for staff accounts.
+            'user_roles',
+            'admin_audit_log',
+            'admin_second_factors',
+            'admin_recovery_codes',
         ];
 
         foreach ($expectedTables as $tableName) {
@@ -92,6 +99,41 @@ final class SchemaTest extends TestCase
         $this->assertTrue(
             $this->foreignKeyExists('creatures', 'owner_id', 'users', 'id'),
             'Expected a foreign key from creatures.owner_id to users.id.'
+        );
+    }
+
+    /**
+     * The unique (user_id, role) index is what makes granting a role
+     * idempotent — the same grant arriving twice at once is a no-op, never a
+     * duplicate row that would make the last-owner count lie (M2.1).
+     */
+    public function testUserRolesAreUniquePerUserAndRole(): void
+    {
+        $statement = $this->connection->prepare(
+            'SELECT COUNT(*) FROM information_schema.STATISTICS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = \'user_roles\'
+               AND NON_UNIQUE = 0
+               AND COLUMN_NAME IN (\'user_id\', \'role\')'
+        );
+        $statement->execute();
+
+        // Both columns of the composite unique index must be present in a
+        // unique index (2 rows: one per column of the composite key).
+        $this->assertGreaterThanOrEqual(2, (int) $statement->fetchColumn(),
+            'Expected a unique index across user_roles (user_id, role).');
+    }
+
+    /**
+     * The audit log must have NO foreign key on actor_user_id: a CASCADE
+     * would let deleting an account delete its audit trail, and the trail
+     * must outlive whoever it describes (M2.1).
+     */
+    public function testTheAuditLogSurvivesItsActors(): void
+    {
+        $this->assertFalse(
+            $this->foreignKeyExists('admin_audit_log', 'actor_user_id', 'users', 'id'),
+            'admin_audit_log.actor_user_id must not be a foreign key — the log outlives its actors.'
         );
     }
 

@@ -1,0 +1,330 @@
+/**
+ * The creator's panel (M2.1): the door, enrolment, tiles, roles and audit.
+ *
+ * The panel is a user-facing product too (build plan, principle (f)) — same
+ * parchment-on-starfield language as the rest of the site, same tokens from
+ * theme.css, no colours of its own. Mobile-first: everything below is the
+ * ~360px layout; the one media query widens what benefits from room.
+ */
+
+/* ---- The door and the enrolment card ---- */
+
+.admin-door__why {
+    color: var(--ink-soft);
+}
+
+/* Codes and secrets are DATA — Space Mono, spaced out, so 0 and O and 1 and
+   l can never be confused while copying them by hand. */
+.admin-door__code {
+    font-family: var(--font-mono);
+    letter-spacing: 0.25em;
+}
+
+.admin-enrol__steps {
+    display: grid;
+    gap: 1.25rem;
+    padding-left: 1.25rem;
+    margin: 1rem 0 0;
+}
+
+.admin-enrol__secret {
+    font-family: var(--font-mono);
+    font-size: 1.05rem;
+    letter-spacing: 0.18em;
+    /* Long secret, small screen: break anywhere rather than overflow the
+       parchment — a secret you can't read whole is a secret typed wrong. */
+    word-break: break-all;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+    user-select: all; /* one tap selects the whole secret for copying */
+}
+
+.admin-enrol__uri {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    word-break: break-all;
+    color: var(--ink-soft);
+}
+
+/* ---- Recovery codes: shown once, so shown BIG ---- */
+
+.admin-recovery__warning {
+    background: var(--panel);
+    border: 1px solid var(--gold);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem;
+}
+
+.admin-recovery__codes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0 1.5rem;
+}
+
+.admin-recovery__codes li {
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+    text-align: center;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.6rem 0.25rem;
+    user-select: all;
+}
+
+/* ---- The panel home: header and tiles ---- */
+
+.admin-panel {
+    display: grid;
+    gap: 1rem;
+}
+
+.admin-panel__roles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    align-items: center;
+    margin: 0.5rem 0 0;
+}
+
+/* Role chips: dark plum with gold text — the one combination the palette
+   allows gold text on (contrast rule in CLAUDE.md section 9). */
+.admin-panel__role-chip,
+.admin-roles__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--plum);
+    color: var(--gold);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    border-radius: var(--radius-pill);
+    padding: 0.25rem 0.75rem;
+}
+
+.admin-panel__tiles {
+    display: grid;
+    gap: 1rem;
+}
+
+/* A tile is one link, whole-card tappable (44px is comfortably exceeded). */
+.admin-tile {
+    display: block;
+    text-decoration: none;
+    color: var(--ink);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-tile:hover,
+.admin-tile:focus-visible {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-raised);
+}
+
+.admin-tile__title {
+    margin: 0 0 0.25rem;
+}
+
+.admin-tile__sentence {
+    margin: 0;
+    color: var(--ink-soft);
+}
+
+/* A section that arrives with a later increment: present, honest, quiet —
+   and visibly not a door yet (no hover lift, softened ink). */
+.admin-tile--later {
+    opacity: 0.75;
+}
+
+.admin-tile--later:hover {
+    transform: none;
+    box-shadow: var(--shadow-panel);
+}
+
+.admin-tile__arrives {
+    margin: 0.5rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+}
+
+/* ---- The roles screen ---- */
+
+.admin-roles__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0.75rem;
+}
+
+.admin-roles__holder {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.75rem;
+}
+
+.admin-roles__holder:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.admin-roles__name {
+    font-weight: 700;
+    min-width: 8rem;
+}
+
+.admin-roles__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+/* The take-away button lives INSIDE the chip it removes: small text, but the
+   padded chip keeps the touch target honest. */
+.admin-roles__revoke {
+    display: inline;
+}
+
+.admin-roles__revoke button {
+    background: none;
+    border: none;
+    color: var(--parchment);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0.5rem 0.25rem; /* padding, not font size, carries the tap target */
+    margin: -0.25rem 0;
+}
+
+.admin-roles__revoke button:hover,
+.admin-roles__revoke button:focus-visible {
+    color: var(--gold-lit);
+}
+
+/* The role choices: radio CARDS, never a dropdown (locked UI rule). The
+   whole label is the target; the checked one lights its border. */
+.admin-roles__choices {
+    border: none;
+    padding: 0;
+    margin: 0 0 1rem;
+    display: grid;
+    gap: 0.5rem;
+}
+
+.admin-roles__choice {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+        "radio name"
+        "radio sentence";
+    column-gap: 0.75rem;
+    align-items: center;
+    background: var(--panel);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.75rem;
+    cursor: pointer;
+}
+
+.admin-roles__choice input {
+    grid-area: radio;
+    /* The native radio stays visible and keyboard-real; scaled up so the
+       state is legible without relying on the border colour alone. */
+    width: 1.25rem;
+    height: 1.25rem;
+    accent-color: var(--purple);
+}
+
+.admin-roles__choice:has(input:checked) {
+    border-color: var(--purple);
+    box-shadow: var(--glow-gold);
+}
+
+.admin-roles__choice:has(input:focus-visible) {
+    outline: 3px solid var(--purple);
+    outline-offset: 2px;
+}
+
+.admin-roles__choice-name {
+    grid-area: name;
+    font-weight: 700;
+}
+
+.admin-roles__choice-sentence {
+    grid-area: sentence;
+    color: var(--ink-soft);
+    font-size: 0.9rem;
+}
+
+/* ---- The audit page ---- */
+
+.admin-audit__entries {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0.75rem;
+}
+
+.admin-audit__line {
+    margin: 0;
+}
+
+.admin-audit__subject,
+.admin-audit__meta {
+    color: var(--ink-soft);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+}
+
+.admin-audit__meta {
+    margin: 0.4rem 0 0;
+}
+
+/* Before/after snapshots are data: mono, wrapped, never overflowing the
+   card on a phone. */
+.admin-audit__change {
+    margin: 0.4rem 0 0;
+    display: grid;
+    gap: 0.2rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    overflow-wrap: anywhere;
+}
+
+/* ---- Desktop refinements ---- */
+
+@media (min-width: 720px) {
+    .admin-panel__tiles {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* The recovery codes deliberately STAY two columns here: the card that
+       holds them is narrow, and four columns wrapped every code across two
+       lines ("D508-" / "4895") — a code that breaks mid-hyphen is a code
+       somebody copies wrong. Seen in the 1280px render, kept honest since. */
+}
+
+/* Respect reduced motion: the tiles simply don't lift. */
+@media (prefers-reduced-motion: reduce) {
+    .admin-tile {
+        transition: none;
+    }
+
+    .admin-tile:hover,
+    .admin-tile:focus-visible {
+        transform: none;
+    }
+}

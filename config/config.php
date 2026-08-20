@@ -226,6 +226,37 @@ return [
             'window_seconds' => 3600, // ...per hour, per IP (anti-abuse; the
                                       // one-entry-per-creature rule is the main gate)
         ],
+
+        // The creator's panel (M2.1). Admin sessions are deliberately MORE
+        // demanding than player sessions: whoever reaches the panel owns the
+        // site, so the panel re-checks who is there far more often. Numbers
+        // signed off by the Product Owner (docs/plan/2026-08-20-m2-1-admin-
+        // foundation.md).
+        'admin' => [
+            // How long a panel-door confirmation (password + code) stays
+            // fresh. After this much time since the door was last passed,
+            // any admin route asks for the password again — so a panel tab
+            // left open on a lost or shared device goes cold on its own.
+            'confirm_max_age_seconds' => 1800, // 30 minutes
+
+            // The shorter window between "password accepted at the door" and
+            // finishing second-factor enrolment. Only used while an account
+            // has no authenticator app connected yet.
+            'password_ok_max_age_seconds' => 600, // 10 minutes
+        ],
+        'rate_limit_admin_door' => [
+            'max_attempts' => 5,     // 5 failed door attempts...
+            'window_seconds' => 900, // ...per 15 minutes. Keyed on user AND
+                                     // IP together (not IP alone like the
+                                     // limits above): the door must not be a
+                                     // password-guessing oracle from anywhere.
+        ],
+        'rate_limit_admin_role_change' => [
+            'max_attempts' => 10,     // 10 role grants/revokes...
+            'window_seconds' => 3600, // ...per hour, per acting owner. Role
+                                      // changes are rare; a burst of them is
+                                      // an incident, not a workflow.
+        ],
     ],
 
     // Gameplay tunables — the documented home for "knobs" so a beginner can

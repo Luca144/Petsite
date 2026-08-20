@@ -315,3 +315,41 @@ the correction trail.
   should confirm he wants it this way — or the adoption day returns.
 - **M8.6's scope discussion is still owed.** Three fun-only mini-games exist;
   whether play should ever reward anything tangible has not been decided.
+
+---
+
+## 2026-08-20 — M2.1 signed off: roles, the door, and a second factor
+
+The full plan, with the three security questions answered, is
+`docs/plan/2026-08-20-m2-1-admin-foundation.md`. The Lead Developer signed
+off the same day on all three open points:
+
+- **The plan as written** — join-table roles, the AdminGate chokepoint every
+  /admin route is registered through, an append-only audit log, and a CLI
+  bootstrap (`bin/grant-role.php`) as the only way the first owner can exist.
+- **Second factor: yes, in M2.1.** TOTP in vanilla PHP (~80 lines, pinned to
+  the RFC 6238 vectors by tests, no new dependency), required for every
+  role-holder, enrolled at first panel entry, with hashed one-time recovery
+  codes. Enrolment shows the secret as text — no QR code, because a QR
+  library is a dependency this does not need; if real staff find typing the
+  secret annoying, adding one is a separate ask-first decision.
+- **The numbers**: panel-door confirmation stales after 30 idle minutes;
+  5 door attempts per 15 minutes per user+IP; 10 role changes per hour per
+  actor. All named config values under `security` in `config/config.php`.
+
+Two things decided along the way, worth their own line:
+
+- **CSRF tokens now rotate at login** (for everyone, not just staff). The
+  token used to live unchanged for the whole session, including across
+  authentication; a token captured pre-login must not survive it.
+- **The guarantee test learned about SET NULL.** "Everything pointing at
+  users CASCADEs on delete" was too strict for `granted_by_user_id`, where
+  CASCADE would delete the TARGET's role because the GRANTER left. Columns
+  meaning "that user once did this to somebody else's row" SET NULL instead —
+  both rules remove every reference to a deleted account, which is what the
+  data-protection promise actually requires.
+
+**Still ahead and unchanged:** M2.2 (image upload) is a MAJOR DECISION —
+hosting persistence must be verified and options presented for approval
+before any code. The two Skerro questions (adoption retirement, mini-game
+rewards) remain parked and untouched.

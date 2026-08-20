@@ -1834,3 +1834,54 @@ render as a second `site-nav__row--personal` under the world pills below 900px;
 the desktop sidebar keeps its stacked copy, and the row is `display: none` there
 so nothing is said twice. There is no "home" pill anywhere: **the banner is the
 way home** (it is a link now), which is the oldest petsite convention there is.
+
+## Increment M2.1 — Admin foundation and roles (the creator's panel begins)
+
+The plan for this increment, with the three security questions answered and
+signed off before any code, is `docs/plan/2026-08-20-m2-1-admin-foundation.md`.
+Read that for the WHY; this section is the map of WHAT exists.
+
+**The pieces.** Four roles (`owner`, `moderator`, `artist`, `coder`) live in
+`user_roles`, additive, allow-listed in `src/Admin/Role.php`. Every `/admin`
+route is registered through `AdminGate` (`src/Admin/AdminGate.php`), which on
+EVERY request checks: logged in → holds any role (read fresh from the
+database, so revocation is immediate) → holds THIS screen's role (owner
+passes everything) → passed the panel door recently. Players get the same
+404 as any unknown URL; the panel never confirms it exists to them.
+
+**The door and the second factor.** Entering the panel re-asks the password
+("the panel door", `AdminDoorController`), and the confirmation goes stale
+after `security.admin.confirm_max_age_seconds` (30 min). Every staff account
+must connect an authenticator app on first entry (`AdminEnrolController`):
+TOTP, implemented in `src/Admin/Totp.php` in ~80 lines of vanilla PHP and
+pinned to the RFC 6238 test vectors by `TotpTest`. Recovery codes (hashed,
+single-use, shown exactly once) cover a lost phone; if those are gone too,
+`php bin/reset-second-factor.php <username>` on the server clears the
+enrolment so the person can set up a fresh app.
+
+**The audit log.** Every admin action writes who/what/when/before/after to
+`admin_audit_log` through `AuditLogRepository`, which is append-only by
+construction — no update, no delete, and a test that fails if either ever
+appears. Owners read it at `/admin/audit`.
+
+**Bootstrapping the first owner** (there is no web path, on purpose):
+
+    C:\xampp\php\php.exe bin/grant-role.php <username> owner
+
+After that, roles are handed out and taken back at `/admin/roles` — owner
+only, rate-limited, guarded so the site can never end up with zero owners.
+
+**How to add an admin route (the recipe).** In `public/index.php`, register
+it THROUGH THE GATE — never with a bare `$router->get()`:
+
+    $router->get('/admin/things', $adminGate->protect(Role::Artist, [$controller, 'show']));
+
+Then add the same route to `tests/Support/AdminWorld.php` and to the matrix
+in `AdminGateTest::protectedRoutes()`, so "every role is refused on every
+route outside its scope" keeps meaning every route. If the screen performs
+an action, give the action a case in `src/Admin/AuditAction.php` and write
+an `AuditEntry` in the same transaction as the change.
+
+**Where the knobs are.** `config/config.php` → `security`: the door's
+freshness window, the door rate limit (keyed on user AND IP together), and
+the role-change rate limit. All signed off 2026-08-20.

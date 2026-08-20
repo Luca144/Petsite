@@ -19,6 +19,13 @@ declare(strict_types=1);
  * follow, with no hidden framework magic (build plan section 2).
  */
 
+use Felkyo\Admin\AdminGate;
+use Felkyo\Admin\AuditLogRepository;
+use Felkyo\Admin\Role;
+use Felkyo\Admin\RoleAssignmentService;
+use Felkyo\Admin\RoleRepository;
+use Felkyo\Admin\SecondFactorRepository;
+use Felkyo\Admin\Totp;
 use Felkyo\Auth\Authenticator;
 use Felkyo\Auth\PasswordHasher;
 use Felkyo\Auth\RegistrationService;
@@ -61,6 +68,11 @@ use Felkyo\Guestbook\GuestbookMessages;
 use Felkyo\Guestbook\GuestbookPanel;
 use Felkyo\Guestbook\GuestbookRepository;
 use Felkyo\Guestbook\GuestbookService;
+use Felkyo\Http\Controllers\AdminAuditController;
+use Felkyo\Http\Controllers\AdminDoorController;
+use Felkyo\Http\Controllers\AdminEnrolController;
+use Felkyo\Http\Controllers\AdminHomeController;
+use Felkyo\Http\Controllers\AdminRolesController;
 use Felkyo\Http\Controllers\BioController;
 use Felkyo\Http\Controllers\BrowseController;
 use Felkyo\Http\Controllers\CollectionController;
@@ -191,6 +203,12 @@ $shopRepository = new ShopRepository($pdo);
 $inventoryRepository = new InventoryRepository($pdo);
 $guestbookRepository = new GuestbookRepository($pdo);
 $profileRepository = new ProfileRepository($pdo);
+// The creator's panel (M2.1): who holds which staff role, and the log of
+// everything staff do. Both are read on admin requests only — except one
+// cheap indexed role lookup per page for logged-in users, which decides
+// whether the sidebar shows the panel link at all.
+$roleRepository = new RoleRepository($pdo);
+$auditLogRepository = new AuditLogRepository($pdo);
 
 // The avatar allow-list. The set is content/config, so adding an avatar needs no
 // code change (docs/adding-avatars.md). Built here (not further down with the
@@ -219,6 +237,19 @@ $registrationService = new RegistrationService(
 );
 $authenticator = new Authenticator($userRepository, $passwordHasher);
 $rateLimiter = new RateLimiter($rateLimitRepository);
+
+// The panel's own machinery (M2.1). The gate is the one door every /admin
+// route is registered through (see the route section); the second-factor
+// pieces are what make an admin login need the phone as well as the password.
+$secondFactorRepository = new SecondFactorRepository($pdo, $passwordHasher);
+$totp = new Totp();
+$adminGate = new AdminGate(
+    $session, $userRepository, $roleRepository, $templates,
+    $config['security']['admin']
+);
+$roleAssignmentService = new RoleAssignmentService(
+    $pdo, $roleRepository, $userRepository, $auditLogRepository
+);
 $starterCreatureService = new StarterCreatureService(
     $speciesRepository, $creatureRepository, $config['gameplay']['creature_names'],
     // The last two give a new player a few treats along with their creature, so
@@ -319,6 +350,12 @@ if (is_int($currentUserId)) {
     $currentUser = $userRepository->findById($currentUserId);
 }
 
+// Does the sidebar show the way to the creator's panel? Only for staff. This
+// is CONVENIENCE, not security — the AdminGate re-checks roles on every
+// admin request; hiding the link just keeps players' screens honest about
+// what is theirs. One indexed lookup, only for logged-in users.
+$showPanelLink = $currentUser !== null && $roleRepository->rolesFor($currentUser->id) !== [];
+
 // A creature moment: every few clicks, one of the player's creatures pops up in
 // a speech bubble at the top of the page. Most requests this stays null — the
 // rarity is deliberate (see CreatureMoments for the whole reasoning).
@@ -412,6 +449,8 @@ $templates->addData([
     'currentAvatarName' => $currentAvatarName,
     'keepsakeTreats' => $keepsakeTreats,
     'currentPath' => $request->path(),
+    // Whether to show the panel link (staff only — see above).
+    'showPanelLink' => $showPanelLink,
     // The label for the currency (e.g. "coins"), shown next to the balance.
     'currencyName' => $config['gameplay']['currency']['name'],
     // Whether to offer the "sign up" link, and whether to show the demo banner.
@@ -575,6 +614,26 @@ $communityController = new CommunityController(
     $config['search']['minimum_length']
 );
 
+// The creator's panel controllers (M2.1). All of them sit BEHIND the
+// AdminGate — see the admin route block below, where the gate is the only
+// way an /admin route can be registered.
+$adminDoorController = new AdminDoorController(
+    $templates, $session, $csrf, $userRepository, $passwordHasher, $totp,
+    $secondFactorRepository, $auditLogRepository, $adminGate, $rateLimiter,
+    $config['security']['rate_limit_admin_door']
+);
+$adminEnrolController = new AdminEnrolController(
+    $templates, $session, $csrf, $userRepository, $totp,
+    $secondFactorRepository, $auditLogRepository, $adminGate, $pdo
+);
+$adminHomeController = new AdminHomeController($templates, $session, $roleRepository);
+$adminRolesController = new AdminRolesController(
+    $templates, $session, $csrf, $userRepository, $roleRepository,
+    $roleAssignmentService, $rateLimiter,
+    $config['security']['rate_limit_admin_role_change']
+);
+$adminAuditController = new AdminAuditController($templates, $auditLogRepository);
+
 // ---- Routes ----
 $router = new Router();
 
@@ -601,6 +660,29 @@ $router->post('/register', [$registerController, 'submit']);
 $router->get('/login', [$loginController, 'show']);
 $router->post('/login', [$loginController, 'submit']);
 $router->post('/logout', [$logoutController, 'submit']);
+
+// ---- The creator's panel (M2.1) ----
+// EVERY admin route is registered through the AdminGate — protect() for
+// normal screens (staff check + role check + door freshness, on every
+// request), protectDoorway() for the door and enrolment themselves (staff
+// check only; the door cannot stand behind itself). There is deliberately no
+// bare $router->get('/admin/...') anywhere: a route that skipped the gate
+// would be an unauthorised admin page, and the AdminGateTest matrix exists
+// to catch one ever appearing.
+//
+// The panel home: any staff role may see it.
+$router->get('/admin', $adminGate->protect(null, [$adminHomeController, 'show']));
+// The door: password (and code) to enter; see AdminDoorController.
+$router->get('/admin/door', $adminGate->protectDoorway([$adminDoorController, 'show']));
+$router->post('/admin/door', $adminGate->protectDoorway([$adminDoorController, 'submit']));
+// Connecting an authenticator app (first entry only; see AdminEnrolController).
+$router->get('/admin/enrol', $adminGate->protectDoorway([$adminEnrolController, 'show']));
+$router->post('/admin/enrol', $adminGate->protectDoorway([$adminEnrolController, 'submit']));
+// Roles and the audit log: the owner's screens.
+$router->get('/admin/roles', $adminGate->protect(Role::Owner, [$adminRolesController, 'show']));
+$router->post('/admin/roles/grant', $adminGate->protect(Role::Owner, [$adminRolesController, 'grant']));
+$router->post('/admin/roles/revoke', $adminGate->protect(Role::Owner, [$adminRolesController, 'revoke']));
+$router->get('/admin/audit', $adminGate->protect(Role::Owner, [$adminAuditController, 'show']));
 
 // The player's own collection of creatures.
 $router->get('/creatures', [$collectionController, 'show']);

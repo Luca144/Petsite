@@ -287,6 +287,74 @@ Index `(creature_id, created_at)` for listing a guestbook newest-first.
 
 ---
 
+### `user_roles` — who is staff, and as what (M2.1)
+
+One row per role a user holds. A join table rather than a column on `users`
+because roles are **additive** — the artist can also be an owner. The four
+role names (`owner`, `moderator`, `artist`, `coder`) are allow-listed in
+`src/Admin/Role.php`; the column is plain text, so adding a role is a code
+edit there, not a migration.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | int unsigned | Primary key. |
+| `user_id` | int unsigned, NOT NULL, FK → `users.id` (CASCADE) | Who holds the role. |
+| `role` | varchar(20), NOT NULL | One of the four allow-listed names. |
+| `granted_by_user_id` | int unsigned, NULL, FK → `users.id` (SET NULL) | Who granted it; NULL = the CLI bootstrap script. |
+| `granted_at` | timestamp, NOT NULL | When. |
+
+- **UNIQUE (`user_id`, `role`)** makes granting idempotent: the same grant
+  arriving twice at once is a no-op, never a duplicate row — which keeps the
+  "how many owners are left?" count honest (the last-owner guard depends on it).
+- **SET NULL, not CASCADE, on `granted_by_user_id`**: deleting the *granter*
+  must not delete the *target's* role; the reference is cleared, the role stays.
+- Only two things ever write this table: `RoleAssignmentService` (owner-only,
+  through the panel) and `bin/grant-role.php` (shell access only).
+
+### `admin_audit_log` — everything staff have done (M2.1)
+
+Who, what, when, before, after. **Append-only by construction**: the
+repository (`AuditLogRepository`) has insert and read methods and will never
+grow an update or a delete — a test (`AdminEscalationTest`) fails the build
+if one appears.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | int unsigned | Primary key. |
+| `actor_user_id` | int unsigned, NULL, **no FK** | Who did it; NULL = a CLI script. Deliberately no foreign key: deleting an account must never delete its audit trail. |
+| `action` | varchar(50), NOT NULL | Allow-listed in `src/Admin/AuditAction.php`, e.g. `role.granted`. |
+| `subject_type` / `subject_id` | varchar(30) NULL / int NULL | What it happened to (polymorphic, like `reports`). |
+| `detail_before` / `detail_after` | text, NULL | JSON snapshots of the changed values. |
+| `ip` | varchar(45), NOT NULL | Where from (`cli` for scripts). IPv6 fits. |
+| `created_at` | timestamp, NOT NULL | When. |
+
+Indexes: (`actor_user_id`, `created_at`) for one person's history;
+(`created_at`) for the newest-first audit page.
+
+### `admin_second_factors` — each staff account's authenticator app (M2.1)
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | int unsigned | Primary key. |
+| `user_id` | int unsigned, NOT NULL, UNIQUE, FK → `users.id` (CASCADE) | One enrolment per account. |
+| `totp_secret` | varchar(64), NOT NULL | The shared TOTP secret, base32. Stored plain because the site must *compute* codes from it. Kept out of `users` so `UserRepository` can never accidentally load it. |
+| `enrolled_at` | timestamp, NOT NULL | When the app was connected. |
+
+### `admin_recovery_codes` — the way back in when the phone is lost (M2.1)
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | int unsigned | Primary key. |
+| `user_id` | int unsigned, NOT NULL, FK → `users.id` (CASCADE) | Whose codes. |
+| `code_hash` | varchar(255), NOT NULL | Hashed like a password — the plain code is shown exactly once, at enrolment. |
+| `used_at` | datetime, NULL | Stamped when spent. Single use is enforced atomically: `UPDATE … SET used_at = NOW() WHERE id = ? AND used_at IS NULL`. |
+| `created_at` | timestamp, NOT NULL | When issued. |
+
+Index (`user_id`, `used_at`): "this account's unspent codes", checked at the
+panel door.
+
+---
+
 ## What is intentionally NOT here (yet)
 
 These are future extensions for the successor to build on this foundation; they

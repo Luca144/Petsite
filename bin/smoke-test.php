@@ -691,6 +691,88 @@ foreach ($captured as $path => $html) {
 }
 
 // ---------------------------------------------------------------------------
+// The creator's panel (M2.1), walked exactly as staff will walk it
+//
+// The whole arc in one sitting: a plain player cannot even see the panel; the
+// CLI script founds them as an owner; the door demands their password; first
+// entry walks through connecting an authenticator app (the TOTP code is
+// computed here with the same class the site uses — this run IS the
+// authenticator); the roles screen grants and revokes; the audit page
+// remembers all of it.
+// ---------------------------------------------------------------------------
+
+echo "\nThe creator's panel:\n";
+
+// Before any role: the panel does not exist for a player.
+check(
+    'a plain player gets a 404 from /admin',
+    request('/admin')['status'] === 404,
+    'status ' . request('/admin')['status']
+);
+
+// Found the first owner the only way it can be done: the CLI script.
+$grantOutput = (string) shell_exec(
+    escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__DIR__ . '/grant-role.php')
+    . ' ' . escapeshellarg($name) . ' owner 2>&1'
+);
+check('bin/grant-role.php founds an owner', str_contains($grantOutput, 'is now: Owner'), $grantOutput);
+
+// The panel now exists — and leads to the door, not straight in.
+$towardsPanel = request('/admin');
+check('an owner is met by the panel door', str_contains($towardsPanel['body'], 'The panel door'));
+
+// Password at the door. Not enrolled yet, so this lands on enrolment.
+$enrolPage = request('/admin/door', [
+    '_csrf_token' => tokenIn($towardsPanel['body']),
+    'password' => 'a-long-enough-password',
+]);
+check('the door leads first entry to enrolment', str_contains($enrolPage['body'], 'add an account by entering a key'));
+
+// Read the secret off the page and compute the current code from it — the
+// same maths the site and every authenticator app run (Totp is RFC-pinned).
+preg_match('~admin-enrol__secret[^>]*>([A-Z2-7]+)<~', $enrolPage['body'], $secretMatch);
+$enrolSecret = $secretMatch[1] ?? '';
+check('the enrolment page shows a secret', $enrolSecret !== '');
+
+$totp = new Felkyo\Admin\Totp();
+$recoveryPage = request('/admin/enrol', [
+    '_csrf_token' => tokenIn($enrolPage['body']),
+    'code' => $totp->codeAt($enrolSecret, time()),
+]);
+check('one correct code completes enrolment', str_contains($recoveryPage['body'], 'recovery'));
+check(
+    'the recovery codes are shown, once',
+    (bool) preg_match('/[0-9A-F]{4}-[0-9A-F]{4}/', $recoveryPage['body'])
+);
+
+// Enrolment also opened the door — the panel home renders.
+check('the panel opens after enrolment', str_contains(request('/admin')['body'], 'You&rsquo;re here as'));
+
+// The roles screen: grant this account the Artist role, see it appear,
+// take it away again, see it go.
+$rolesPage = request('/admin/roles');
+check('the roles screen renders for an owner', str_contains($rolesPage['body'], 'Hand out a role'));
+
+$afterGrant = request('/admin/roles/grant', [
+    '_csrf_token' => tokenIn($rolesPage['body']),
+    'username' => $name,
+    'role' => 'artist',
+]);
+check('granting a role says so', str_contains($afterGrant['body'], 'now has the Artist role'));
+
+$afterRevoke = request('/admin/roles/revoke', [
+    '_csrf_token' => tokenIn($afterGrant['body']),
+    'username' => $name,
+    'role' => 'artist',
+]);
+check('revoking it says so', str_contains($afterRevoke['body'], 'no longer has the Artist role'));
+
+// The audit page remembers the founding, the door, and both role changes.
+$auditPage = request('/admin/audit')['body'];
+check('the audit log shows the panel entry', str_contains($auditPage, 'entered the panel'));
+check('the audit log shows the role changes', str_contains($auditPage, 'granted a role') && str_contains($auditPage, 'took a role away'));
+
+// ---------------------------------------------------------------------------
 // Logging out
 //
 // This runs LAST, because everything after it would be a logged-out request.

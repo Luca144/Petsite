@@ -97,6 +97,13 @@ if (empty($currentUser)) {
                     <li><a href="/"<?= $isCurrent('/') ? ' aria-current="page"' : '' ?>>home</a></li>
                     <li><a href="/creatures"<?= $isCurrent('/creatures') ? ' aria-current="page"' : '' ?>>my creatures</a></li>
                     <li><a href="/inventory"<?= $isCurrent('/inventory') ? ' aria-current="page"' : '' ?>>inventory</a></li>
+                    <?php if (!empty($showPanelLink)): ?>
+                        <?php /* Staff only (M2.1). Convenience, not security —
+                                 the AdminGate re-checks roles on every admin
+                                 request; this link just doesn't clutter a
+                                 player's sidebar with a door that isn't theirs. */ ?>
+                        <li><a href="/admin"<?= $isCurrent('/admin') ? ' aria-current="page"' : '' ?>>the panel</a></li>
+                    <?php endif; ?>
                 </ul>
             </nav>
 

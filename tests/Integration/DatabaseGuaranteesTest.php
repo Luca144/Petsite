@@ -114,12 +114,22 @@ final class DatabaseGuaranteesTest extends DatabaseTestCase
         $this->assertNotEmpty($rows, 'Nothing references users at all, which cannot be right.');
 
         foreach ($rows as $row) {
-            $this->assertSame(
-                'CASCADE',
+            // Two rules keep the promise, for two kinds of column:
+            //  - A column meaning "this row BELONGS TO that user" must
+            //    CASCADE — the row goes with the account.
+            //  - A column meaning "that user once DID this to somebody
+            //    else's row" (user_roles.granted_by_user_id, M2.1) must SET
+            //    NULL — the reference to the deleted account is removed, but
+            //    the row belongs to someone else and stays. CASCADE here
+            //    would delete the TARGET's role because the GRANTER left.
+            // Both remove every reference to the deleted account, which is
+            // what the data-protection promise actually requires.
+            $this->assertContains(
                 $row['delete_rule'],
+                ['CASCADE', 'SET NULL'],
                 sprintf(
-                    '%s.%s points at a user but does not CASCADE on delete, so deleting an '
-                    . 'account would leave it behind.',
+                    '%s.%s points at a user but neither CASCADEs nor SET-NULLs on delete, '
+                    . 'so deleting an account would leave a reference to it behind.',
                     $row['table_name'],
                     $row['column_name']
                 )
