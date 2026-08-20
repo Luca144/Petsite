@@ -501,11 +501,12 @@ someone pets a creature they do **not** own, `PettingService` pays out
 petting cooldown limits how often any one creature can pay. The balance shows as
 a chip in the sidebar.
 
-> **Superseded by M2 — read that section before trusting this one.** The money is
-> now called **gems**, one per pet, and it goes to the **person doing the petting**
-> rather than to the creature's owner. There is also a daily cap, which B.7 did
-> not have. The paragraph above is left as the record of what B.7 built; the
-> current rules are in *M2 — the creature you keep* at the end of this guide.
+> **Superseded — read "Interlude after M1" before trusting this one.** The money
+> is now called **gems**, one per pet, and it goes to the **person doing the
+> petting** rather than to the creature's owner. There is also a daily cap, which
+> B.7 did not have. The paragraph above is left as the record of what B.7 built;
+> the current rules are in *Interlude after M1 — the creature you keep* at the
+> end of this guide.
 
 **B.8 — Inventory.** `inventory` links a user to an item with a quantity.
 `InventoryRepository::findForUser` joins to `items` and returns whole `Item`
@@ -1532,15 +1533,21 @@ order on the real HTML.
 
 ---
 
-## M2 — The creature you keep
+## Interlude after M1 — the creature you keep
+
+**Previously mislabelled "M2".** The real M2 in the milestone plan
+(`felkyo-milestones.md` / `felkyo-build-plan-2.md`) is **the creator's panel**,
+which this work is not. What is documented here was pulled forward from M6.2
+(petting pays the petter), M8.1 (care) and M8.6 (play) — the correction note at
+the top of the plan document below has the full mapping.
 
 **What it delivers:** a creature that has a mood, treats to give it, a card
 holding it on every page, and a shop that sells creatures for gems. Daily
 adoption is gone.
 
-Read `docs/plan/2026-08-18-m2-the-creature-you-keep.md` for *why* each piece is
-shaped the way it is — especially the argument about not punishing absence. This
-section is the map of *where* things are.
+Read `docs/plan/2026-08-18-interlude-the-creature-you-keep.md` for *why* each
+piece is shaped the way it is — especially the argument about not punishing
+absence. This section is the map of *where* things are.
 
 ### Moods
 

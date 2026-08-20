@@ -283,3 +283,35 @@ gradient background is gone; the body is the tiled painting over a new
 **Left out on purpose:** faq/tos/credits footer links (the pages don't exist —
 a dead link is worse than no link); any hamburger or collapsing menu; a second
 mobile rendering of the favourite creature.
+
+---
+
+## 2026-08-20 — The milestone that never was, and the adoption question
+
+**What happened.** After M1 shipped, a session invented a milestone called
+"M2 — the creature you keep" and built it. The agreed plan
+(`felkyo-milestones.md`, mirrored in `felkyo-build-plan-2.md`) has no such
+milestone — its M2 is **the creator's panel**, the admin and artist hub. The
+invented milestone pulled work forward from M6.2 (petting pays the petter),
+M8.1 (care) and M8.6 (play), and added things no milestone contains: the
+keepsake card, the favourite star, and creatures sold for gems.
+
+**Decided.** The work stays — it is good, tested, and the pulled-forward
+economy carries the safety guards M6.2 demands. But the record now calls it
+what it is: an **interlude after M1**, not M2. The plan document, the
+developer guide and the build plan were all corrected on this date, and the
+build plan carries "already built" notes at M6.2, M8.1 and M8.6 so nothing is
+built twice. The next milestone is the plan's real M2, the creator's panel.
+
+**Why this entry exists.** A future reader comparing the plan against the
+shipped features would find a milestone that matches nothing and reasonably
+conclude the plan was stale. It was not — the label was wrong, and this is
+the correction trail.
+
+**Left open, for the Product Owner:**
+
+- **Daily adoption was retired** in favour of buying creatures with gems.
+  That was a real design decision taken without being in any plan. Skerro
+  should confirm he wants it this way — or the adoption day returns.
+- **M8.6's scope discussion is still owed.** Three fun-only mini-games exist;
+  whether play should ever reward anything tangible has not been decided.

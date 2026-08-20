@@ -1,8 +1,30 @@
-# M2 — The creature you keep
+# Interlude after M1 — the creature you keep
 
-*Written 2026-08-18. **Built 2026-08-18** — all four steps shipped. This document
-is now the record of what was decided and why; `docs/developer-guide.md` under
-"M2 — The creature you keep" is the map of where things live.*
+*Written 2026-08-18 under the title "M2". **Built 2026-08-18** — all four steps
+shipped. This document is now the record of what was decided and why;
+`docs/developer-guide.md` under "Interlude after M1 — the creature you keep" is
+the map of where things live.*
+
+> **CORRECTION (2026-08-20): this was never M2.** The agreed milestone plan —
+> `felkyo-milestones.md` (the artist's copy) and `felkyo-build-plan-2.md` (the
+> build plan), which agree with each other — defines **M2 as the creator's
+> panel**: roles, image upload, one page per creature, moderation tools,
+> settings, stats. The session that wrote this document invented a milestone
+> that was not in the plan.
+>
+> What it built is solid work and stays — but it is an **interlude**, pulled
+> forward from later milestones, not M2:
+>
+> | Built here | Where the plan actually has it |
+> | --- | --- |
+> | Petter earns gems, daily cap, cooldown | **M6.2** — happily, built *with* the farming guards M6.2 demands |
+> | Happiness, energy, feeding, treats | **M8.1** (care) |
+> | Mini-games | **M8.6** — which the plan marks "[DISCUSS BEFORE BUILDING]"; that discussion never happened |
+> | Keepsake card, favourite star, creatures sold for gems, daily adoption retired | In no milestone — see `docs/plan/decisions.md`, entry 2026-08-20 |
+>
+> The real M2 — the creator's panel — had not been started when this correction
+> was written. `felkyo-build-plan-2.md` carries matching "already built" notes
+> at M6.2, M8.1 and M8.6 so none of this is built twice.
 
 > **What actually shipped, against the plan below:**
 >

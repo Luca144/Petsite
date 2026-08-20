@@ -8,6 +8,20 @@ The first build plan took the site from nothing to a live, feature-complete clos
 
 The milestone numbers here match the ones the artist sees, so everyone is talking about the same thing. The artist's design document is the content source from M9 onward.
 
+> **Status note (2026-08-20).** M1 is built and shipped. What was built next was
+> **mislabelled "M2"** — a session invented a milestone called "the creature you
+> keep" that is not in this plan (see
+> `docs/plan/2026-08-18-interlude-the-creature-you-keep.md` and its correction
+> note). It pulled forward: **M6.2** (petting pays the petter — built with its
+> farming guards), most of **M8.1** (happiness, energy, feeding with treats) and
+> a first cut of **M8.6** (mini-games, whose "discuss before building" gate was
+> skipped), plus a keepsake card, a favourite star, and creatures sold for gems
+> with daily adoption retired (an unplanned decision awaiting the Product
+> Owner's sign-off — `docs/plan/decisions.md`, 2026-08-20). Inline notes at
+> those increments below mark what already exists so nothing is built twice.
+> The real **M2 — the creator's panel — is not started** and is the next
+> milestone.
+
 ---
 
 ## 1. The insight this plan is built on
@@ -259,6 +273,13 @@ Currently only the owner benefits, which makes the friendliest activity on the s
 **Guard against alt-account farming explicitly** — per-actor cooldowns, a per-creature-per-day cap on rewarded clicks, and no reward where actor and owner are plainly the same person. State in the plan how you have limited it.
 Tests: reward paid once per actor per creature per window, no reward when logged out, cap enforcement, and that repeated or concurrent requests cannot double-pay.
 
+> **Already built (2026-08-18, pulled forward out of order).** `PettingService`
+> pays the petter one gem per pet, with the guards this increment demands: your
+> own creature never pays (checked against the stored owner id), a per-account
+> daily cap, and the petting cooldown. When M6 proper starts, verify the
+> per-creature-per-day angle and the concurrency test, then tick this off
+> rather than rebuilding it.
+
 **M6.3 — The share box.**
 A copy-paste box on every creature page containing ready-made HTML (and a plain-link alternative) showing the creature's image linked to its page, for posting on forums and other sites. The site generates the markup; players never write it.
 Tests: generated markup is well-formed and contains nothing user-authored beyond the creature's name, correctly escaped.
@@ -324,6 +345,13 @@ Tone matters: tending something you love, never a chore list with a guilt timer.
 **M8.1 — Care stats and feeding.** Stats computed from timestamps, not a scheduled job. Feeding consumes a food item; roughly three feeds a day.
 **Hard constraint: neglect never kills or permanently damages a creature.** A hungry creature looks sad; it does not die. Display with icons or short bars rather than numbers — gentler and better on a phone.
 
+> **Largely built (2026-08-18, pulled forward out of order):** happiness and
+> energy computed from timestamps with a decay floor (never sad, never dead),
+> feeding that consumes treat items, mood shown as a sentence plus bars. Built
+> as "mood" rather than "care"; cleaning (M8.2) and sickness (M8.3) do not
+> exist. When M8 starts, extend what is there instead of adding a parallel
+> care system.
+
 **M8.2 — Cleaning.** Mess appears on a timer; cleaning clears it.
 
 **M8.3 — Sickness and cure.** A creature left unclean may fall ill; a care action or item cures it. Visible, temporary, never permanent, never cascading.
@@ -337,6 +365,12 @@ Small markers for long-kept creatures — 100 days and beyond — so a creature'
 
 **M8.6 — Play and sleep. [DISCUSS BEFORE BUILDING]**
 A simple play interaction granting happiness is a small increment; a minigame is its own project. Raise scope before starting.
+
+> **Partially built (2026-08-18) — and the discussion this increment requires
+> was skipped.** Three small mini-games exist (`PlayService`, `PlayableGames`),
+> fun-only, no gem rewards. The scope conversation is still owed to the Product
+> Owner: whether games should ever reward anything tangible is his call and has
+> not been made.
 
 ---
 
