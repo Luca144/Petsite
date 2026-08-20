@@ -178,8 +178,11 @@
     margin-top: var(--space-4);
 }
 
+/* Narrow side padding on purpose: at 360px each cell is about 100px wide, and
+   the "TIMES PETTED" label needs nearly all of it to stay on one line. The text
+   is centred, so the cells still read as evenly spaced. */
 .creature-stat {
-    padding: var(--space-4) var(--space-2);
+    padding: var(--space-4) var(--space-1);
     text-align: center;
     border-right: 1px solid var(--border);
 }
@@ -195,6 +198,24 @@
     font-size: 1.6rem;
     line-height: 1;
     color: var(--gold-lit);
+}
+
+/* The stage cell holds a WORD ("juvenile") between two numbers, and at the
+   numbers' size (1.6rem Fraunces black) that word is wider than a phone-width
+   cell — it ran clean across both column dividers. Words get a size that fits
+   the narrowest cell, and a line-height that pads their line box up to the
+   numbers' 1.6rem one, so all three labels underneath stay on one baseline. */
+.creature-stat__value--word {
+    font-size: 1.05rem;
+    line-height: 1.52;
+}
+
+/* From 480px up the cells are wide enough to let the word grow again. */
+@media (min-width: 480px) {
+    .creature-stat__value--word {
+        font-size: 1.35rem;
+        line-height: 1.19;
+    }
 }
 
 .creature-stat__label {

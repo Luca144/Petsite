@@ -101,7 +101,10 @@ $createdLabel = $creature->createdAt !== null
                 <span class="creature-stat__label">level</span>
             </div>
             <div class="creature-stat">
-                <span class="creature-stat__value"><?= $this->e($stage) ?></span>
+                <?php /* --word: the stage is a word between two numbers, and at
+                         the numbers' display size "juvenile" is wider than a
+                         phone-width cell (see creature.css). */ ?>
+                <span class="creature-stat__value creature-stat__value--word"><?= $this->e($stage) ?></span>
                 <span class="creature-stat__label">stage</span>
             </div>
             <div class="creature-stat">
