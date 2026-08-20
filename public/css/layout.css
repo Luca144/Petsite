@@ -175,6 +175,25 @@
 
 /* ---- Masthead (the painted banner) ---- */
 
+/* The positioning anchor for the creature-moment popup, which from 900px up is
+   laid over the banner INSIDE this header — anchored here rather than to the
+   whole panel, so it sits within the art whatever the paddings around it do. */
+.site-header {
+    position: relative;
+}
+
+/* The banner is the way home. The link is invisible chrome around the art: no
+   underline box, and the focus ring is the signal for keyboard users. */
+.site-header__home {
+    display: block;
+    border-radius: var(--radius-sm);
+}
+
+.site-header__home:focus-visible {
+    outline: 3px solid var(--purple);
+    outline-offset: 3px;
+}
+
 /* The wordmark is the artist's banner art rather than type. It stays inside a
    real <h1> — screen readers and search engines need a heading here — so this
    rule only stops the heading's line box adding a stray gap under the image. */

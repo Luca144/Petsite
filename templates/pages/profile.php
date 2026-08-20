@@ -90,13 +90,21 @@ $this->layout('layout', ['title' => $profile->username . ' — Felkyo Creatures'
     ?>
 
     <?php if ($spotlight !== null): ?>
-        <?php $star = $spotlight['creature']; ?>
+        <?php
+        $star = $spotlight['creature'];
+        $spotlightImage = '/assets/creatures/' . rawurlencode($spotlight['species']?->slug ?? '')
+            . '/' . rawurlencode($spotlight['stage']) . '.gif';
+        // Whole-multiple sizing — a fractional scale smears pixel art (PixelArt).
+        [$artWidth, $artHeight] = \Felkyo\Design\PixelArt::displaySize($spotlightImage, 170);
+        ?>
         <a class="spotlight<?= $star->isFeatured() ? ' spotlight--favourite' : '' ?>"
            href="/creature/<?= $this->e((string) $star->id) ?>">
-            <img class="spotlight__img pixelated"
-                 src="/assets/creatures/<?= $this->e(rawurlencode($spotlight['species']?->slug ?? '')) ?>/<?= $this->e(rawurlencode($spotlight['stage'])) ?>.gif"
-                 alt="<?= $this->e($star->name) ?>"
-                 width="180" height="180">
+            <span class="spotlight__art">
+                <img class="spotlight__img pixelated"
+                     src="<?= $this->e($spotlightImage) ?>"
+                     alt="<?= $this->e($star->name) ?>"
+                     width="<?= $this->e((string) $artWidth) ?>" height="<?= $this->e((string) $artHeight) ?>">
+            </span>
 
             <span class="spotlight__text">
                 <?php if ($star->isFeatured()): ?>

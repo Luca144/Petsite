@@ -1794,3 +1794,36 @@ And screenshots fire before animations and images settle unless
 `--virtual-time-budget` is passed — a half-faded shell photographs as a ghost page.
 
 When a milestone adds a page, add it to the `PAGES` list at the top of the script.
+
+### The sidebar fold and honest pixel scaling (added 2026-08-20, from the Product Owner's review)
+
+**The sidebar folds.** The whole personal panel is a native `<details>`: the
+summary row (name + purse) is always visible, everything beneath collapses. The
+state **persists between pages** — `sidebar-fold.js` writes one cookie per toggle
+and `public/index.php` reads it, so the server renders the panel already-open or
+already-closed and it never springs open just to snap shut (the failure mode the
+Product Owner explicitly ruled out). Without JavaScript the fold still works; it
+merely starts open on each page. The cookie is a UI preference, only ever compared
+against the string `"closed"`, never trusted as data.
+
+This is also the answer to short desktop screens: a sticky column taller than the
+viewport pins its overflow out of reach, and when even a tightened column cannot
+fit, the player folds it to its summary row. Never an inner scrollbar, never a
+max-height.
+
+**Sprites are drawn at whole multiples only.** The creature art arrives at
+whatever size the artist drew (34×28 up to 101×79), and squeezing every sprite
+into a fixed box scales it by a fraction — which smears pixel art, because some
+source pixels land 3 screen pixels wide and their neighbours 2.
+`Felkyo\Design\PixelArt::displaySize($path, $box)` returns the largest
+whole-number multiple of the native size that fits the box (never below 1×); the
+five display sites (creature page, collection card, keepsake, profile spotlight,
+shop) each keep a fixed FRAME for layout rhythm and centre the honestly-sized
+sprite inside it. `image-rendering: pixelated` alone cannot do this — it chooses
+how to interpolate, not how much.
+
+**Personal pills live in the task bar on phones.** `my creatures` and `inventory`
+render as a second `site-nav__row--personal` under the world pills below 900px;
+the desktop sidebar keeps its stacked copy, and the row is `display: none` there
+so nothing is said twice. There is no "home" pill anywhere: **the banner is the
+way home** (it is a link now), which is the oldest petsite convention there is.

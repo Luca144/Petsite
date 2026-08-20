@@ -70,4 +70,22 @@ $isCurrent = static function (string $href) use ($currentPath): bool {
             </a>
         </li>
     </ul>
+
+    <?php if (!empty($currentUser)): ?>
+        <?php /* YOUR pages, as a second row — PHONES ONLY (hidden from 900px up,
+                 where the sidebar column carries these pills instead; see
+                 site-nav.css). The Product Owner asked for the personal buttons
+                 to migrate into the task bar on mobile, and his original mockup
+                 always drew two rows of pills under the banner. No "home" pill:
+                 the banner itself is the way home, as it was on every old-web
+                 petsite. */ ?>
+        <ul class="site-nav__row site-nav__row--personal">
+            <li>
+                <a href="/creatures"<?= $isCurrent('/creatures') ? ' aria-current="page"' : '' ?>>my creatures</a>
+            </li>
+            <li>
+                <a href="/inventory"<?= $isCurrent('/inventory') ? ' aria-current="page"' : '' ?>>inventory</a>
+            </li>
+        </ul>
+    <?php endif; ?>
 </nav>

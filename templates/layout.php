@@ -90,30 +90,23 @@ use Felkyo\Http\AssetUrl;
                  Screen readers get the better end of this too — the actual content
                  now comes before the chrome that is the same on every page. */ ?>
         <div class="site-main">
-            <?php if (!empty($creatureMoment)): ?>
-                <?php /* A creature chose this page to pop up on (a rare roll — see
-                         CreatureMoments).
-
-                         IT IS FIRST IN THE PANEL, above the clock and the banner,
-                         which is where the artist's mockup puts it. It used to sit
-                         inside <main>, below the whole header — so on a phone the
-                         creature said hello a scroll after you had arrived, which
-                         is not a greeting.
-
-                         From 900px up the stylesheet lifts it out of the flow and
-                         over the banner as the popup the mockup draws, so its
-                         position here only decides the phone layout and the order
-                         a screen reader reads it in. Both now match what a sighted
-                         phone user sees, which is the point. */ ?>
-                <?= $this->insert('partials/creature-moment', ['moment' => $creatureMoment]) ?>
-            <?php endif; ?>
-
             <?php /* The server clock — the classic petsite "server time" touch.
                      The server's own date(), nothing from the visitor, purely
                      decorative (the page works identically without reading it). */ ?>
             <p class="site-clock"><?= $this->e(date('H:i, M jS')) ?></p>
 
             <header class="site-header">
+                <?php if (!empty($creatureMoment)): ?>
+                    <?php /* A creature chose this page to pop up on (a rare roll —
+                             see CreatureMoments). It lives INSIDE the header so
+                             that from 900px up the popup sits fully within the
+                             banner art — anchored to the header itself, it cannot
+                             drift onto the panel edge whatever the paddings around
+                             it do ("this still needs pushing inside the banner",
+                             and he was right). On a phone it simply flows here,
+                             right at the top under the clock. */ ?>
+                    <?= $this->insert('partials/creature-moment', ['moment' => $creatureMoment]) ?>
+                <?php endif; ?>
                 <!-- The masthead is the artist's wide painted banner on every
                      screen size. At phone width it scales down to a ~67px strip —
                      a warm little masthead rather than a full-screen landing
@@ -121,8 +114,15 @@ use Felkyo\Http\AssetUrl;
                      The alt text carries the site's name for screen readers and
                      for anyone whose images fail to load. -->
                 <h1 class="site-header__wordmark">
-                    <img class="site-header__banner" src="/assets/art/logo-large.png"
-                         alt="Felkyo Creatures" width="800" height="150">
+                    <?php /* The banner is the way home — the oldest petsite
+                             convention there is, and the reason the world bar
+                             needs no "home" pill. The link's accessible name is
+                             the image's alt, so a screen reader hears "Felkyo
+                             Creatures" once, as a link. */ ?>
+                    <a class="site-header__home" href="/">
+                        <img class="site-header__banner" src="/assets/art/logo-large.png"
+                             alt="Felkyo Creatures" width="800" height="150">
+                    </a>
                 </h1>
 
                 <?php if (empty($currentUser)): ?>
@@ -187,6 +187,8 @@ use Felkyo\Http\AssetUrl;
             // them. Empty for a guest, and empty for anybody with none — the card
             // says where to get some rather than hiding the button.
             'keepsakeTreats' => $keepsakeTreats ?? [],
+            // Whether the panel was left folded away (from the fold cookie).
+            'sidebarOpen' => $sidebarOpen ?? true,
         ]) ?>
     </div>
 
@@ -195,5 +197,6 @@ use Felkyo\Http\AssetUrl;
              included by the pages that need them, NOT here — loading one both
              here and there ran it twice and bound every handler twice over. */ ?>
     <script src="<?= AssetUrl::versioned('/js/password-toggle.js') ?>" defer></script>
+    <script src="<?= AssetUrl::versioned('/js/sidebar-fold.js') ?>" defer></script>
 </body>
 </html>

@@ -187,8 +187,32 @@
     flex-wrap: wrap;
     gap: var(--space-3);
     align-items: center;
+    /* Real air between the stats card above and these buttons — they sat almost
+       touching, and the Product Owner circled it ("these need spacing"). */
+    margin-top: var(--space-5);
+    /* Centred on a phone, where the whole column is centred anyway and a
+       left-ragged stack of buttons read as spilled rather than placed. From
+       900px up the info column is left-aligned beside the portrait, and the
+       buttons go back to lining up with the text above them. */
+    justify-content: center;
 }
 
 .creature__doings .creature__pet {
     margin: 0;
+}
+
+/* The star sits centred under the buttons on a phone, for the same reason. */
+.favourite-star {
+    display: flex;
+    justify-content: center;
+}
+
+@media (min-width: 900px) {
+    .creature__doings {
+        justify-content: flex-start;
+    }
+
+    .favourite-star {
+        justify-content: flex-start;
+    }
 }

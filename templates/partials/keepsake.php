@@ -23,6 +23,8 @@
  * needs reading belongs on the creature's own page, which is one tap away.
  */
 
+use Felkyo\Design\PixelArt;
+
 $creature = $summary['creature'];
 $mood = $summary['mood'];
 $species = $summary['species'];
@@ -32,19 +34,29 @@ $treats = $treats ?? [];
 // species slug and the creature's current life stage.
 $image = '/assets/creatures/' . rawurlencode($species?->slug ?? '')
     . '/' . rawurlencode($summary['stage']) . '.gif';
+
+// The largest WHOLE multiple of the sprite's native pixels that fits its frame —
+// a fractional scale smears pixel art (see PixelArt).
+[$artWidth, $artHeight] = PixelArt::displaySize($image, 104);
 ?>
 <section class="keepsake" aria-labelledby="keepsake-heading">
     <h2 class="keepsake__heading" id="keepsake-heading">your favourite</h2>
 
+    <?php /* THE PORTRAIT IS THE DOOR TO THE CREATURE'S PAGE — the card used to
+             also carry a "visit X" text link underneath, and the Product Owner
+             rightly pointed out that people know they can click the pet. One
+             door, and it is the biggest thing on the card. */ ?>
     <a class="keepsake__portrait" href="/creature/<?= $this->e((string) $creature->id) ?>">
         <?php /* The art is animated and pixel-drawn, so it keeps image-rendering:
                  pixelated — unlike avatars, whose thin lines vanish under it. The
                  alt carries the creature's name and how it is feeling, because a
                  screen reader user should get the same glance everybody else does. */ ?>
-        <img class="keepsake__img pixelated<?= $mood->isResting ? ' keepsake__img--resting' : '' ?>"
-             src="<?= $this->e($image) ?>"
-             alt="<?= $this->e($creature->name . ', ' . $mood->word) ?>"
-             width="96" height="96">
+        <span class="keepsake__art">
+            <img class="keepsake__img pixelated<?= $mood->isResting ? ' keepsake__img--resting' : '' ?>"
+                 src="<?= $this->e($image) ?>"
+                 alt="<?= $this->e($creature->name . ', ' . $mood->word) ?>"
+                 width="<?= $this->e((string) $artWidth) ?>" height="<?= $this->e((string) $artHeight) ?>">
+        </span>
         <span class="keepsake__name"><?= $this->e($creature->name) ?></span>
     </a>
 
@@ -110,9 +122,4 @@ $image = '/assets/creatures/' . rawurlencode($species?->slug ?? '')
         </a>
     </div>
 
-    <p class="keepsake__visit">
-        <a href="/creature/<?= $this->e((string) $creature->id) ?>">
-            visit <?= $this->e($creature->name) ?>
-        </a>
-    </p>
 </section>

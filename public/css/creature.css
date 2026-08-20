@@ -26,15 +26,18 @@
     position: relative; /* so the celebration heart can be placed over it */
 }
 
-/* The animated creature image. .pixelated (from theme.css) keeps pixel-art crisp
-   when scaled up; a GIF loops on its own. A gold ring and soft glow frame it.
-   It lifts and glows a touch on hover (the magic pass, C.3). */
-.creature__img {
-    display: block;
+/* The framed square the creature lives in. The FRAME is the fixed 240px box
+   with the gold ring and glow; the sprite inside is sized by PixelArt to an
+   exact whole multiple of its native pixels and centred, because a fractional
+   scale smears pixel art. The frame lifts and glows a touch on hover (the magic
+   pass, C.3). */
+.creature__frame {
+    display: grid;
+    place-items: center;
     width: 100%;
     max-width: 240px;
-    height: auto;
     aspect-ratio: 1;
+    overflow: hidden;
     background: var(--parchment);
     border: 3px solid var(--gold);
     border-radius: var(--radius-md);
@@ -42,9 +45,15 @@
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.creature__img:hover {
+.creature__frame:hover {
     transform: translateY(-3px);
     box-shadow: 0 0 0 6px var(--parchment), 0 0 34px rgba(232, 201, 90, 0.65), var(--shadow-raised);
+}
+
+/* The animated creature itself. .pixelated (from theme.css) keeps the enlarged
+   pixels crisp; a GIF loops on its own. */
+.creature__img {
+    display: block;
 }
 
 /* ---------------------------------------------------------------------------
@@ -228,12 +237,25 @@
     box-shadow: 0 10px 20px -8px rgba(201, 162, 39, 0.6);
 }
 
-.creature-card__img {
-    width: 96px;
-    height: 96px;
+/* The FRAME is the fixed box — every card keeps the same rhythm whatever size
+   its sprite is. The sprite inside is sized by PixelArt to an exact whole
+   multiple of its native pixels, because a fractional scale smears pixel art
+   (some source pixels land 3 screen pixels wide, their neighbours 2, and every
+   line wobbles). overflow hidden crops a sprite bigger than its frame at 1×
+   rather than ever shrinking it fractionally. */
+.creature-card__art {
+    display: grid;
+    place-items: center;
+    width: 104px;
+    height: 104px;
+    overflow: hidden;
     background: var(--parchment);
     border: 2px solid var(--gold);
     border-radius: var(--radius-sm);
+}
+
+.creature-card__img {
+    display: block;
 }
 
 .creature-card__name {

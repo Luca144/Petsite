@@ -42,10 +42,18 @@ $createdLabel = $creature->createdAt !== null
              something happened. All of it is CSS and all of it is skipped entirely
              under prefers-reduced-motion. */ ?>
     <div class="creature__portrait<?= !empty($justPetted) ? ' creature__portrait--celebrate' : '' ?>">
-        <img class="creature__img pixelated"
-             src="<?= $this->e($imagePath) ?>"
-             alt="<?= $this->e($creature->name . ', a ' . $speciesName . ' (' . $stage . ')') ?>"
-             width="240" height="240">
+        <?php
+        // The largest WHOLE multiple of the sprite's native pixels that fits the
+        // frame — a fractional scale smears pixel art (see PixelArt). 216 leaves
+        // the sprite a little air inside the 240 frame.
+        [$artWidth, $artHeight] = \Felkyo\Design\PixelArt::displaySize($imagePath, 216);
+        ?>
+        <span class="creature__frame">
+            <img class="creature__img pixelated"
+                 src="<?= $this->e($imagePath) ?>"
+                 alt="<?= $this->e($creature->name . ', a ' . $speciesName . ' (' . $stage . ')') ?>"
+                 width="<?= $this->e((string) $artWidth) ?>" height="<?= $this->e((string) $artHeight) ?>">
+        </span>
 
         <?php if (!empty($justPetted)): ?>
             <?php /* Purely decorative, so hidden from screen readers — the flash

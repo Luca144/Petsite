@@ -282,10 +282,20 @@
     outline-offset: 4px;
 }
 
-.spotlight__img {
+/* Fixed frame, honest sprite: the box keeps the layout steady while the image
+   inside is an exact whole multiple of its native pixels (PixelArt) — a
+   fractional scale smears pixel art. */
+.spotlight__art {
+    display: grid;
+    place-items: center;
     width: 180px;
     height: 180px;
-    object-fit: contain;
+    overflow: hidden;
+    flex: 0 0 auto;
+}
+
+.spotlight__img {
+    display: block;
 }
 
 .spotlight__text {

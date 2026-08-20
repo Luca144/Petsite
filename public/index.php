@@ -393,10 +393,18 @@ $flash = $session->takeFlash();
 // reason. One read, one truth, every template.
 $justPetted = $session->takeCelebration() === 'pet';
 
+// Whether the sidebar panel was left folded away. A pure UI preference from a
+// cookie the browser owns: it is only ever COMPARED against one string, never
+// trusted as data — and reading it on the server is what lets the panel arrive
+// already-closed instead of springing open and snapping shut on every page
+// (see sidebar-fold.js, and the Product Owner's request for exactly this).
+$sidebarOpen = ($_COOKIE['felkyo_sidebar'] ?? 'open') !== 'closed';
+
 // Share these with every template (used by the shared layout's shell).
 $templates->addData([
     'flash' => $flash,
     'justPetted' => $justPetted,
+    'sidebarOpen' => $sidebarOpen,
     'currentUser' => $currentUser,
     'creatureMoment' => $creatureMoment,
     'favouriteSummary' => $favouriteSummary,

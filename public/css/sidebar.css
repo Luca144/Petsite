@@ -13,23 +13,55 @@
  * artist drew. Every colour and spacing value comes from theme.css.
  */
 
-/* The strip: everything in one wrapping row on a phone. */
 .site-side {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-2) var(--space-3);
     padding: var(--space-3) var(--space-4);
 }
 
-/* Name + purse share the first line, name left, purse right. */
-.site-side__who {
-    flex: 1 1 100%;
+/* THE SUMMARY ROW: your name and your purse, always visible, and the handle the
+   whole panel folds by. A <summary> is natively a button to keyboard and screen
+   reader; list-style/marker rules remove the browser's default triangle because
+   the chevron on the right carries that job (as decoration — the OPEN/CLOSED
+   state itself is announced natively). Comfortably past the 44px tap target,
+   because on a phone this is the thing a thumb finds. */
+.site-side__summary {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-2) var(--space-3);
+    min-height: 44px;
+    cursor: pointer;
+    list-style: none;
+}
+
+.site-side__summary::-webkit-details-marker {
+    display: none;
+}
+
+.site-side__summary:focus-visible {
+    outline: 3px solid var(--purple);
+    outline-offset: 3px;
+    border-radius: var(--radius-sm);
+}
+
+/* The chevron flips when the panel is open — a shape change, not a colour one. */
+.site-side__chevron {
+    color: var(--ink-soft);
+    transition: transform 160ms ease;
+}
+
+.site-side__fold[open] > .site-side__summary .site-side__chevron {
+    transform: rotate(180deg);
+}
+
+/* What unfolds: on a phone, essentially the keepsake card (portrait, pills and
+   log out are desktop-only there). */
+.site-side__body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    margin-top: var(--space-2);
 }
 
 .site-side__name {
@@ -101,9 +133,14 @@
 }
 
 /* The personal links: the same pill recipe as the world bar (site-nav.css),
-   so "a pill is a place you can go" stays one single idea site-wide. */
+   so "a pill is a place you can go" stays one single idea site-wide.
+
+   DESKTOP ONLY. On a phone these pills live in the world bar under the banner
+   (site-nav.php) — the Product Owner asked for them to migrate to the task bar,
+   and his original mockup always drew them there. Keeping this copy on desktop
+   preserves the mockup's tall column of stacked pills. */
 .site-side__nav {
-    display: contents; /* on the phone strip, the list flows with its siblings */
+    display: none;
 }
 
 .site-side__links {
@@ -213,11 +250,15 @@
    --------------------------------------------------------------------------- */
 @media (min-width: 900px) {
     .site-side {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: var(--space-4);
-        padding: var(--space-6) var(--space-4);
+        /* Tighter than it was (space-6 vertical): the Product Owner's screen is
+           shorter than the developer's, and every spare pixel of padding here is
+           a pixel the sticky column may not have. The column must fit inside a
+           laptop viewport — and when even a tight column cannot, the FOLD is the
+           answer (collapse the panel to its summary row), never an inner
+           scrollbar and never a max-height: a sticky element taller than the
+           viewport pins its overflow below the fold where scrolling cannot reach
+           it, and a scrollbar inside a sidebar is nobody's idea of a companion. */
+        padding: var(--space-4);
         text-align: center;
         /* The column follows you as the main panel scrolls, so your links are
            always at hand. align-self keeps it its own height (a stretched grid
@@ -225,36 +266,24 @@
         align-self: start;
         position: sticky;
         top: var(--space-4);
-
-        /* NO INNER SCROLLBAR, AND NO MAX-HEIGHT. There was one for a day, and it
-           was the wrong fix.
-
-           The problem it papered over: a sticky element taller than the viewport
-           hangs its overflow below the fold and then stops moving, because sticky
-           pins it — so the keepsake card at the bottom of the column could only be
-           reached by scrolling to the very end of the page. Capping the height and
-           adding an inner scrollbar made the card reachable, but it made it
-           reachable by finding and using a scrollbar inside a sidebar, which is
-           nobody's idea of a companion sitting beside you.
-
-           The real cause was that the card had grown too tall: it carried a list of
-           radio cards, one per treat. That list moved to the creature's own page and
-           the card now has three buttons, so the whole column fits a laptop screen
-           again and sticky does what it was meant to do — the creature stays with
-           you as you read, with nothing to scroll and nothing hidden.
-
-           If it ever outgrows a screen again, the fix is to shorten the column, not
-           to hide the overflow. */
     }
 
-    .site-side__who {
-        flex: 0 1 auto;
+    /* Summary becomes the column's head: name above, purse below, both centred.
+       The chevron takes the full width beneath so the fold handle stays obvious. */
+    .site-side__summary {
         flex-direction: column;
         gap: var(--space-2);
     }
 
+    .site-side__body {
+        flex-direction: column;
+        align-items: center;
+        gap: var(--space-3);
+        margin-top: var(--space-3);
+    }
+
     .site-side__name {
-        font-size: 1.7rem;
+        font-size: 1.5rem;
     }
 
     /* The way out returns on the wide layout, where the sidebar is a roomy column
@@ -263,7 +292,9 @@
         display: inline-flex;
     }
 
-    /* The portrait grows from a pill into the framed box of the mockup. */
+    /* The portrait grows from a pill into the framed box of the mockup — at 72px
+       rather than the old 96, as part of fitting the whole column onto a short
+       laptop screen. It is a door, not a gallery piece. */
     .site-side__portrait {
         display: inline-flex; /* Show on desktop (hidden on mobile) */
         flex-direction: column;
@@ -273,12 +304,13 @@
     }
 
     .site-side__portrait-img {
-        width: 96px;
-        height: 96px;
+        width: 72px;
+        height: 72px;
         border-radius: var(--radius-sm);
     }
 
-    /* The links stack into full-width buttons, like the mockup's stacked pills. */
+    /* The links return on desktop and stack into full-width buttons, like the
+       mockup's stacked pills. (On a phone they live in the world bar instead.) */
     .site-side__nav {
         display: block;
         width: 100%;

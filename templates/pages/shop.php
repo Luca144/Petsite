@@ -55,14 +55,19 @@ $this->layout('layout', ['title' => $shop->name . ' — Felkyo Creatures']);
             <?php foreach ($creaturesForSale as $species): ?>
                 <?php
                 // A creature on the shelf is shown as a baby — that is what you
-                // would be taking home. Same art convention as everywhere else.
+                // would be taking home. Same art convention as everywhere else,
+                // and the same whole-multiple sizing (PixelArt): a fractional
+                // scale smears pixel art.
                 $canAfford = !empty($currentUser) && $currentUser->currencyBalance >= $species->gemPrice;
+                [$artWidth, $artHeight] = \Felkyo\Design\PixelArt::displaySize($species->imagePathFor('baby'), 104);
                 ?>
                 <div class="creature-shop__offer">
-                    <img class="creature-shop__img pixelated"
-                         src="<?= $this->e($species->imagePathFor('baby')) ?>"
-                         alt="<?= $this->e('A baby ' . $species->name) ?>"
-                         width="96" height="96">
+                    <span class="creature-shop__art">
+                        <img class="creature-shop__img pixelated"
+                             src="<?= $this->e($species->imagePathFor('baby')) ?>"
+                             alt="<?= $this->e('A baby ' . $species->name) ?>"
+                             width="<?= $this->e((string) $artWidth) ?>" height="<?= $this->e((string) $artHeight) ?>">
+                    </span>
 
                     <span class="creature-shop__name"><?= $this->e($species->name) ?></span>
 

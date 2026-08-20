@@ -56,10 +56,19 @@
     border-radius: var(--radius-md);
 }
 
+/* Fixed frame, honest sprite (PixelArt): the box keeps every offer the same
+   height while the image inside is an exact whole multiple of its native
+   pixels — a fractional scale smears pixel art. */
+.creature-shop__art {
+    display: grid;
+    place-items: center;
+    width: 104px;
+    height: 104px;
+    overflow: hidden;
+}
+
 .creature-shop__img {
-    width: 96px;
-    height: 96px;
-    object-fit: contain;
+    display: block;
 }
 
 .creature-shop__name {

@@ -54,10 +54,18 @@
     outline-offset: 3px;
 }
 
+/* A fixed frame with the sprite centred inside at an exact whole multiple of its
+   native pixels (PixelArt) — a fractional scale smears pixel art. */
+.keepsake__art {
+    display: grid;
+    place-items: center;
+    width: 104px;
+    height: 104px;
+    overflow: hidden;
+}
+
 .keepsake__img {
-    width: 96px;
-    height: 96px;
-    object-fit: contain;
+    display: block;
 }
 
 /* A dozing creature is drawn a little softer — the picture says the same thing
@@ -113,20 +121,8 @@
 }
 
 
-/* On the wide layout the card is the bottom of a calm column, so it can breathe
-   a little more than it does in the phone strip. */
-@media (min-width: 900px) {
-    .keepsake {
-        gap: var(--space-3);
-        padding: var(--space-4);
-    }
-}
+/* Deliberately NO extra desktop breathing room: the sidebar column has to fit a
+   short laptop screen with the log-out link still reachable, and every pixel of
+   padding here is a pixel the sticky column may not have. The card keeps its
+   phone-strip compactness at every width. */
 
-/* "visit Biscuit" — a quiet text link under the three buttons rather than a
-   fourth one. Pet, feed and play are things you DO to the creature; visiting is
-   going somewhere else, and it should not compete with them for a thumb. */
-.keepsake__visit {
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-}

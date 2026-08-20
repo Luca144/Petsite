@@ -28,6 +28,21 @@
     list-style: none;
 }
 
+/* YOUR pages as a second row of pills — the Product Owner asked for the personal
+   buttons to live in the task bar on a phone, and his original mockup drew two
+   rows under the banner. PHONES ONLY: from 900px up the sidebar column carries
+   these same links (sidebar.css), and saying everything twice on a wide screen
+   would just be noise. */
+.site-nav__row--personal {
+    margin-top: var(--space-2);
+}
+
+@media (min-width: 900px) {
+    .site-nav__row--personal {
+        display: none;
+    }
+}
+
 /* The same pill recipe as the sidebar's links (sidebar.css), so "a pill is a
    place you can go" stays one single idea site-wide. */
 .site-nav a {
@@ -175,16 +190,19 @@
 }
 
 /* From 900px up: the popup the artist drew — lifted out of the flow and laid
-   over the banner from the top left. The main panel is the positioning anchor
-   (position:relative in layout.css). The right inset keeps it clear of the
-   server clock in the opposite corner. A drop shadow lifts it off the art. */
+   over the banner. The HEADER is the positioning anchor (position:relative in
+   layout.css) and the banner sits at the header's top, so small insets here put
+   the bubble fully INSIDE the art — it used to hang off the banner's top edge
+   onto the panel, which the Product Owner rightly sent back. The right inset
+   keeps it off the dragon on the banner's right. A drop shadow lifts it off
+   the painting. */
 @media (min-width: 900px) {
     .creature-moment {
         position: absolute;
         z-index: 3;
-        top: var(--space-8);
-        left: var(--space-6);
-        right: 28%;
+        top: var(--space-4);
+        left: var(--space-4);
+        right: 30%;
         margin-bottom: 0;
         filter: drop-shadow(0 14px 24px rgba(14, 8, 26, 0.45));
     }
