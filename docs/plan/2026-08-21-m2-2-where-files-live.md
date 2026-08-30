@@ -1,8 +1,11 @@
 # M2.2 — Image upload: where the files live (the decision memo)
 
-**Status: awaiting approval from the Lead Developer and the Product Owner.
-No code has been written. This is the MAJOR DECISION gate the build plan
-puts in front of M2.2.**
+**Status: DECIDED 2026-08-21 — Option A (Railway volume) approved by the
+Lead Developer; she sets up the volume and backups from a step-by-step in
+the deployment guide; limits raised to 5 MB / 2048×2048 (the artist's
+current exports are 515–630 KB, and there will be more); animated files
+kept byte-for-byte, with the risks and the artist's export checklist
+written up in the M2.2 build plan (`2026-08-21-m2-2-build-plan.md`).**
 
 Written for two people who have said they are not weathered in hosting. So
 it explains the words before it uses them, and it ends with one clear

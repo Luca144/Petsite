@@ -353,3 +353,34 @@ Two things decided along the way, worth their own line:
 hosting persistence must be verified and options presented for approval
 before any code. The two Skerro questions (adoption retirement, mini-game
 rewards) remain parked and untouched.
+
+---
+
+## 2026-08-21 — M2.2: the pictures live on a Railway volume
+
+The memo with the verification and the three options, written for readers
+new to hosting, is `docs/plan/2026-08-21-m2-2-where-files-live.md`.
+
+**Decided (Lead Developer, 2026-08-21):**
+
+- **Option A — a Railway volume.** A persistent disk on the app service,
+  cents a month at this size, backups a switch in the dashboard. Chosen
+  over Cloudflare R2 because R2's proper public serving needs a domain
+  Felkyo does not own yet plus an account, a key and signing code — too
+  many new places for a Tuesday-night breakage to hide, for a closed demo
+  run by two people new to hosting. Storage sits behind one `ImageStore`
+  class so R2 is a swap, not a rewrite, when a domain arrives (revisit at
+  the open-registration gate).
+- **She sets up the volume and its backups herself**, from exact steps
+  written into the deployment guide.
+- **Limits: 5 MB per file, 2048×2048 pixels, GIF/PNG/WebP.** The artist's
+  current pictures are 515–630 KB; there will be more and larger.
+- **Animated files are stored byte-for-byte** (re-encoding would flatten
+  them, which CLAUDE.md forbids). The risks that leaves and what the
+  artist must do at export time are in the M2.2 build plan.
+
+**The verification changed the recommendation.** The first instinct was
+R2; the custom-domain requirement (its built-in address is documented as
+"development only, rate-limited") is what tipped it. Recorded so a future
+reader does not wonder why the "obviously more robust" option was passed
+over.
