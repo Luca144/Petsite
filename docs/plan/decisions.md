@@ -384,3 +384,33 @@ R2; the custom-domain requirement (its built-in address is documented as
 "development only, rate-limited") is what tipped it. Recorded so a future
 reader does not wonder why the "obviously more robust" option was passed
 over.
+
+---
+
+## 2026-08-31 — The Lead Developer's ask: whole pages editable, not just pieces
+
+**What was asked.** After using the panel on production, Katharina asked for
+more substance behind it: the artist should be able to set up a SHOP in one
+sitting (background image, wares, shopkeeper and their lines, publish) and
+an EXPLORATION area likewise — instead of iterating through the Lead
+Developer and a coding session for every change.
+
+**The answer, sorted honestly into two piles:**
+
+- **Already the plan.** A one-sitting shop editor is M2.4 verbatim ("NPC
+  art, dialogue lines, offerings"), and M2.4 will also grow the small
+  frontend surfaces those settings feed (the shop page showing its
+  background, portrait and dialogue) — a panel screen and the frontend
+  spot it fills ship together, per principle (b2). Area backgrounds and
+  the bulk loot-table editor are M2.4/M2.5.
+- **A new question, parked for Skerro.** "Clickable points placed on the
+  exploration image" is a new PLAYER mechanic, not a panel screen —
+  exploration today is enter-area-and-search with a weighted table, with
+  no positional hotspots. Whether exploring should become hotspot-based
+  belongs to the artist's design document and the M9+ engine work
+  (foraging/fishing/mining/hunting as one engine). Parked beside the two
+  existing Skerro questions (adoption retirement, minigame rewards) so it
+  is decided by design, not slipped in as a panel feature.
+
+**Order unchanged:** M2.3 (one page per creature) stays next — M2's
+definition of done hangs on it — then M2.4 brings the shop editor.
