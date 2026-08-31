@@ -289,8 +289,12 @@ return [
         'max_dimension' => 2048, // pixels, each side
 
         // The Pictures screen warns from here that the art disk is getting
-        // full. The Hobby-plan volume is 5 GB; 4 GB leaves room to notice.
-        'volume_warning_bytes' => 4 * 1024 * 1024 * 1024,
+        // full. The volume actually attached in Railway is 500 MB (its
+        // default size, growable in the volume's settings), so the warning
+        // comes at 400 MB — about 80% full. IF THE VOLUME IS EVER GROWN,
+        // RAISE THIS TOO, to ~80% of whatever the volume really is, or the
+        // warning fires pointlessly early.
+        'volume_warning_bytes' => 400 * 1024 * 1024,
     ],
 
     // Gameplay tunables — the documented home for "knobs" so a beginner can

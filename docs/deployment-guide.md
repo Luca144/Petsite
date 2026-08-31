@@ -373,9 +373,21 @@ upload:**
    - Railway sets the variable `RAILWAY_VOLUME_MOUNT_PATH` for you when it
      does this, and the app reads it — so **no variable to add**. (You only
      need `ART_STORAGE_PATH` if you ever mount the disk somewhere else.)
-2. **Switch on backups.** Click the volume → **Backups** → enable **Daily**
-   and **Weekly**. Daily keeps six days, weekly keeps a month. Both together
-   cost pennies at this size, and **without this step there is no backup**.
+2. **Backups — corrected 2026-08-31, the hard way.** This guide originally
+   said "switch on Daily + Weekly backups". When the volume was actually
+   attached, Railway's Backups tab said: *"Backups and point-in-time
+   recovery (PITR) are only available for customers on the Pro plan"* —
+   $20/month, which this project does not pay. So, honestly: **the art
+   volume has no platform backup.** What stands in for one, until the
+   M2.8 "download all art" button exists:
+   - **The artist keeps every original file** (artist guide, rule 8). The
+     worst case of a lost disk is then re-uploading, not losing art.
+   - Deleting in the panel already confirms, and the audit log records
+     what was deleted — the likelier accidents are covered by care, not
+     by backups.
+   If the site ever outgrows the demo, revisit: Pro, or moving the art to
+   object storage (the M2.2 memo's option B), which carries its own
+   durability.
 3. **Check it worked.** Log into the panel → **Pictures**. If the screen
    shows a warning about the server's upload limit or the disk, read it —
    it says what to do. Upload a small test picture; push any commit; check
