@@ -18,7 +18,7 @@ use League\Plates\Engine;
  *
  * Each staff member sees only their own doors (build plan M2.1: "each seeing
  * only what it needs"). Sections whose screens arrive in a later increment
- * are said so honestly, with the increment named — a moderator with no queue
+ * are said so honestly, with the increment named â a moderator with no queue
  * yet deserves "your tools arrive with M2.7", not a broken tile and a guess.
  *
  * HOW THIS GROWS: each M2 increment that adds a section adds its tile in
@@ -62,7 +62,7 @@ final class AdminHomeController
         if ($isOwner) {
             $sections[] = [
                 'title' => 'Roles',
-                'sentence' => 'Who can do what — grant and take away the four staff roles.',
+                'sentence' => 'Who can do what â grant and take away the four staff roles.',
                 'href' => '/admin/roles',
                 'arrives' => null,
             ];
@@ -77,19 +77,19 @@ final class AdminHomeController
         if ($isOwner || in_array(Role::Artist, $heldRoles, true)) {
             $sections[] = [
                 'title' => 'Pictures',
-                'sentence' => 'The art store — upload sprites, icons, portraits, cards and backgrounds.',
+                'sentence' => 'The art store â upload sprites, icons, portraits, cards and backgrounds.',
                 'href' => '/admin/pictures',
                 'arrives' => null,
             ];
             $sections[] = [
                 'title' => 'Creatures',
-                'sentence' => 'One page per species — sprites, words, stats; draft it, preview it, publish it.',
+                'sentence' => 'One page per species â sprites, words, stats; draft it, preview it, publish it.',
                 'href' => '/admin/creatures',
                 'arrives' => null,
             ];
             $sections[] = [
                 'title' => 'Items',
-                'sentence' => 'What can be owned, eaten and sold — prices, effects, icons.',
+                'sentence' => 'What can be owned, eaten and sold â prices, effects, icons.',
                 'href' => '/admin/items',
                 'arrives' => null,
             ];
@@ -101,8 +101,14 @@ final class AdminHomeController
             ];
             $sections[] = [
                 'title' => 'Areas',
-                'sentence' => 'The places to explore — scene, search spots, and the loot table.',
+                'sentence' => 'The places to explore â scene, search spots, and the loot table.',
                 'href' => '/admin/areas',
+                'arrives' => null,
+            ];
+            $sections[] = [
+                'title' => 'Unfinished',
+                'sentence' => 'What still needs a hand — the site keeps the list so you need not.',
+                'href' => '/admin/unfinished',
                 'arrives' => null,
             ];
             $sections[] = [

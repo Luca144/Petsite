@@ -1073,6 +1073,29 @@ request('/admin/areas/' . $woodId . '/loot', [
 check('tidied: the seeded table is back', !str_contains(request('/admin/areas/' . $woodId)['body'], $marker));
 
 // ---------------------------------------------------------------------------
+// The unfinished list (M2.6)
+//
+// The M2.4 chapter above deliberately left its test item as a DRAFT — so
+// the site itself should now be pointing at it. That makes this check
+// honest: the list is generated from real state, not from anything this
+// chapter set up for itself.
+// ---------------------------------------------------------------------------
+
+echo "\nThe unfinished list:\n";
+
+$unfinishedPage = request('/admin/unfinished');
+check('the unfinished list renders', str_contains($unfinishedPage['body'], 'Waiting to publish'));
+check(
+    'the draft item from the shop chapter is on it',
+    str_contains($unfinishedPage['body'], $itemName),
+    'expected to find ' . $itemName
+);
+check(
+    'and its row names the editor page that fixes it',
+    str_contains($unfinishedPage['body'], '/admin/items/' . $itemId)
+);
+
+// ---------------------------------------------------------------------------
 // Logging out
 //
 // This runs LAST, because everything after it would be a logged-out request.

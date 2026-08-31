@@ -2126,3 +2126,29 @@ whispering-wood table through the real field, watches a refusal keep the
 typing, and restores the seed word for word.
 
 **For the artist**: `docs/artist-guide-areas.md`.
+
+## Increment M2.6 — The unfinished list
+
+Plan: `docs/plan/2026-08-31-m2-6-build-plan.md`. The smallest increment in
+M2, deliberately: one read-only screen, no migration, no writes, no
+JavaScript.
+
+**`UnfinishedListService`** (Admin namespace) gathers two tiers: drafts
+that cannot publish yet — REUSING the four editors' `missingForPublish()`
+so this screen and the publish buttons can never disagree (shops have no
+such method because their minimum is just a name; the service says so in
+a comment) — and published content wearing a fallback (an item on its
+category's icon, an area scene on the glow placeholder, a keeper with no
+greeting, a species without lore or library art). Every row links to the
+editor page that fixes it.
+
+**Screen**: `GET /admin/unfinished`, Role::Artist behind the gate, in the
+`AdminGateTest` matrix; a tile on the panel home. Styles live at the end
+of `admin.css`.
+
+**Tests**: `UnfinishedListTest` — each incompleteness detected and
+cleared, with ROW-SCOPED assertions (`rowsLinkingTo`): the content tables
+are never truncated, so other tests' drafts are on the list too, and a
+page-wide substring check would pass on their account. The smoke test
+checks the list points at the draft item the M2.4 chapter leaves behind —
+real state, not fixture state.

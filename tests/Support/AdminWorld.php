@@ -35,6 +35,8 @@ use Felkyo\Exploration\AreaRepository;
 use Felkyo\Exploration\LootLineParser;
 use Felkyo\Http\Controllers\AdminAreaEditController;
 use Felkyo\Http\Controllers\AdminAreasController;
+use Felkyo\Http\Controllers\AdminUnfinishedController;
+use Felkyo\Admin\UnfinishedListService;
 use Felkyo\Http\Controllers\AdminItemEditController;
 use Felkyo\Http\Controllers\AdminItemsController;
 use Felkyo\Http\Controllers\AdminShopEditController;
@@ -311,6 +313,8 @@ final class AdminWorld
         $world->router->post('/admin/areas/{id}/revert', $gate->protect(Role::Artist, [$areaEditController, 'revert']));
         $world->router->get('/admin/areas/{id}/picture', $gate->protect(Role::Artist, [$areaEditController, 'pickPicture']));
         $world->router->post('/admin/areas/{id}/picture', $gate->protect(Role::Artist, [$areaEditController, 'choosePicture']));
+        // The unfinished list (M2.6): read-only, so the controller is built inline.
+        $world->router->get('/admin/unfinished', $gate->protect(Role::Artist, [new AdminUnfinishedController($templates, new UnfinishedListService($world->speciesRepo, $world->itemRepo, $world->shopRepo, $world->areaRepo, $world->speciesEditor, $world->itemEditor, $world->areaEditor)), 'show']));
         $world->router->get('/art/{name}', [$artController, 'show']);
 
         return $world;

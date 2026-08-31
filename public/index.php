@@ -26,6 +26,7 @@ use Felkyo\Admin\RoleAssignmentService;
 use Felkyo\Admin\RoleRepository;
 use Felkyo\Admin\SecondFactorRepository;
 use Felkyo\Admin\Totp;
+use Felkyo\Admin\UnfinishedListService;
 use Felkyo\Art\ArtRepository;
 use Felkyo\Art\ArtService;
 use Felkyo\Art\ImageValidator;
@@ -79,6 +80,7 @@ use Felkyo\Exploration\ExplorationRepository;
 use Felkyo\Exploration\LootLineParser;
 use Felkyo\Http\Controllers\AdminAreaEditController;
 use Felkyo\Http\Controllers\AdminAreasController;
+use Felkyo\Http\Controllers\AdminUnfinishedController;
 use Felkyo\Exploration\ExplorationService;
 use Felkyo\Exploration\ItemRewardGranter;
 use Felkyo\Exploration\WeightedPicker;
@@ -786,6 +788,17 @@ $adminAreaEditController = new AdminAreaEditController(
     new LootLineParser(), $rateLimiter, $config['security']['rate_limit_content_save']
 );
 
+// The unfinished list (M2.6): the read-only "what still needs doing" screen.
+// It reuses the four editor services so its idea of "missing" can never
+// disagree with the publish buttons.
+$adminUnfinishedController = new AdminUnfinishedController(
+    $templates,
+    new UnfinishedListService(
+        $speciesRepository, $itemRepository, $shopRepository, $areaRepository,
+        $speciesEditorService, $itemEditorService, $areaEditorService
+    )
+);
+
 // ---- Routes ----
 $router = new Router();
 
@@ -877,6 +890,7 @@ $router->post('/admin/shops/{id}/shelf/{itemId}/remove', $adminGate->protect(Rol
 $router->get('/admin/shops/{id}/picture/{slot}', $adminGate->protect(Role::Artist, [$adminShopEditController, 'pickPicture']));
 $router->post('/admin/shops/{id}/picture/{slot}', $adminGate->protect(Role::Artist, [$adminShopEditController, 'choosePicture']));
 // The area editor (M2.5).
+$router->get('/admin/unfinished', $adminGate->protect(Role::Artist, [$adminUnfinishedController, 'show']));
 $router->get('/admin/areas', $adminGate->protect(Role::Artist, [$adminAreasController, 'show']));
 $router->post('/admin/areas/create', $adminGate->protect(Role::Artist, [$adminAreasController, 'create']));
 $router->get('/admin/areas/{id}', $adminGate->protect(Role::Artist, [$adminAreaEditController, 'show']));

@@ -312,6 +312,7 @@ $fetch('/admin/areas/' . $shotAreaId . '/picture', [
     '_csrf_token' => $token($areaPicker),
     'art_id' => $sceneM[1] ?? '0',
 ]);
+$save('admin-unfinished', $fetch('/admin/unfinished')); // the M2.6 list
 $save('admin-areas', $fetch('/admin/areas'));
 $save('admin-area-edit', $fetch('/admin/areas/' . $shotAreaId));
 $save('explore', $fetch('/explore'));
