@@ -100,6 +100,12 @@ final class AdminHomeController
                 'arrives' => null,
             ];
             $sections[] = [
+                'title' => 'Areas',
+                'sentence' => 'The places to explore — scene, search spots, and the loot table.',
+                'href' => '/admin/areas',
+                'arrives' => null,
+            ];
+            $sections[] = [
                 'title' => 'Postcards & themes',
                 'sentence' => 'Each editor arrives with its content: cards with M6, themes with M4.',
                 'href' => null,

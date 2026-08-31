@@ -1,0 +1,124 @@
+/**
+ * The area editor (M2.5): the scene preview with its click-to-place
+ * markers, the spot number rows, and the loot table field.
+ *
+ * Shares the panel's card/status/choice styles (admin.css,
+ * admin-creatures.css); this file carries only what areas add.
+ */
+
+/* ---- The scene preview: the same framed shape players see ---- */
+
+.admin-scene {
+    position: relative;
+    width: 100%;
+    max-width: 640px;
+    aspect-ratio: 16 / 10;
+    margin-bottom: 0.75rem;
+    border: 2px solid var(--gold);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    /* The same lamplight placeholder the player scene wears (explore.css). */
+    background:
+        radial-gradient(circle at 30% 22%, rgba(232, 201, 90, 0.20), transparent 55%),
+        linear-gradient(160deg, var(--purple), var(--plum-deep));
+}
+
+.admin-scene--painted {
+    background-image: var(--scene-bg);
+    background-size: cover;
+    background-position: center;
+}
+
+/* Only when the enhancement is running does the box invite pointing. */
+.admin-scene--clickable {
+    cursor: crosshair;
+}
+
+/* A placed spot's marker — the same glow the player's spots wear, so what
+   the artist places is what players will see. */
+.admin-scene__marker {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    transform: translate(-50%, -50%);
+    min-width: 40px;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: var(--gold-lit);
+    background: rgba(42, 28, 58, 0.55);
+    border: 2px solid var(--gold);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: var(--glow-gold);
+}
+
+.admin-scene__marker:hover {
+    background: rgba(106, 76, 147, 0.7);
+}
+
+/* ---- The spot number rows ---- */
+
+.admin-scene__rows {
+    border: none;
+    padding: 0;
+    margin: 0.75rem 0;
+    display: grid;
+    gap: 0.4rem;
+}
+
+.admin-scene__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem;
+    max-width: 16rem;
+}
+
+/* ---- The loot table ---- */
+
+/* The current rows, readable at a glance above the editing field. */
+.admin-loot__current {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0.75rem;
+    display: grid;
+    gap: 0.3rem;
+}
+
+.admin-loot__current li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: baseline;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.3rem;
+    font-size: 0.9rem;
+}
+
+.admin-loot__current li:last-child {
+    border-bottom: none;
+}
+
+.admin-loot__weight {
+    font-family: var(--font-mono);
+    min-width: 2.5rem;
+    text-align: right;
+}
+
+.admin-loot__what {
+    font-weight: 700;
+}
+
+.admin-loot__message {
+    color: var(--ink-soft);
+}
+
+/* The field itself: mono, no wrapping surprises — it IS a table. */
+.admin-loot__field {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    white-space: pre;
+    overflow-x: auto;
+}

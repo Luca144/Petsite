@@ -224,7 +224,11 @@ final class AdminShopEditController
         $result = $action($actor, $shopId);
         $this->session->flash($result->message);
 
-        return Response::redirect($result->contentId !== null ? '/admin/shops/' . $result->contentId : '/admin/shops');
+        // Back to the shop's own page either way — a refusal's reasons
+        // belong next to the form they refuse, not on the list. (Refused
+        // results carry no contentId, so keying the redirect on it sent
+        // refusals to the list; the area editor's smoke test caught it.)
+        return Response::redirect($backTo);
     }
 
     private function currentUser(): User

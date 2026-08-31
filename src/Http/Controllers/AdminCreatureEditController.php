@@ -173,7 +173,11 @@ final class AdminCreatureEditController
         $result = $action($actor, $speciesId);
         $this->session->flash($result->message);
 
-        return Response::redirect($result->speciesId !== null ? '/admin/creatures/' . $result->speciesId : '/admin/creatures');
+        // Back to the species' own page either way — a refusal's reasons
+        // belong next to the form they refuse, not on the list. (Refused
+        // results carry no id, so keying the redirect on it sent refusals
+        // to the list; the area editor's smoke test caught it.)
+        return Response::redirect($backTo);
     }
 
     private function currentUser(): User

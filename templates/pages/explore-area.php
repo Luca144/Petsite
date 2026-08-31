@@ -8,23 +8,32 @@
  * any spot submits it, which searches the area once (see ExplorationController).
  * When the visit's searches are used up, the spots are replaced by a note.
  *
- * The scene background is a themed placeholder; real area art can replace it later.
+ * THE SCENE'S BACKGROUND is the area's own painting from the art store when
+ * the artist has chosen one (M2.5) — passed as a CSS custom property, no
+ * styling inline — and the themed gradient placeholder when not, exactly as
+ * it always looked.
  *
- * Variables:
- *   $areaSlug (string), $area (the area's config array), $remaining (int),
- *   $flash (string|null)
+ * Variables: $area (Felkyo\Exploration\Area), $remaining (int),
+ * $flash (string|null).
  */
-$this->layout('layout', ['title' => $area['name'] . ' — Felkyo Creatures']);
+$this->layout('layout', ['title' => $area->name . ' — Felkyo Creatures']);
+
+$sceneStyle = $area->backgroundUrl() !== null
+    ? ' style="--scene-bg: url(\'' . $this->e($area->backgroundUrl()) . '\')"'
+    : '';
+$sceneClass = $area->backgroundUrl() !== null ? ' explore-scene--painted' : '';
 ?>
 
-<h2 class="panel-label"><?= $this->e($area['name']) ?></h2>
-<p><?= $this->e($area['description']) ?></p>
+<h2 class="panel-label"><?= $this->e($area->name) ?></h2>
+<?php if ($area->description !== null): ?>
+    <p><?= $this->e($area->description) ?></p>
+<?php endif; ?>
 <p class="explore-clicks">Searches left this visit: <b><?= $this->e((string) $remaining) ?></b></p>
 
 <?php if ($remaining > 0): ?>
-    <form method="post" action="/explore/<?= $this->e($areaSlug) ?>" class="explore-scene">
+    <form method="post" action="/explore/<?= $this->e($area->slug) ?>" class="explore-scene<?= $sceneClass ?>"<?= $sceneStyle ?>>
         <?= $this->csrf_field() ?>
-        <?php foreach ($area['spots'] as $spot): ?>
+        <?php foreach ($area->spots as $spot): ?>
             <!-- Each spot is a submit button positioned on the scene. Its position
                  is passed as CSS custom properties (--x/--y), which the stylesheet
                  uses — so no styling rules live inline, only the data values. -->
@@ -36,7 +45,7 @@ $this->layout('layout', ['title' => $area['name'] . ' — Felkyo Creatures']);
         <?php endforeach; ?>
     </form>
 <?php else: ?>
-    <div class="explore-scene explore-scene--spent">
+    <div class="explore-scene explore-scene--spent<?= $sceneClass ?>"<?= $sceneStyle ?>>
         <p class="empty-state">You&rsquo;ve searched all you can here for now. Come back a little later.</p>
     </div>
 <?php endif; ?>

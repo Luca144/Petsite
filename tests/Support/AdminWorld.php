@@ -30,6 +30,11 @@ use Felkyo\Economy\ItemEditorService;
 use Felkyo\Economy\ItemRepository;
 use Felkyo\Economy\ShopEditorService;
 use Felkyo\Economy\ShopRepository;
+use Felkyo\Exploration\AreaEditorService;
+use Felkyo\Exploration\AreaRepository;
+use Felkyo\Exploration\LootLineParser;
+use Felkyo\Http\Controllers\AdminAreaEditController;
+use Felkyo\Http\Controllers\AdminAreasController;
 use Felkyo\Http\Controllers\AdminItemEditController;
 use Felkyo\Http\Controllers\AdminItemsController;
 use Felkyo\Http\Controllers\AdminShopEditController;
@@ -90,6 +95,8 @@ final class AdminWorld
     public ItemEditorService $itemEditor;
     public ShopRepository $shopRepo;
     public ShopEditorService $shopEditor;
+    public AreaRepository $areaRepo;
+    public AreaEditorService $areaEditor;
 
     // Where test uploads land: a throwaway folder in the system temp dir, so
     // a test can never write into the project's real art folder.
@@ -183,19 +190,13 @@ final class AdminWorld
         );
 
         // The item and shop editors (M2.4), wired as the front controller
-        // wires them — including the same referenced-slugs assembly.
-        $referencedItemSlugs = [];
+        // wires them — the loot references come from the areas tables since
+        // M2.5, merged with the starter gift (appended, not assigned: an
+        // item can be several things at once).
+        $world->areaRepo = new AreaRepository($connection);
+        $referencedItemSlugs = $world->areaRepo->lootItemReferences();
         foreach (array_keys(StarterCreatureService::STARTER_TREATS) as $starterSlug) {
             $referencedItemSlugs[$starterSlug][] = 'part of every new player\'s starter gift';
-        }
-        foreach ($config['gameplay']['exploration']['areas'] as $area) {
-            foreach ($area['loot'] as $lootEntry) {
-                if (($lootEntry['type'] ?? '') === 'item' && isset($lootEntry['item'])) {
-                    // Appended, not assigned — an item can be several things
-                    // at once, exactly as the front controller builds it.
-                    $referencedItemSlugs[$lootEntry['item']][] = 'found while exploring ' . $area['name'];
-                }
-            }
         }
         $world->itemRepo = new ItemRepository($connection);
         $world->shopRepo = new ShopRepository($connection);
@@ -225,6 +226,21 @@ final class AdminWorld
             $templates, $world->session, $world->csrf, $world->users, $world->shopRepo,
             $world->itemRepo, $world->speciesVersions, $world->shopEditor, $world->pictures,
             $rateLimiter, $security['rate_limit_content_save']
+        );
+
+        // The area editor (M2.5), wired as the front controller wires it.
+        $world->areaEditor = new AreaEditorService(
+            $connection, $world->areaRepo, $world->itemRepo, $world->speciesVersions,
+            $world->pictures, $world->auditLog, new LootLineParser(), $config['art']
+        );
+        $areasController = new AdminAreasController(
+            $templates, $world->session, $world->csrf, $world->users, $world->areaRepo,
+            $world->areaEditor, $rateLimiter, $security['rate_limit_content_save']
+        );
+        $areaEditController = new AdminAreaEditController(
+            $templates, $world->session, $world->csrf, $world->users, $world->areaRepo,
+            $world->speciesVersions, $world->areaEditor, $world->pictures,
+            new LootLineParser(), $rateLimiter, $security['rate_limit_content_save']
         );
         $picturesController = new AdminPicturesController(
             $templates, $world->session, $world->csrf, $world->users, $world->pictures,
@@ -284,6 +300,17 @@ final class AdminWorld
         $world->router->post('/admin/shops/{id}/shelf/{itemId}/remove', $gate->protect(Role::Artist, [$shopEditController, 'removeListing']));
         $world->router->get('/admin/shops/{id}/picture/{slot}', $gate->protect(Role::Artist, [$shopEditController, 'pickPicture']));
         $world->router->post('/admin/shops/{id}/picture/{slot}', $gate->protect(Role::Artist, [$shopEditController, 'choosePicture']));
+        $world->router->get('/admin/areas', $gate->protect(Role::Artist, [$areasController, 'show']));
+        $world->router->post('/admin/areas/create', $gate->protect(Role::Artist, [$areasController, 'create']));
+        $world->router->get('/admin/areas/{id}', $gate->protect(Role::Artist, [$areaEditController, 'show']));
+        $world->router->post('/admin/areas/{id}/words', $gate->protect(Role::Artist, [$areaEditController, 'saveWords']));
+        $world->router->post('/admin/areas/{id}/spots', $gate->protect(Role::Artist, [$areaEditController, 'saveSpots']));
+        $world->router->post('/admin/areas/{id}/loot', $gate->protect(Role::Artist, [$areaEditController, 'saveLoot']));
+        $world->router->post('/admin/areas/{id}/publish', $gate->protect(Role::Artist, [$areaEditController, 'publish']));
+        $world->router->post('/admin/areas/{id}/unpublish', $gate->protect(Role::Artist, [$areaEditController, 'unpublish']));
+        $world->router->post('/admin/areas/{id}/revert', $gate->protect(Role::Artist, [$areaEditController, 'revert']));
+        $world->router->get('/admin/areas/{id}/picture', $gate->protect(Role::Artist, [$areaEditController, 'pickPicture']));
+        $world->router->post('/admin/areas/{id}/picture', $gate->protect(Role::Artist, [$areaEditController, 'choosePicture']));
         $world->router->get('/art/{name}', [$artController, 'show']);
 
         return $world;

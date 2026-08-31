@@ -4,10 +4,12 @@
  *
  * @package Felkyo\Templates
  *
- * Rendered by ExplorationController::index. Each area is a tile linking to its
- * scene. Right now there is one area; more are added by config, not code.
+ * Rendered by ExplorationController::index. Each area is a tile linking to
+ * its scene — wearing its own scene painting as a face when the artist has
+ * chosen one (M2.5), the little tree glyph when not. Areas are panel
+ * content now; new ones appear here the moment they are published.
  *
- * Variable: $areas — the areas config (slug => ['name' => ..., 'description' => ...]).
+ * Variables: $areas (Felkyo\Exploration\Area[]).
  */
 $this->layout('layout', ['title' => 'Explore — Felkyo Creatures']);
 ?>
@@ -16,10 +18,15 @@ $this->layout('layout', ['title' => 'Explore — Felkyo Creatures']);
 <p>Search the quiet places of Felkyo. You might come home with a new friend.</p>
 
 <div class="tile-grid">
-    <?php foreach ($areas as $slug => $area): ?>
-        <a class="tile" href="/explore/<?= $this->e($slug) ?>">
-            <span aria-hidden="true">&#127795;</span>
-            <span><?= $this->e($area['name']) ?></span>
+    <?php foreach ($areas as $area): ?>
+        <a class="tile" href="/explore/<?= $this->e($area->slug) ?>">
+            <?php if ($area->backgroundUrl() !== null): ?>
+                <?php /* Decorative — the name beside it is the information. */ ?>
+                <img class="tile__face" src="<?= $this->e($area->backgroundUrl()) ?>" alt="" loading="lazy">
+            <?php else: ?>
+                <span aria-hidden="true">&#127795;</span>
+            <?php endif; ?>
+            <span><?= $this->e($area->name) ?></span>
         </a>
     <?php endforeach; ?>
 </div>

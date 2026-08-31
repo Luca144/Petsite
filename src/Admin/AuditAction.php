@@ -65,6 +65,13 @@ enum AuditAction: string
     case ShopUnpublished = 'shop.unpublished';
     case ShopReverted = 'shop.reverted';
 
+    // The area editor (M2.5) — the same five life events.
+    case AreaCreated = 'area.created';
+    case AreaSaved = 'area.saved';
+    case AreaPublished = 'area.published';
+    case AreaUnpublished = 'area.unpublished';
+    case AreaReverted = 'area.reverted';
+
     /**
      * What a person reading the audit page sees, in plain words.
      */
@@ -94,6 +101,11 @@ enum AuditAction: string
             self::ShopPublished => 'published a shop',
             self::ShopUnpublished => 'took a shop back to draft',
             self::ShopReverted => 'restored an older version of a shop',
+            self::AreaCreated => 'started a new area',
+            self::AreaSaved => 'saved an area',
+            self::AreaPublished => 'published an area',
+            self::AreaUnpublished => 'took an area back to draft',
+            self::AreaReverted => 'restored an older version of an area',
         };
     }
 }

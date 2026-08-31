@@ -2062,3 +2062,67 @@ page, script-tag names inert, revert incl. shelves. The smoke test builds
 an item and a keeper through the real forms and watches the real shop obey.
 
 **For the artist**: `docs/artist-guide-items.md`, `docs/artist-guide-shops.md`.
+
+## Increment M2.5 — The area editor
+
+Plan: `docs/plan/2026-08-31-m2-5-build-plan.md` (signed off, with one
+deviation chosen at sign-off: click-on-the-image spot placement ships DAY
+ONE, not later). The map:
+
+**Areas became database content.** Three tables — `areas`, `area_spots`,
+`loot_entries` (see `docs/schema.md`) — replaced the config block; the
+migration seeded whispering-wood verbatim (spots and loot to the word), so
+deploy day changed nothing a player can see. `exploration_visits` has
+always referenced areas by slug, so history survived the move untouched.
+Loot references items by FOREIGN KEY now (RESTRICT — an item on a loot
+table refuses deletion), replacing the config's by-slug references; the
+`referencedItemSlugs` guard in `public/index.php` reads
+`AreaRepository::lootItemReferences()` instead of config.
+
+**The Exploration namespace grew its editor half**: `Area` (VO),
+`AreaRepository` (player reads filter `status='published'`; panel reads
+don't — the acquire-vs-render asymmetry every editor uses),
+`LootLineParser`, and `AreaEditorService` — the same
+withHistory/audit/publish shape as species/items/shops, snapshotting into
+`content_versions` as `content_type='area'` with spots AND loot in the
+snapshot, so restore brings the whole place back.
+
+**The loot table is a plain-line field**, one reward per line
+(`weight; what; message`, split on the first two semicolons so messages
+keep their own). `LootLineParser::parse` is ALL-OR-NOTHING with every
+problem named by line number; a refused save stashes the typed text in the
+session (`AdminAreaEditController::LOOT_STASH_PREFIX`) and the next page
+view spends it — no typing is ever lost to a typo, and no half-table is
+ever written. Crash-the-roll tables (empty, weight 0) are unwritable by
+construction. `format()` writes the table back aligned, and the round trip
+is pinned by `LootLineParserTest`.
+
+**Spots save as paired number fields** (`spot_x[]`/`spot_y[]`, percentages
+0–100, twenty at most, blank pairs skipped — the form renders three blank
+add-rows so no-JS users can add spots). `public/js/area-spots.js` is the
+click-to-place layer OVER those fields: clicking the scene preview fills
+the first blank pair, clicking a marker clears one, and every change
+re-renders from the fields — the fields stay the single source of truth
+and the keyboard path stays complete (the standing accessibility rule).
+
+**Screens**: `/admin/areas`, `/admin/areas/{id}` (+ the shared art picker,
+Backgrounds only) — Role::Artist behind the gate, all 12 routes in the
+`AdminGateTest` matrix. The player's `/explore` pages moved to the `Area`
+VO and wear the chosen scene painting (`--scene-bg` +
+`.explore-scene--painted`); no picture renders the old painted-glow
+placeholder, unchanged.
+
+**Local quirk**: `php -S` answers its own 404 for missing static paths, so
+the art-store scenes need `bin/dev-server-router.php` locally (setup guide
+says so since M2.2).
+
+**Tests**: `LootLineParserTest` (the format, every refusal, the round
+trip), `AreaEditorTest` (publish minimum named piece by piece, refused
+loot saves change nothing and keep typing exactly once, off-scene spots
+refused, wrong-kind pictures refused, revert restores spots+loot together,
+whispering-wood still guards its loot items), and the draft-invisibility
+pin in `ExplorationControllerTest`. The smoke test edits the REAL
+whispering-wood table through the real field, watches a refusal keep the
+typing, and restores the seed word for word.
+
+**For the artist**: `docs/artist-guide-areas.md`.

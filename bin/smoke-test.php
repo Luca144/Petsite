@@ -1008,6 +1008,71 @@ request('/admin/shops/' . $shopId . '/keeper', [
 check('tidied: the item is off the real shelf again', !str_contains(request('/shop')['body'], $itemName));
 
 // ---------------------------------------------------------------------------
+// The area editor (M2.5), through the real forms
+//
+// Edit the real whispering-wood loot table through the plain-line field,
+// see the change land, watch a refused save keep the typing, and put the
+// original table back word for word so repeated runs stay clean.
+// ---------------------------------------------------------------------------
+
+echo "\nThe area editor:\n";
+
+$areasPage = request('/admin/areas');
+check('the area list renders for an owner', str_contains($areasPage['body'], 'Start a new area'));
+
+// Find the seeded wood among the cards — its id differs between a fresh
+// install and a migrated one, so we ask each editor page who it is.
+preg_match_all('~href="/admin/areas/(\d+)"~', $areasPage['body'], $areaLinks);
+$woodId = '0';
+$woodEditor = ['status' => 0, 'body' => ''];
+foreach (array_unique($areaLinks[1]) as $candidateId) {
+    $candidate = request('/admin/areas/' . $candidateId);
+    if (str_contains($candidate['body'], 'The Whispering Wood')) {
+        $woodId = $candidateId;
+        $woodEditor = $candidate;
+        break;
+    }
+}
+check('the whispering wood has an editor page', $woodId !== '0');
+
+// The loot field reopens holding the current table — kept for restoring.
+preg_match('~name="loot"[^>]*>(.*?)</textarea>~s', $woodEditor['body'], $lootMatch);
+$originalLoot = html_entity_decode($lootMatch[1] ?? '', ENT_QUOTES, 'UTF-8');
+check('the loot field holds the seeded table', str_contains($originalLoot, 'acorn-treat'));
+
+// A real edit: one more line, typed into the real field.
+$marker = 'Smokeleaf' . random_int(1000, 9999) . ' drifts past.';
+$afterSave = request('/admin/areas/' . $woodId . '/loot', [
+    '_csrf_token' => tokenIn($woodEditor['body']),
+    'loot' => $originalLoot . "\n1; nothing; " . $marker,
+]);
+check('saving the table says so', str_contains($afterSave['body'], 'The table is saved'));
+check('and the editor shows the new line', str_contains($afterSave['body'], $marker));
+check('the real wood still opens for a player', request('/explore/whispering-wood')['status'] === 200);
+
+// A refused save: nothing changes, and the typing survives — exactly once.
+$refusedLoot = request('/admin/areas/' . $woodId . '/loot', [
+    '_csrf_token' => tokenIn($afterSave['body']),
+    'loot' => '0; nothing; a weight of zero is unwritable',
+]);
+check('a broken table is refused with nothing saved', str_contains($refusedLoot['body'], 'Nothing was saved'));
+check('the refused typing is kept in the field', str_contains($refusedLoot['body'], 'a weight of zero is unwritable'));
+check('the saved table itself is unharmed', str_contains($refusedLoot['body'], $marker));
+$secondVisit = request('/admin/areas/' . $woodId);
+check(
+    'the field goes back to the real table on the next visit',
+    !str_contains($secondVisit['body'], 'a weight of zero is unwritable')
+        && str_contains($secondVisit['body'], $marker)
+);
+
+// Tidy: the original seeded table, word for word.
+request('/admin/areas/' . $woodId . '/loot', [
+    '_csrf_token' => tokenIn($secondVisit['body']),
+    'loot' => $originalLoot,
+]);
+check('tidied: the seeded table is back', !str_contains(request('/admin/areas/' . $woodId)['body'], $marker));
+
+// ---------------------------------------------------------------------------
 // Logging out
 //
 // This runs LAST, because everything after it would be a logged-out request.

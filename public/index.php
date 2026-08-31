@@ -73,7 +73,12 @@ use Felkyo\Http\Controllers\AdminItemEditController;
 use Felkyo\Http\Controllers\AdminItemsController;
 use Felkyo\Http\Controllers\AdminShopEditController;
 use Felkyo\Http\Controllers\AdminShopsController;
+use Felkyo\Exploration\AreaEditorService;
+use Felkyo\Exploration\AreaRepository;
 use Felkyo\Exploration\ExplorationRepository;
+use Felkyo\Exploration\LootLineParser;
+use Felkyo\Http\Controllers\AdminAreaEditController;
+use Felkyo\Http\Controllers\AdminAreasController;
 use Felkyo\Exploration\ExplorationService;
 use Felkyo\Exploration\ItemRewardGranter;
 use Felkyo\Exploration\WeightedPicker;
@@ -561,10 +566,12 @@ $creatureRenameController = new CreatureRenameController(
 $collectionController = new CollectionController(
     $templates, $session, $creatureRepository, $creatureProfileBuilder
 );
+// Areas are database content since M2.5 (they lived in config before) —
+// the controller reads them through the repository, published only.
+$areaRepository = new AreaRepository($pdo);
 $explorationController = new ExplorationController(
-    $templates, $session, $csrf, $explorationService, $rateLimiter,
+    $templates, $session, $csrf, $explorationService, $rateLimiter, $areaRepository,
     [
-        'areas' => $config['gameplay']['exploration']['areas'],
         'rate_limit' => $config['security']['rate_limit_explore'],
     ]
 );
@@ -727,19 +734,13 @@ $adminCreaturePreviewController = new AdminCreaturePreviewController(
 // here so an item's editor page can say "this slug is spoken for" instead
 // of leaving the artist to wonder. Slugs are minted once and never
 // editable, which is what keeps these references safe.
-$referencedItemSlugs = [];
+// The loot references come from the areas tables since M2.5; the starter
+// gift is APPENDED, not assigned — one item can be several things at once
+// (acorn-treat is a starter gift AND forest loot), and the editor page
+// should say all of them.
+$referencedItemSlugs = $areaRepository->lootItemReferences();
 foreach (array_keys(StarterCreatureService::STARTER_TREATS) as $starterSlug) {
     $referencedItemSlugs[$starterSlug][] = 'part of every new player\'s starter gift';
-}
-foreach ($config['gameplay']['exploration']['areas'] as $area) {
-    foreach ($area['loot'] as $lootEntry) {
-        if (($lootEntry['type'] ?? '') === 'item' && isset($lootEntry['item'])) {
-            // Appended, not assigned: one item can be several things at
-            // once (acorn-treat is a starter gift AND forest loot), and the
-            // editor page should say all of them.
-            $referencedItemSlugs[$lootEntry['item']][] = 'found while exploring ' . $area['name'];
-        }
-    }
 }
 
 $itemRepository = new ItemRepository($pdo);
@@ -768,6 +769,21 @@ $adminShopEditController = new AdminShopEditController(
     $templates, $session, $csrf, $userRepository, $shopRepository, $itemRepository,
     $contentVersionRepository, $shopEditorService, $artRepository, $rateLimiter,
     $config['security']['rate_limit_content_save']
+);
+
+// The area editor (M2.5) — the panel side of the tables above.
+$areaEditorService = new AreaEditorService(
+    $pdo, $areaRepository, $itemRepository, $contentVersionRepository,
+    $artRepository, $auditLogRepository, new LootLineParser(), $config['art']
+);
+$adminAreasController = new AdminAreasController(
+    $templates, $session, $csrf, $userRepository, $areaRepository, $areaEditorService,
+    $rateLimiter, $config['security']['rate_limit_content_save']
+);
+$adminAreaEditController = new AdminAreaEditController(
+    $templates, $session, $csrf, $userRepository, $areaRepository,
+    $contentVersionRepository, $areaEditorService, $artRepository,
+    new LootLineParser(), $rateLimiter, $config['security']['rate_limit_content_save']
 );
 
 // ---- Routes ----
@@ -860,6 +876,18 @@ $router->post('/admin/shops/{id}/shelf', $adminGate->protect(Role::Artist, [$adm
 $router->post('/admin/shops/{id}/shelf/{itemId}/remove', $adminGate->protect(Role::Artist, [$adminShopEditController, 'removeListing']));
 $router->get('/admin/shops/{id}/picture/{slot}', $adminGate->protect(Role::Artist, [$adminShopEditController, 'pickPicture']));
 $router->post('/admin/shops/{id}/picture/{slot}', $adminGate->protect(Role::Artist, [$adminShopEditController, 'choosePicture']));
+// The area editor (M2.5).
+$router->get('/admin/areas', $adminGate->protect(Role::Artist, [$adminAreasController, 'show']));
+$router->post('/admin/areas/create', $adminGate->protect(Role::Artist, [$adminAreasController, 'create']));
+$router->get('/admin/areas/{id}', $adminGate->protect(Role::Artist, [$adminAreaEditController, 'show']));
+$router->post('/admin/areas/{id}/words', $adminGate->protect(Role::Artist, [$adminAreaEditController, 'saveWords']));
+$router->post('/admin/areas/{id}/spots', $adminGate->protect(Role::Artist, [$adminAreaEditController, 'saveSpots']));
+$router->post('/admin/areas/{id}/loot', $adminGate->protect(Role::Artist, [$adminAreaEditController, 'saveLoot']));
+$router->post('/admin/areas/{id}/publish', $adminGate->protect(Role::Artist, [$adminAreaEditController, 'publish']));
+$router->post('/admin/areas/{id}/unpublish', $adminGate->protect(Role::Artist, [$adminAreaEditController, 'unpublish']));
+$router->post('/admin/areas/{id}/revert', $adminGate->protect(Role::Artist, [$adminAreaEditController, 'revert']));
+$router->get('/admin/areas/{id}/picture', $adminGate->protect(Role::Artist, [$adminAreaEditController, 'pickPicture']));
+$router->post('/admin/areas/{id}/picture', $adminGate->protect(Role::Artist, [$adminAreaEditController, 'choosePicture']));
 
 // (Serving an uploaded picture — GET /art/{name} — is NOT registered here:
 // it is dispatched near the top of this file, before the session and the

@@ -440,6 +440,58 @@ offered, at the page AND at purchase time.
 
 ---
 
+### `areas` — the places to explore (content; M2.5)
+Areas moved out of config and into the database when the panel's area editor
+arrived: a place is content the artist builds, not code. The seeded
+whispering-wood was carried over by the migration word for word, so nothing
+read differently on deploy day. **The slug is the area's forever-address**
+(`/explore/whispering-wood`, and `exploration_visits` has always referenced
+areas by slug) — minted once, never editable, and there is no delete:
+retiring an area is taking it back to `draft`.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | int unsigned | Primary key. |
+| `slug` | varchar(50), unique, NOT NULL | The address; see above. |
+| `name` | varchar(60), NOT NULL | Display name. |
+| `description` | varchar(500), NULL | The line under the name on the area page. |
+| `background_art_id` | int unsigned, NULL, FK → `art_files.id` (SET NULL) | The scene painting, from the art store (Background kind). NULL renders the painted-glow placeholder. |
+| `status` | enum('draft','published'), NOT NULL, default 'published' | Default 'published' so the seed stays live; the panel writes 'draft'. Player reads filter on it; the panel sees everything. |
+| `updated_at` | datetime, NOT NULL | Touched by every editor save. |
+| `created_at` | timestamp, NOT NULL | |
+
+### `area_spots` — where a scene can be searched (M2.5)
+The clickable spots, one row each, positioned by percentage across the
+scene (0–100 from the left, 0–100 from the top). Replaced wholesale on
+every spots save — a set this small (twenty at most) isn't worth diffing.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | int unsigned | Primary key. |
+| `area_id` | int unsigned, NOT NULL, FK → `areas.id` (CASCADE) | Deleted with its area. |
+| `x` | tinyint unsigned, NOT NULL | Percent from the left. |
+| `y` | tinyint unsigned, NOT NULL | Percent from the top. |
+| `position` | tinyint unsigned, NOT NULL | Keeps the artist's ordering stable. |
+
+### `loot_entries` — what searching an area finds (M2.5)
+The weighted reward table, one row per line of the panel's plain-line loot
+field. **Items are referenced by foreign key here** (unlike the old config
+tables, which used slugs): both sides live in the database now, so the
+database can enforce that the item exists — and RESTRICT means an item on
+a loot table refuses deletion, the same guard the editor explains in words.
+The parser makes crash-the-roll tables unwritable (no empty tables, every
+weight ≥ 1), so the reward roll never divides by zero.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | int unsigned | Primary key. |
+| `area_id` | int unsigned, NOT NULL, FK → `areas.id` (CASCADE) | Deleted with its area. |
+| `type` | enum('nothing','creature','item'), NOT NULL | What is granted. |
+| `item_id` | int unsigned, NULL, FK → `items.id` (RESTRICT) | Only for type 'item'. |
+| `weight` | smallint unsigned, NOT NULL | Relative chance, ≥ 1. |
+| `message` | varchar(200), NOT NULL | What the player reads. |
+| `position` | smallint unsigned, NOT NULL | The table's line order. |
+
 ## What is intentionally NOT here (yet)
 
 These are future extensions for the successor to build on this foundation; they

@@ -286,6 +286,41 @@ $save('admin-shops', $fetch('/admin/shops'));
 $save('admin-shop-edit', $fetch('/admin/shops/' . $shotShopId));
 $save('shop', $fetch('/shop')); // re-captured WITH the shopfront greeting
 
+// ---- The area editor (M2.5): the wood in a painted scene ----
+// Hang a real background on whispering-wood through the real picker, so
+// the admin scene box AND the player page are both shot painted; unlink
+// afterwards so repeated runs start clean (the shots keep the painting).
+preg_match_all('~href="/admin/areas/(\d+)"~', $fetch('/admin/areas'), $areaM);
+$shotAreaId = '0';
+foreach (array_unique($areaM[1]) as $candidateAreaId) {
+    if (str_contains($fetch('/admin/areas/' . $candidateAreaId), 'The Whispering Wood')) {
+        $shotAreaId = $candidateAreaId;
+        break;
+    }
+}
+$sceneArt = sys_get_temp_dir() . '/felkyo-gui-scene.gif';
+file_put_contents($sceneArt, Felkyo\Tests\Support\Pictures::animatedGif(random_int(11, 60000)));
+$fetch('/admin/pictures/upload', [
+    '_csrf_token' => $token($fetch('/admin/pictures')),
+    'kind' => 'background',
+    'picture' => new CURLFile($sceneArt, 'image/gif', 'test-scene.gif'),
+]);
+@unlink($sceneArt);
+$areaPicker = $fetch('/admin/areas/' . $shotAreaId . '/picture');
+preg_match('~name="art_id" value="([1-9]\d*)"~', $areaPicker, $sceneM);
+$fetch('/admin/areas/' . $shotAreaId . '/picture', [
+    '_csrf_token' => $token($areaPicker),
+    'art_id' => $sceneM[1] ?? '0',
+]);
+$save('admin-areas', $fetch('/admin/areas'));
+$save('admin-area-edit', $fetch('/admin/areas/' . $shotAreaId));
+$save('explore', $fetch('/explore'));
+$save('explore-area', $fetch('/explore/whispering-wood'));
+$fetch('/admin/areas/' . $shotAreaId . '/picture', [
+    '_csrf_token' => $token($fetch('/admin/areas/' . $shotAreaId . '/picture')),
+    'art_id' => '0', // back to the glow placeholder for the next run
+]);
+
 // ---- Render ----
 echo "Rendering with " . basename($browser) . "...\n";
 $shoot = static function (string $file, string $size, string $png) use ($browser, $outDir): void {

@@ -32,6 +32,25 @@
         linear-gradient(160deg, var(--purple), var(--plum-deep));
 }
 
+/* An area with its own painting (M2.5): the artist's scene replaces the
+   gradient, passed in as --scene-bg from the template (a data value, not a
+   style rule). The gradient above remains the fallback for every area
+   without one. */
+.explore-scene--painted {
+    background-image: var(--scene-bg);
+    background-size: cover;
+    background-position: center;
+}
+
+/* An area tile wearing its scene as a face on the explore list. */
+.tile__face {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+}
+
 /* When the visit is spent, we still show the framed scene, but with the note
    centred inside it instead of spots. */
 .explore-scene--spent {

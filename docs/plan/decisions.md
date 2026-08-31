@@ -477,3 +477,23 @@ and items/shops get the species rules — slugs minted once and never
 editable, no deletion, retiring = back to draft — because starter gifts
 and exploration loot tables reference items by slug, and a rename would
 break them silently.
+
+---
+
+## 2026-08-31 — M2.5 signed off: areas become data, spots become clickable to place
+
+The build plan (`docs/plan/2026-08-31-m2-5-build-plan.md`) was signed off:
+exploration areas move from config into tables (whispering-wood migrated
+verbatim, the config block removed — one source of truth; the mechanics
+knobs stay config), the loot table is edited as paste-friendly plain lines
+(all-or-nothing with per-line errors and nothing typed ever lost), loot
+references items by real foreign key (a typo becomes unwritable, not
+silently broken), and the publish minimum is a name, one spot, one loot
+row — the background stays optional over the gradient fallback.
+
+**One deviation from the recommendation, chosen deliberately:**
+click-on-the-image spot placement ships in M2.5 itself rather than later.
+The shape honours the standing accessibility rule (recorded 2026-08-12 for
+M11 decorating, applied here): the number fields REMAIN the full, keyboard-
+reachable, no-JavaScript way; clicking the scene is a vanilla-JS
+convenience layered on top, never the only way to place anything.

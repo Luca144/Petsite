@@ -555,47 +555,14 @@ return [
         // reward is chosen at random, weighted by its "weight" (higher = more
         // likely). Each visit allows a limited number of clicks, which refreshes
         // after the window passes.
+        // The AREAS themselves — names, scenes, spots and loot tables —
+        // are database content since M2.5, built in the creator's panel
+        // (they lived here as a config map before; whispering-wood moved
+        // over by migration, word for word). Only the two MECHANICS knobs
+        // remain, because they are tuning, not content.
         'exploration' => [
             'clicks_per_visit' => 5,
             'window_seconds' => 3600, // the click allowance refreshes after this
-            'areas' => [
-                'whispering-wood' => [
-                    'name' => 'The Whispering Wood',
-                    'description' => 'A hush of amber trees where small things rustle just out of sight.',
-                    // Clickable spots, positioned by percentage across the scene.
-                    'spots' => [
-                        ['x' => 18, 'y' => 60],
-                        ['x' => 40, 'y' => 42],
-                        ['x' => 63, 'y' => 66],
-                        ['x' => 80, 'y' => 48],
-                        ['x' => 52, 'y' => 78],
-                    ],
-                    // Weighted rewards. Weights are relative and need not total 100.
-                    //
-                    // "type" says what is granted:
-                    //   nothing   — a message and no more.
-                    //   creature  — a new creature of a random adoptable species.
-                    //   item      — one of the item named by "item", which is its
-                    //               SLUG. Never an id: ids differ between a fresh
-                    //               install and a migrated one, and content must
-                    //               mean the same thing everywhere.
-                    //
-                    // WHY FINDING SOMETHING IS THE COMMON CASE NOW. Exploring used
-                    // to return nothing 85 times in 100, which is a long way to go
-                    // for a sentence about leaves. Treats give the click somewhere
-                    // to land, and they are the free way to look after a creature —
-                    // so nobody has to buy their way into the mood system. Coming
-                    // back empty-handed still happens; it is just no longer the
-                    // whole experience.
-                    'loot' => [
-                        ['type' => 'nothing', 'weight' => 45, 'message' => 'Only leaves and a soft wind. Nothing this time.'],
-                        ['type' => 'item', 'item' => 'acorn-treat', 'weight' => 25, 'message' => 'A crunchy little acorn, tucked under a root.'],
-                        ['type' => 'item', 'item' => 'honey-treat', 'weight' => 10, 'message' => 'Something sweet, wrapped in a leaf.'],
-                        ['type' => 'item', 'item' => 'chamomile-bundle', 'weight' => 5, 'message' => 'A bundle of little dried flowers, still faintly scented.'],
-                        ['type' => 'creature', 'weight' => 15, 'message' => 'Something small blinks in the undergrowth — a new creature follows you home!'],
-                    ],
-                ],
-            ],
         ],
 
         // The pool of friendly default names a new creature can be given — used

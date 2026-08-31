@@ -92,6 +92,18 @@ final class AdminGateTest extends DatabaseTestCase
             ['POST', '/admin/shops/999/shelf/1/remove', Role::Artist],
             ['GET', '/admin/shops/999/picture/portrait', Role::Artist],
             ['POST', '/admin/shops/999/picture/portrait', Role::Artist],
+            // The area editor (M2.5).
+            ['GET', '/admin/areas', Role::Artist],
+            ['POST', '/admin/areas/create', Role::Artist],
+            ['GET', '/admin/areas/999', Role::Artist],
+            ['POST', '/admin/areas/999/words', Role::Artist],
+            ['POST', '/admin/areas/999/spots', Role::Artist],
+            ['POST', '/admin/areas/999/loot', Role::Artist],
+            ['POST', '/admin/areas/999/publish', Role::Artist],
+            ['POST', '/admin/areas/999/unpublish', Role::Artist],
+            ['POST', '/admin/areas/999/revert', Role::Artist],
+            ['GET', '/admin/areas/999/picture', Role::Artist],
+            ['POST', '/admin/areas/999/picture', Role::Artist],
         ];
     }
 
