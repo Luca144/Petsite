@@ -53,6 +53,18 @@ enum AuditAction: string
     case SpeciesUnpublished = 'species.unpublished';
     case SpeciesReverted = 'species.reverted';
 
+    // The item and shop editors (M2.4) — the same five life events each.
+    case ItemCreated = 'item.created';
+    case ItemSaved = 'item.saved';
+    case ItemPublished = 'item.published';
+    case ItemUnpublished = 'item.unpublished';
+    case ItemReverted = 'item.reverted';
+    case ShopCreated = 'shop.created';
+    case ShopSaved = 'shop.saved';
+    case ShopPublished = 'shop.published';
+    case ShopUnpublished = 'shop.unpublished';
+    case ShopReverted = 'shop.reverted';
+
     /**
      * What a person reading the audit page sees, in plain words.
      */
@@ -72,6 +84,16 @@ enum AuditAction: string
             self::SpeciesPublished => 'published a species',
             self::SpeciesUnpublished => 'took a species back to draft',
             self::SpeciesReverted => 'restored an older version of a species',
+            self::ItemCreated => 'started a new item',
+            self::ItemSaved => 'saved an item',
+            self::ItemPublished => 'published an item',
+            self::ItemUnpublished => 'took an item back to draft',
+            self::ItemReverted => 'restored an older version of an item',
+            self::ShopCreated => 'started a new shop',
+            self::ShopSaved => 'saved a shop',
+            self::ShopPublished => 'published a shop',
+            self::ShopUnpublished => 'took a shop back to draft',
+            self::ShopReverted => 'restored an older version of a shop',
         };
     }
 }

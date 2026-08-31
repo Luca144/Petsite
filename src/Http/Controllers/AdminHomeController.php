@@ -88,10 +88,22 @@ final class AdminHomeController
                 'arrives' => null,
             ];
             $sections[] = [
-                'title' => 'Items, shops & more',
-                'sentence' => 'The same one-sitting editors for items, shops, cards and themes.',
+                'title' => 'Items',
+                'sentence' => 'What can be owned, eaten and sold — prices, effects, icons.',
+                'href' => '/admin/items',
+                'arrives' => null,
+            ];
+            $sections[] = [
+                'title' => 'Shops',
+                'sentence' => 'The shopfronts: keeper, background, and what is on the shelves when.',
+                'href' => '/admin/shops',
+                'arrives' => null,
+            ];
+            $sections[] = [
+                'title' => 'Postcards & themes',
+                'sentence' => 'Each editor arrives with its content: cards with M6, themes with M4.',
                 'href' => null,
-                'arrives' => 'M2.4',
+                'arrives' => 'M4/M6',
             ];
         }
 

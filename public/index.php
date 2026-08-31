@@ -51,9 +51,9 @@ use Felkyo\Creatures\PettingRepository;
 use Felkyo\Creatures\PettingService;
 use Felkyo\Creatures\PlayableGames;
 use Felkyo\Creatures\PlayService;
+use Felkyo\Admin\ContentVersionRepository;
 use Felkyo\Creatures\SpeciesEditorService;
 use Felkyo\Creatures\SpeciesRepository;
-use Felkyo\Creatures\SpeciesVersionRepository;
 use Felkyo\Creatures\StarterCreatureService;
 use Felkyo\Economy\InventoryRepository;
 use Felkyo\Economy\ItemFinder;
@@ -64,8 +64,15 @@ use Felkyo\Safety\ReportService;
 use Felkyo\Safety\TextGuard;
 use Felkyo\Safety\WordBlocklist;
 use Felkyo\Economy\ItemDisposalService;
+use Felkyo\Economy\ItemEditorService;
+use Felkyo\Economy\ItemRepository;
 use Felkyo\Economy\PurchaseService;
+use Felkyo\Economy\ShopEditorService;
 use Felkyo\Economy\ShopRepository;
+use Felkyo\Http\Controllers\AdminItemEditController;
+use Felkyo\Http\Controllers\AdminItemsController;
+use Felkyo\Http\Controllers\AdminShopEditController;
+use Felkyo\Http\Controllers\AdminShopsController;
 use Felkyo\Exploration\ExplorationRepository;
 use Felkyo\Exploration\ExplorationService;
 use Felkyo\Exploration\ItemRewardGranter;
@@ -691,26 +698,76 @@ $adminPicturesController = new AdminPicturesController(
 // from the growth config's keys, so the screens and the validator follow a
 // fourth stage the day config grows one.
 $stageNames = array_keys($config['gameplay']['growth']['stage_start_levels']);
-$speciesVersionRepository = new SpeciesVersionRepository($pdo);
+// One undo engine for every editor (M2.4) — species, items and shops all
+// keep their snapshots in content_versions through this.
+$contentVersionRepository = new ContentVersionRepository($pdo);
 $speciesEditorService = new SpeciesEditorService(
-    $pdo, $speciesRepository, $speciesVersionRepository, $artRepository,
+    $pdo, $speciesRepository, $contentVersionRepository, $artRepository,
     $auditLogRepository, $config['art'], $stageNames
 );
 $adminCreaturesController = new AdminCreaturesController(
     $templates, $session, $csrf, $userRepository, $speciesRepository,
-    $speciesEditorService, $rateLimiter, $config['security']['rate_limit_species_save'], $stageNames
+    $speciesEditorService, $rateLimiter, $config['security']['rate_limit_content_save'], $stageNames
 );
 $adminCreatureEditController = new AdminCreatureEditController(
     $templates, $session, $csrf, $userRepository, $speciesRepository,
-    $speciesVersionRepository, $speciesEditorService, $inventoryRepository,
-    $rateLimiter, $config['security']['rate_limit_species_save'], $stageNames
+    $contentVersionRepository, $speciesEditorService, $inventoryRepository,
+    $rateLimiter, $config['security']['rate_limit_content_save'], $stageNames
 );
 $adminCreaturePickerController = new AdminCreaturePickerController(
     $templates, $session, $csrf, $userRepository, $speciesRepository, $artRepository,
-    $speciesEditorService, $rateLimiter, $config['security']['rate_limit_species_save'], $stageNames
+    $speciesEditorService, $rateLimiter, $config['security']['rate_limit_content_save'], $stageNames
 );
 $adminCreaturePreviewController = new AdminCreaturePreviewController(
     $templates, $session, $speciesRepository, $moodCalculator, $config['gameplay']['growth']
+);
+
+// The item and shop editors (M2.4). WHERE ITEMS ARE WOVEN IN: the starter
+// gift and the exploration loot tables both name items by slug — collected
+// here so an item's editor page can say "this slug is spoken for" instead
+// of leaving the artist to wonder. Slugs are minted once and never
+// editable, which is what keeps these references safe.
+$referencedItemSlugs = [];
+foreach (array_keys(StarterCreatureService::STARTER_TREATS) as $starterSlug) {
+    $referencedItemSlugs[$starterSlug][] = 'part of every new player\'s starter gift';
+}
+foreach ($config['gameplay']['exploration']['areas'] as $area) {
+    foreach ($area['loot'] as $lootEntry) {
+        if (($lootEntry['type'] ?? '') === 'item' && isset($lootEntry['item'])) {
+            // Appended, not assigned: one item can be several things at
+            // once (acorn-treat is a starter gift AND forest loot), and the
+            // editor page should say all of them.
+            $referencedItemSlugs[$lootEntry['item']][] = 'found while exploring ' . $area['name'];
+        }
+    }
+}
+
+$itemRepository = new ItemRepository($pdo);
+$itemEditorService = new ItemEditorService(
+    $pdo, $itemRepository, $contentVersionRepository, $artRepository, $auditLogRepository,
+    $config['art'] + ['maximum_sell_fraction_of_price' => $config['gameplay']['economy']['maximum_sell_fraction_of_price']],
+    $referencedItemSlugs
+);
+$shopEditorService = new ShopEditorService(
+    $pdo, $shopRepository, $itemRepository, $contentVersionRepository, $artRepository,
+    $auditLogRepository, $config['art']
+);
+$adminItemsController = new AdminItemsController(
+    $templates, $session, $csrf, $userRepository, $itemRepository, $itemEditorService,
+    $rateLimiter, $config['security']['rate_limit_content_save']
+);
+$adminItemEditController = new AdminItemEditController(
+    $templates, $session, $csrf, $userRepository, $itemRepository, $contentVersionRepository,
+    $itemEditorService, $artRepository, $rateLimiter, $config['security']['rate_limit_content_save']
+);
+$adminShopsController = new AdminShopsController(
+    $templates, $session, $csrf, $userRepository, $shopRepository, $shopEditorService,
+    $rateLimiter, $config['security']['rate_limit_content_save']
+);
+$adminShopEditController = new AdminShopEditController(
+    $templates, $session, $csrf, $userRepository, $shopRepository, $itemRepository,
+    $contentVersionRepository, $shopEditorService, $artRepository, $rateLimiter,
+    $config['security']['rate_limit_content_save']
 );
 
 // ---- Routes ----
@@ -779,6 +836,30 @@ $router->post('/admin/creatures/{id}/revert', $adminGate->protect(Role::Artist, 
 $router->get('/admin/creatures/{id}/picture/{slot}', $adminGate->protect(Role::Artist, [$adminCreaturePickerController, 'show']));
 $router->post('/admin/creatures/{id}/picture/{slot}', $adminGate->protect(Role::Artist, [$adminCreaturePickerController, 'choose']));
 $router->get('/admin/creatures/{id}/preview', $adminGate->protect(Role::Artist, [$adminCreaturePreviewController, 'show']));
+// The item editor (M2.4).
+$router->get('/admin/items', $adminGate->protect(Role::Artist, [$adminItemsController, 'show']));
+$router->post('/admin/items/create', $adminGate->protect(Role::Artist, [$adminItemsController, 'create']));
+$router->get('/admin/items/{id}', $adminGate->protect(Role::Artist, [$adminItemEditController, 'show']));
+$router->post('/admin/items/{id}/words', $adminGate->protect(Role::Artist, [$adminItemEditController, 'saveWords']));
+$router->post('/admin/items/{id}/numbers', $adminGate->protect(Role::Artist, [$adminItemEditController, 'saveNumbers']));
+$router->post('/admin/items/{id}/publish', $adminGate->protect(Role::Artist, [$adminItemEditController, 'publish']));
+$router->post('/admin/items/{id}/unpublish', $adminGate->protect(Role::Artist, [$adminItemEditController, 'unpublish']));
+$router->post('/admin/items/{id}/revert', $adminGate->protect(Role::Artist, [$adminItemEditController, 'revert']));
+$router->get('/admin/items/{id}/icon', $adminGate->protect(Role::Artist, [$adminItemEditController, 'pickIcon']));
+$router->post('/admin/items/{id}/icon', $adminGate->protect(Role::Artist, [$adminItemEditController, 'chooseIcon']));
+// The shop editor (M2.4).
+$router->get('/admin/shops', $adminGate->protect(Role::Artist, [$adminShopsController, 'show']));
+$router->post('/admin/shops/create', $adminGate->protect(Role::Artist, [$adminShopsController, 'create']));
+$router->get('/admin/shops/{id}', $adminGate->protect(Role::Artist, [$adminShopEditController, 'show']));
+$router->post('/admin/shops/{id}/words', $adminGate->protect(Role::Artist, [$adminShopEditController, 'saveWords']));
+$router->post('/admin/shops/{id}/keeper', $adminGate->protect(Role::Artist, [$adminShopEditController, 'saveKeeper']));
+$router->post('/admin/shops/{id}/publish', $adminGate->protect(Role::Artist, [$adminShopEditController, 'publish']));
+$router->post('/admin/shops/{id}/unpublish', $adminGate->protect(Role::Artist, [$adminShopEditController, 'unpublish']));
+$router->post('/admin/shops/{id}/revert', $adminGate->protect(Role::Artist, [$adminShopEditController, 'revert']));
+$router->post('/admin/shops/{id}/shelf', $adminGate->protect(Role::Artist, [$adminShopEditController, 'putListing']));
+$router->post('/admin/shops/{id}/shelf/{itemId}/remove', $adminGate->protect(Role::Artist, [$adminShopEditController, 'removeListing']));
+$router->get('/admin/shops/{id}/picture/{slot}', $adminGate->protect(Role::Artist, [$adminShopEditController, 'pickPicture']));
+$router->post('/admin/shops/{id}/picture/{slot}', $adminGate->protect(Role::Artist, [$adminShopEditController, 'choosePicture']));
 
 // (Serving an uploaded picture — GET /art/{name} — is NOT registered here:
 // it is dispatched near the top of this file, before the session and the

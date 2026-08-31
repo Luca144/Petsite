@@ -10,23 +10,33 @@ namespace Felkyo\Economy;
  * @package Felkyo\Economy
  *
  * WHAT THIS IS: a plain, read-only value object describing an item (its name,
- * what it costs, what it sells for, and which category it belongs to). Items are
- * content stored as data, so adding a new item is a new row in the items table,
- * not new code. The inventory and shop repositories build these from database rows.
+ * what it costs, what it sells for, and which category it belongs to). Items
+ * are content stored as data; since M2.4 they are BUILT in the creator's
+ * panel — drafted, given words, numbers and an icon, published.
  *
  * THE TWO NUMBERS: "price" is what a shop charges for one; "sellValue" is what a
  * player gets back for parting with one. They are deliberately separate, and the
  * second must always stay meaningfully below the first — see docs/owned-things.md
- * rule 3, and the shop margin in config.
+ * rule 3, and the shop margin in config (checked at SAVE since M2.4, not only
+ * by the test suite).
  *
- * WHERE AN ITEM'S PICTURE LIVES: nowhere in this object. Like creature art, item
- * art is found by convention from the slug — public/assets/items/{slug}.png — so
- * adding an item does not mean typing a file path. (When the panel gains uploads
- * in M2.2 this becomes a stored column, because uploaded files must be saved
- * under a generated name for safety, and a generated name cannot be guessed.)
+ * WHERE AN ITEM'S PICTURE COMES FROM — one method, three sources, in order:
+ * iconUrl() returns the art-store picture if one is linked (content-hash URL,
+ * so replacing it defeats every cache), else the pre-panel convention path
+ * (public/assets/items/{slug}.png — templates check the file really exists),
+ * and when neither exists the templates fall back to the category's icon, as
+ * they always have. Nothing existing looks different until an icon is chosen.
+ *
+ * DRAFT vs PUBLISHED: a draft item is on no shelf and cannot be bought, but
+ * everything a player already OWNS keeps working — inventory, feeding,
+ * selling read items unfiltered. The same asymmetry species have.
  */
 final class Item
 {
+    // The two states an item can be in (same shape as Species).
+    public const STATUS_DRAFT = 'draft';
+    public const STATUS_PUBLISHED = 'published';
+
     public function __construct(
         public readonly int $id,
         public readonly string $slug,
@@ -39,6 +49,11 @@ final class Item
         public readonly int $happinessBonus = 0,
         /** How much more rested a creature is for eating this. */
         public readonly int $energyBonus = 0,
+        public readonly string $status = self::STATUS_PUBLISHED,
+        /** The icon's stored (content-hash) name in the art store, or null. */
+        public readonly ?string $iconArtName = null,
+        public readonly ?int $iconArtId = null,
+        public readonly ?string $updatedAt = null,
     ) {
     }
 
@@ -48,7 +63,8 @@ final class Item
      * The category's columns arrive under "category_" names (category_slug, and
      * so on) because both tables have a "name" and an "id" — without the prefixes
      * one would quietly overwrite the other, and an item would take the
-     * category's name as its own.
+     * category's name as its own. The icon columns are optional so queries
+     * written before M2.4 keep producing usable items.
      */
     public static function fromRow(array $row): self
     {
@@ -69,6 +85,10 @@ final class Item
             ),
             (int) ($row['happiness_bonus'] ?? 0),
             (int) ($row['energy_bonus'] ?? 0),
+            (string) ($row['status'] ?? self::STATUS_PUBLISHED),
+            $row['icon_art_name'] ?? null,
+            isset($row['icon_art_id']) ? (int) $row['icon_art_id'] : null,
+            $row['updated_at'] ?? null,
         );
     }
 
@@ -99,12 +119,47 @@ final class Item
         return $this->sellValue > 0;
     }
 
+    public function isPublished(): bool
+    {
+        return $this->status === self::STATUS_PUBLISHED;
+    }
+
     /**
-     * Where this item's picture lives. Built from the slug by convention, exactly
-     * as creature art is, so adding an item never means typing a path.
+     * Is the icon an uploaded art-store picture (as opposed to the
+     * convention path below, whose existence templates check on disk)?
+     */
+    public function hasStoredIcon(): bool
+    {
+        return $this->iconArtName !== null && $this->iconArtName !== '';
+    }
+
+    /**
+     * THE icon address (see the class note for the three sources).
+     */
+    public function iconUrl(): string
+    {
+        if ($this->hasStoredIcon()) {
+            return '/art/' . $this->iconArtName;
+        }
+
+        return $this->conventionPath();
+    }
+
+    /**
+     * The pre-panel convention path. Public because the editor says honestly
+     * which source an item is using.
+     */
+    public function conventionPath(): string
+    {
+        return '/assets/items/' . rawurlencode($this->slug) . '.png';
+    }
+
+    /**
+     * The old name for the convention path, kept so templates written before
+     * M2.4 keep working until each is moved to iconUrl().
      */
     public function imagePath(): string
     {
-        return '/assets/items/' . rawurlencode($this->slug) . '.png';
+        return $this->conventionPath();
     }
 }

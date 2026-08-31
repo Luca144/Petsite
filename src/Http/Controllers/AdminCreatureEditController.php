@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Felkyo\Http\Controllers;
 
 use Felkyo\Auth\Session;
+use Felkyo\Admin\ContentVersionRepository;
 use Felkyo\Creatures\SpeciesEditorService;
 use Felkyo\Creatures\SpeciesRepository;
-use Felkyo\Creatures\SpeciesVersionRepository;
 use Felkyo\Economy\InventoryRepository;
 use Felkyo\Http\Csrf;
 use Felkyo\Http\Request;
@@ -44,7 +44,7 @@ final class AdminCreatureEditController
         private Csrf $csrf,
         private UserRepository $users,
         private SpeciesRepository $species,
-        private SpeciesVersionRepository $versions,
+        private ContentVersionRepository $versions,
         private SpeciesEditorService $editor,
         private InventoryRepository $inventory,
         private RateLimiter $rateLimiter,
@@ -73,7 +73,7 @@ final class AdminCreatureEditController
             'missing' => $species->isPublished() ? [] : $this->editor->missingForPublish($species),
             // The taste picker's choices: every feedable item, as tiles.
             'treats' => $this->inventory->findAllTreats(),
-            'versions' => $this->versions->listFor($species->id),
+            'versions' => $this->versions->listFor('species', $species->id),
         ]));
     }
 

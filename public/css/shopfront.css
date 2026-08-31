@@ -1,0 +1,88 @@
+/**
+ * The shopfront (M2.4): the shop page's header, fed by the panel — the
+ * background art, the keeper's portrait, and their greeting.
+ *
+ * Player-facing, mobile-first. The background is DECORATION: the words sit
+ * on a solid parchment panel floating over it, so contrast never depends on
+ * what the artist painted (accessibility rule: check contrast wherever text
+ * meets colour — here it meets parchment, always).
+ */
+
+.shopfront {
+    margin-bottom: 1rem;
+    border-radius: var(--radius-md);
+}
+
+/* With a painted background: the header becomes a little scene, the art
+   tiled behind a parchment panel. Without one, the header is just flow. */
+.shopfront--painted {
+    background-image: var(--shopfront-bg);
+    background-size: cover;
+    background-position: center;
+    border: 1px solid var(--border);
+    padding: 1.25rem;
+}
+
+.shopfront__panel {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+/* The solid ground under the words when art is behind them. */
+.shopfront--painted .shopfront__panel {
+    background: var(--parchment);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-panel);
+    padding: 0.9rem 1.1rem;
+}
+
+.shopfront__portrait {
+    width: 84px;
+    height: 84px;
+    object-fit: contain;
+    flex-shrink: 0;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.3rem;
+}
+
+.shopfront__words {
+    min-width: 0; /* long words wrap instead of pushing the panel wide */
+}
+
+.shopfront__words .panel-label {
+    margin-top: 0;
+}
+
+/* The greeting reads as speech: the site's display serif, slightly larger,
+   with the keeper's name as an aside. */
+.shopfront__greeting {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 1.05rem;
+    margin: 0.25rem 0 0.5rem;
+}
+
+.shopfront__keeper {
+    font-family: var(--font-mono);
+    font-style: normal;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    white-space: nowrap;
+}
+
+/* ---- Desktop refinements ---- */
+
+@media (min-width: 720px) {
+    .shopfront--painted {
+        padding: 2rem 1.5rem;
+    }
+
+    .shopfront__portrait {
+        width: 110px;
+        height: 110px;
+    }
+}

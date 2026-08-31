@@ -83,7 +83,9 @@ final class ShopController
                 'shownCount' => count($items),
                 'searchShownFrom' => $this->config['search_shown_from'],
                 'thingsWord' => 'items',
-                'emptyLine' => 'Ruinily doesn’t have anything like that on the shelves.',
+                // The keeper's own words, set in the panel — or a neutral
+                // line for a shop whose keeper has none yet (M2.4).
+                'emptyLine' => $shop->refusalLine(),
             ],
         ]));
     }

@@ -10,10 +10,13 @@
 $item = $stack->item;
 $category = $item->category;
 
-// Same convention as the card: real artwork if it exists, the category's icon
-// as a stand-in until it does.
-$artworkFile = dirname(__DIR__, 2) . '/public' . $item->imagePath();
-$hasArtwork = is_file($artworkFile);
+// Same three-source cascade as the card (M2.4): the linked art-store icon,
+// else the old convention file, else the category's icon stands in.
+$conventionFile = dirname(__DIR__, 2) . '/public' . $item->conventionPath();
+$iconSrc = $item->hasStoredIcon()
+    ? $item->iconUrl()
+    : (is_file($conventionFile) ? $item->conventionPath() : null);
+$hasArtwork = $iconSrc !== null;
 
 $this->layout('layout', ['title' => $item->name . ' — Felkyo Creatures']);
 ?>
@@ -26,7 +29,7 @@ $this->layout('layout', ['title' => $item->name . ' — Felkyo Creatures']);
 
     <div class="item-detail__art">
         <?php if ($hasArtwork): ?>
-            <img class="pixelated" src="<?= $this->e($item->imagePath()) ?>"
+            <img class="pixelated" src="<?= $this->e($iconSrc) ?>"
                  alt="<?= $this->e($item->name) ?>" width="128" height="128">
         <?php else: ?>
             <svg class="item-detail__placeholder" aria-hidden="true" focusable="false">

@@ -3,10 +3,12 @@
 *Written for someone who has never programmed. The first of the "how to add one"
 recipes — the documents that let the world grow without a developer.*
 
-> **From M2.4 this becomes a form in the creator's panel.** Until then it is a
-> migration, which does need a developer. The recipe is written now anyway,
-> because the panel screen will do exactly these steps and it helps to know what
-> it is doing.
+> **Part 1 HAS become a form in the creator's panel** (M2.4): adding an item
+> is Panel → Items, no developer involved — the friendly walkthrough is
+> `docs/artist-guide-items.md`. Part 1 below is kept as the reference for
+> what the form does underneath. **Part 2 — adding a CATEGORY — is still
+> this manual recipe**, deliberately, until the theme editor (M4) moves
+> colours and icons from files into data (decisions.md, 2026-08-31).
 
 ---
 

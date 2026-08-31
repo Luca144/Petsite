@@ -257,13 +257,15 @@ return [
                                       // changes are rare; a burst of them is
                                       // an incident, not a workflow.
         ],
-        'rate_limit_species_save' => [
+        'rate_limit_content_save' => [
             'max_attempts' => 120,    // 120 saves/publishes/reverts...
-            'window_seconds' => 3600, // ...per hour, per staff member. The
-                                      // editor saves section by section, so an
-                                      // afternoon building one species is many
-                                      // small saves — generous for a person,
-                                      // slow for a script.
+            'window_seconds' => 3600, // ...per hour, per staff member, SHARED
+                                      // by the species, item and shop editors
+                                      // (renamed from rate_limit_species_save
+                                      // in M2.4). The editors save section by
+                                      // section, so an afternoon of content
+                                      // work is many small saves — generous
+                                      // for a person, slow for a script.
         ],
         'rate_limit_art_upload' => [
             'max_attempts' => 60,     // 60 picture uploads...
@@ -302,7 +304,16 @@ return [
         'species_name_max_length' => 60,     // matches the column
         'species_blurb_max_length' => 500,   // a paragraph per stage
         'species_lore_max_length' => 5000,   // the library's long read
-        'species_versions_kept' => 20,       // newest snapshots per species
+        'species_versions_kept' => 20,       // newest snapshots per thing —
+                                             // shared by every editor since
+                                             // M2.4 (the name kept for the
+                                             // M2.3 wiring; it is THE depth)
+
+        // ---- The item and shop editors (M2.4) ----
+        'item_name_max_length' => 60,          // matches the column
+        'item_description_max_length' => 500,  // a shelf card's paragraph
+        'shop_greeting_max_length' => 300,     // the keeper's welcome line
+        'shop_refusal_max_length' => 150,      // "nothing like that here"
 
         // The Pictures screen warns from here that the art disk is getting
         // full. The volume actually attached in Railway is 500 MB (its

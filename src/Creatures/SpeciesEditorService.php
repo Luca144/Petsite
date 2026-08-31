@@ -7,6 +7,7 @@ namespace Felkyo\Creatures;
 use Felkyo\Admin\AuditAction;
 use Felkyo\Admin\AuditEntry;
 use Felkyo\Admin\AuditLogRepository;
+use Felkyo\Admin\ContentVersionRepository;
 use Felkyo\Art\ArtKind;
 use Felkyo\Art\ArtRepository;
 use Felkyo\Users\User;
@@ -36,6 +37,9 @@ final class SpeciesEditorService
     private SpeciesWording $wording;
     private SpeciesSnapshots $snapshots;
 
+    // This editor's rows in the shared content_versions table.
+    private const VERSION_TYPE = 'species';
+
     /**
      * @param array $speciesConfig species_* caps and versions kept (config 'art').
      * @param string[] $stageNames from config growth.stage_start_levels keys —
@@ -44,7 +48,7 @@ final class SpeciesEditorService
     public function __construct(
         private PDO $connection,
         private SpeciesRepository $species,
-        private SpeciesVersionRepository $versions,
+        private ContentVersionRepository $versions,
         private ArtRepository $art,
         private AuditLogRepository $auditLog,
         private array $speciesConfig,
@@ -76,7 +80,7 @@ final class SpeciesEditorService
         }
 
         $created = $this->species->create($name, $slug);
-        $this->versions->record($created->id, $this->snapshots->snapshotOf($created), $actor->id, $this->versionsKept());
+        $this->versions->record(self::VERSION_TYPE, $created->id, $this->snapshots->snapshotOf($created), $actor->id, $this->versionsKept());
         $this->audit($actor, AuditAction::SpeciesCreated, $created->id, null, ['name' => $name], $ip);
 
         return SpeciesEditResult::ok(sprintf('%s exists — as a draft, invisible to players until you publish.', $name), $created->id);
@@ -280,7 +284,7 @@ final class SpeciesEditorService
             return SpeciesEditResult::refused('That species is gone.');
         }
 
-        $snapshot = $this->versions->findSnapshot($versionId, $speciesId);
+        $snapshot = $this->versions->findSnapshot($versionId, self::VERSION_TYPE, $speciesId);
         if ($snapshot === null) {
             return SpeciesEditResult::refused('That version isn\'t in this species\' history.');
         }
@@ -333,17 +337,17 @@ final class SpeciesEditorService
     {
         $this->connection->beginTransaction();
         try {
-            if ($this->versions->listFor($before->id) === []) {
+            if ($this->versions->listFor(self::VERSION_TYPE, $before->id) === []) {
                 // A species from before the panel: keep its day-one state
                 // restorable before the first edit changes it.
-                $this->versions->record($before->id, $this->snapshots->snapshotOf($before), null, $this->versionsKept());
+                $this->versions->record(self::VERSION_TYPE, $before->id, $this->snapshots->snapshotOf($before), null, $this->versionsKept());
             }
 
             $mutate();
 
             $after = $this->species->findById($before->id);
             $afterSnapshot = $after !== null ? $this->snapshots->snapshotOf($after) : [];
-            $this->versions->record($before->id, $afterSnapshot, $actor->id, $this->versionsKept());
+            $this->versions->record(self::VERSION_TYPE, $before->id, $afterSnapshot, $actor->id, $this->versionsKept());
             $this->audit($actor, $action, $before->id, $this->snapshots->snapshotOf($before), $afterSnapshot, $ip);
 
             $this->connection->commit();

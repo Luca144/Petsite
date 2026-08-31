@@ -268,6 +268,24 @@ $save('admin-creature-edit', $fetch('/admin/creatures/' . $shotSpeciesId));
 $save('admin-creature-picker', $fetch('/admin/creatures/' . $shotSpeciesId . '/picture/juvenile'));
 $save('admin-creature-preview', $fetch('/admin/creatures/' . $shotSpeciesId . '/preview'));
 
+// ---- The item and shop editors (M2.4) ----
+// Give the general store a greeting so the shopfront header has something
+// to show, then re-capture the player-facing shop page with it.
+preg_match('~href="/admin/shops/(\d+)"~', $fetch('/admin/shops'), $shopM);
+$shotShopId = $shopM[1] ?? '0';
+$fetch('/admin/shops/' . $shotShopId . '/keeper', [
+    '_csrf_token' => $token($fetch('/admin/shops/' . $shotShopId)),
+    'keeper_name' => 'Ruinily',
+    'keeper_greeting' => 'Come in out of the stars, love — the kettle is on.',
+    'keeper_refusal' => 'Ruinily doesn’t have anything like that on the shelves.',
+]);
+$save('admin-items', $fetch('/admin/items'));
+preg_match('~href="/admin/items/(\d+)"~', $fetch('/admin/items'), $itemM);
+$save('admin-item-edit', $fetch('/admin/items/' . ($itemM[1] ?? '0')));
+$save('admin-shops', $fetch('/admin/shops'));
+$save('admin-shop-edit', $fetch('/admin/shops/' . $shotShopId));
+$save('shop', $fetch('/shop')); // re-captured WITH the shopfront greeting
+
 // ---- Render ----
 echo "Rendering with " . basename($browser) . "...\n";
 $shoot = static function (string $file, string $size, string $png) use ($browser, $outDir): void {

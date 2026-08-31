@@ -927,6 +927,87 @@ request('/admin/creatures/' . $speciesId . '/unpublish', ['_csrf_token' => token
 check('back to draft, off the shelf again', !str_contains(request('/shop')['body'], $speciesName));
 
 // ---------------------------------------------------------------------------
+// The item and shop editors (M2.4), through the real forms
+//
+// Build an item, watch the shop refuse the draft, publish and shelve it,
+// buy one; give the keeper a greeting and see it on the real shop page.
+// Everything is tidied afterwards so repeated runs stay clean.
+// ---------------------------------------------------------------------------
+
+echo "\nThe item and shop editors:\n";
+
+$itemName = 'Smokeberry' . random_int(1000, 9999);
+$itemsPage = request('/admin/items');
+check('the item list renders for an owner', str_contains($itemsPage['body'], 'Start a new item'));
+
+preg_match('~name="category_id" value="(\d+)"~', $itemsPage['body'], $categoryMatch);
+$itemEditor = request('/admin/items/create', [
+    '_csrf_token' => tokenIn($itemsPage['body']),
+    'name' => $itemName,
+    'category_id' => $categoryMatch[1] ?? '0',
+]);
+check('creating an item lands on its editor', str_contains($itemEditor['body'], $itemName));
+preg_match('~action="/admin/items/(\d+)/words"~', $itemEditor['body'], $itemMatch);
+$itemId = $itemMatch[1] ?? '0';
+
+// The margin rule refuses at save, in plain words.
+$refusedNumbers = request('/admin/items/' . $itemId . '/numbers', [
+    '_csrf_token' => tokenIn($itemEditor['body']),
+    'price' => '10', 'sell_value' => '9',
+    'happiness_bonus' => '0', 'energy_bonus' => '0',
+    'category_id' => $categoryMatch[1] ?? '0',
+]);
+check('a sell value over the margin is refused at save', str_contains($refusedNumbers['body'], 'at most 8'));
+
+request('/admin/items/' . $itemId . '/numbers', [
+    '_csrf_token' => tokenIn($refusedNumbers['body']),
+    'price' => '3', 'sell_value' => '2',
+    'happiness_bonus' => '0', 'energy_bonus' => '0',
+    'category_id' => $categoryMatch[1] ?? '0',
+]);
+check('the shop does NOT shelve or show a draft item', !str_contains(request('/shop')['body'], $itemName));
+
+$afterItemPublish = request('/admin/items/' . $itemId . '/publish', ['_csrf_token' => tokenIn($itemEditor['body'])]);
+check('publishing the item says it is live', str_contains($afterItemPublish['body'], 'is live'));
+
+// Shelve it in the general store through the shop editor.
+$shopsPage = request('/admin/shops');
+preg_match('~href="/admin/shops/(\d+)"~', $shopsPage['body'], $shopMatch);
+$shopId = $shopMatch[1] ?? '0';
+$shopEditor = request('/admin/shops/' . $shopId);
+$afterShelf = request('/admin/shops/' . $shopId . '/shelf', [
+    '_csrf_token' => tokenIn($shopEditor['body']),
+    'item_id' => $itemId, 'available_from' => '', 'available_to' => '',
+]);
+check('shelving says so', str_contains($afterShelf['body'], 'on the shelf'));
+check('and the real shop now sells it', str_contains(request('/shop')['body'], $itemName));
+
+// The keeper speaks — set a greeting, see it on the player-facing page.
+$greetingWord = 'Willkommen' . random_int(100, 999);
+request('/admin/shops/' . $shopId . '/keeper', [
+    '_csrf_token' => tokenIn($afterShelf['body']),
+    'keeper_name' => 'Ruinily',
+    'keeper_greeting' => $greetingWord . ', wanderer!',
+    'keeper_refusal' => 'Ruinily doesn’t have anything like that on the shelves.',
+]);
+check('the keeper\'s greeting appears on the real shop page', str_contains(request('/shop')['body'], $greetingWord));
+
+// Buy one — the whole point of a shelf.
+$shopPage = request('/shop');
+$bought = request('/shop/buy', ['_csrf_token' => tokenIn($shopPage['body']), 'item_id' => $itemId]);
+check('buying it works or explains the gap in gems', str_contains($bought['body'], 'You bought') || str_contains($bought['body'], 'more gem'));
+
+// Tidy: off the shelf, back to draft, greeting cleared to the seeded state.
+request('/admin/shops/' . $shopId . '/shelf/' . $itemId . '/remove', ['_csrf_token' => tokenIn($shopPage['body'])]);
+request('/admin/items/' . $itemId . '/unpublish', ['_csrf_token' => tokenIn($shopPage['body'])]);
+request('/admin/shops/' . $shopId . '/keeper', [
+    '_csrf_token' => tokenIn($shopPage['body']),
+    'keeper_name' => 'Ruinily', 'keeper_greeting' => '',
+    'keeper_refusal' => 'Ruinily doesn’t have anything like that on the shelves.',
+]);
+check('tidied: the item is off the real shelf again', !str_contains(request('/shop')['body'], $itemName));
+
+// ---------------------------------------------------------------------------
 // Logging out
 //
 // This runs LAST, because everything after it would be a logged-out request.

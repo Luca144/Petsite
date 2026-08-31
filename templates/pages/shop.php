@@ -23,10 +23,10 @@ $this->layout('layout', ['title' => $shop->name . ' — Felkyo Creatures']);
 
 <?= $this->insert('partials/item-icons') ?>
 
-<h2 class="panel-label"><?= $this->e($shop->name) ?></h2>
-<?php if ($shop->description !== null): ?>
-    <p><?= $this->e($shop->description) ?></p>
-<?php endif; ?>
+<?php /* The shopfront — background, keeper, greeting, all panel-set data.
+         Its own partial (M2.4), shared-ready for the day more shops get
+         doors. */ ?>
+<?= $this->insert('partials/shopfront', ['shop' => $shop]) ?>
 
 <?php if (!empty($currentUser)): ?>
     <?php /* The purse, right where the deciding happens. It is also in the page
@@ -122,10 +122,13 @@ $this->layout('layout', ['title' => $shop->name . ' — Felkyo Creatures']);
     <?php foreach ($items as $item): ?>
         <?php
         $category = $item->category;
-        // Same convention as the inventory card: the item's real artwork when the
-        // artist has drawn it, the category's icon standing in until then.
-        $artworkFile = dirname(__DIR__, 2) . '/public' . $item->imagePath();
-        $hasArtwork = is_file($artworkFile);
+        // Same three-source cascade as the inventory card (M2.4): the linked
+        // art-store icon, else the old convention file, else the category icon.
+        $conventionFile = dirname(__DIR__, 2) . '/public' . $item->conventionPath();
+        $iconSrc = $item->hasStoredIcon()
+            ? $item->iconUrl()
+            : (is_file($conventionFile) ? $item->conventionPath() : null);
+        $hasArtwork = $iconSrc !== null;
         ?>
         <?php /* data-category / data-name: the contract with item-finder.js,
                  which filters these cards in place without a reload. */ ?>
@@ -135,7 +138,7 @@ $this->layout('layout', ['title' => $shop->name . ' — Felkyo Creatures']);
              style="--card-tint: <?= $this->e($category->colourVariable()) ?>">
             <span class="shop-item__art">
                 <?php if ($hasArtwork): ?>
-                    <img class="pixelated" src="<?= $this->e($item->imagePath()) ?>"
+                    <img class="pixelated" src="<?= $this->e($iconSrc) ?>"
                          alt="" width="52" height="52">
                 <?php else: ?>
                     <svg class="shop-item__placeholder" aria-hidden="true" focusable="false">

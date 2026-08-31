@@ -68,6 +68,30 @@ final class AdminGateTest extends DatabaseTestCase
             ['GET', '/admin/creatures/999/picture/baby', Role::Artist],
             ['POST', '/admin/creatures/999/picture/baby', Role::Artist],
             ['GET', '/admin/creatures/999/preview', Role::Artist],
+            // The item editor (M2.4).
+            ['GET', '/admin/items', Role::Artist],
+            ['POST', '/admin/items/create', Role::Artist],
+            ['GET', '/admin/items/999', Role::Artist],
+            ['POST', '/admin/items/999/words', Role::Artist],
+            ['POST', '/admin/items/999/numbers', Role::Artist],
+            ['POST', '/admin/items/999/publish', Role::Artist],
+            ['POST', '/admin/items/999/unpublish', Role::Artist],
+            ['POST', '/admin/items/999/revert', Role::Artist],
+            ['GET', '/admin/items/999/icon', Role::Artist],
+            ['POST', '/admin/items/999/icon', Role::Artist],
+            // The shop editor (M2.4).
+            ['GET', '/admin/shops', Role::Artist],
+            ['POST', '/admin/shops/create', Role::Artist],
+            ['GET', '/admin/shops/999', Role::Artist],
+            ['POST', '/admin/shops/999/words', Role::Artist],
+            ['POST', '/admin/shops/999/keeper', Role::Artist],
+            ['POST', '/admin/shops/999/publish', Role::Artist],
+            ['POST', '/admin/shops/999/unpublish', Role::Artist],
+            ['POST', '/admin/shops/999/revert', Role::Artist],
+            ['POST', '/admin/shops/999/shelf', Role::Artist],
+            ['POST', '/admin/shops/999/shelf/1/remove', Role::Artist],
+            ['GET', '/admin/shops/999/picture/portrait', Role::Artist],
+            ['POST', '/admin/shops/999/picture/portrait', Role::Artist],
         ];
     }
 

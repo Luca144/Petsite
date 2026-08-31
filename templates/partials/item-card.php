@@ -25,12 +25,15 @@
 $item = $stack->item;
 $category = $item->category;
 
-// Show the item's real artwork if it exists, and the category icon if it does
-// not. Art arrives file by file as the artist draws it, so this quietly upgrades
-// itself: drop mossling-treat.png into public/assets/items/ and the card starts
-// showing it, with nothing to edit and nothing to remember.
-$artworkFile = dirname(__DIR__, 2) . '/public' . $item->imagePath();
-$hasArtwork = is_file($artworkFile);
+// The item's picture, three sources in order (M2.4): its art-store icon if
+// one is linked in the panel (a content-hash URL, so replacing it defeats
+// every cache), else the old convention file if the artist ever dropped one
+// into public/assets/items/, else the category's icon below stands in.
+$conventionFile = dirname(__DIR__, 2) . '/public' . $item->conventionPath();
+$iconSrc = $item->hasStoredIcon()
+    ? $item->iconUrl()
+    : (is_file($conventionFile) ? $item->conventionPath() : null);
+$hasArtwork = $iconSrc !== null;
 ?>
 <?php /* data-category and data-name are the contract with item-finder.js: the
          in-place filtering reads them to decide which cards to hide. They are
@@ -43,7 +46,7 @@ $hasArtwork = is_file($artworkFile);
     <span class="item-card__art">
         <?php if ($hasArtwork): ?>
             <img class="item-card__img pixelated"
-                 src="<?= $this->e($item->imagePath()) ?>"
+                 src="<?= $this->e($iconSrc) ?>"
                  alt="" width="64" height="64">
         <?php else: ?>
             <?php /* No drawing yet, so the category's own icon stands in. It is

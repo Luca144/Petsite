@@ -401,19 +401,42 @@ UNIQUE (`species_id`, `stage`) — saves are upserts. Index on
 `sprite_art_id`: "which species use this picture?", the art delete-guard's
 question.
 
-### `species_versions` — the editor's undo
+### `content_versions` — every editor's undo (M2.4; absorbed `species_versions`)
 
 | Column | Type | Notes |
 | --- | --- | --- |
 | `id` | int unsigned | Primary key. |
-| `species_id` | int unsigned, NOT NULL, FK → `species.id` (CASCADE) | |
-| `snapshot` | text, NOT NULL | The whole editable state as JSON — art as REFERENCES, never bytes. |
+| `content_type` | varchar(20), NOT NULL | `species` / `item` / `shop` — hard-coded by each editor service, never from a request. |
+| `content_id` | int unsigned, NOT NULL | Which one, in that type's own table (polymorphic — PHP guards what an FK cannot, like `reports`). |
+| `snapshot` | text, NOT NULL | The whole editable state as JSON — art as REFERENCES, never bytes. A shop's snapshot includes its shelves. |
 | `saved_by_user_id` | int unsigned, NULL, FK → `users.id` (SET NULL) | |
 | `created_at` | timestamp, NOT NULL | |
 
-One snapshot per save, pruned to the newest N (config
-`art.species_versions_kept`, 20). Restoring applies whitelisted fields only
-and never touches `status`.
+Index (`content_type`, `content_id`, `created_at`). One snapshot per save,
+pruned to the newest N (config `art.species_versions_kept`, 20 — the one
+depth every editor shares). Restoring applies whitelisted fields only and
+never touches `status`. The M2.3-era `species_versions` table was copied in
+and dropped by migration `20260831130001`.
+
+### The item and shop editors' additions (M2.4)
+
+**`items` gained**: `status` (draft/published, default `'published'` — the
+same seeds-stay-live reasoning as species), `updated_at`, `icon_art_id`
+(FK → `art_files`, SET NULL — the three-source icon cascade: art-store
+icon, else the old `/assets/items/{slug}.png` convention file, else the
+category icon). Index on `status`. The shop's listing AND purchase queries
+require `status='published'`.
+
+**`shops` gained**: `status` + `updated_at` (same shape), the keeper —
+`keeper_name` (60), `keeper_greeting` (300), `keeper_refusal` (150), all
+NULL (a keeperless shop renders as shops always did; Ruinily and her
+refusal line were seeded verbatim by the migration) — and two art links,
+`background_art_id` / `portrait_art_id` (FK → `art_files`, SET NULL).
+
+**`shop_items`' seasonal columns came alive**: `available_from`/`available_to`
+(added 2026-08-12) are now honoured by `ShopRepository::findItems()` and
+`findSoldItem()` — NULL means always; out of season means simply not
+offered, at the page AND at purchase time.
 
 ---
 

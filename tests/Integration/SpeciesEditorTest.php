@@ -242,7 +242,7 @@ final class SpeciesEditorTest extends DatabaseTestCase
         ]);
 
         // The history is newest-first; find the version holding the first words.
-        $versions = $this->world->speciesVersions->listFor($species->id);
+        $versions = $this->world->speciesVersions->listFor('species', $species->id);
         $target = null;
         foreach ($versions as $version) {
             if (($version['snapshot']['flavour_text'] ?? null) === 'The first words.') {
@@ -262,7 +262,7 @@ final class SpeciesEditorTest extends DatabaseTestCase
     {
         $first = $this->createDraft();
         $second = $this->createDraft();
-        $firstVersionId = $this->world->speciesVersions->listFor($first->id)[0]['id'];
+        $firstVersionId = $this->world->speciesVersions->listFor('species', $first->id)[0]['id'];
 
         $this->post('/admin/creatures/' . $second->id . '/revert', ['version_id' => (string) $firstVersionId]);
 

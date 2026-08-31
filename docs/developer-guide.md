@@ -2010,3 +2010,55 @@ with named pieces, the kind rule, the delete guard, revert incl. the
 cross-species refusal, script-tag names inert). The smoke test builds a
 whole species through the real forms and watches the shop refuse the draft
 and shelve the published one.
+
+## Increment M2.4 — The item and shop editors
+
+Plan: `docs/plan/2026-08-31-m2-4-build-plan.md` (signed off with the
+re-scoping: postcards ride with M6, themes with M4 — decisions.md). The map:
+
+**One undo engine.** `content_versions` (+`ContentVersionRepository`, Admin
+namespace) replaced the species-only version table; the migration copied
+the species history across and dropped it. Species, item and shop editors
+all snapshot there under their own content_type, newest 20 kept.
+
+**Items** grew a real persistence layer from zero: `ItemRepository` (reads
+unfiltered — the panel and reference lookups want drafts; acquiring is
+filtered where acquiring happens), `ItemEditorService` (the same
+withHistory/audit/publish shape as species; THE MARGIN RULE — sell value
+at most the config fraction of price — now refuses AT SAVE with the exact
+ceiling in the sentence, same arithmetic as `ItemSellValueTest`), and
+`Item` gained status/icon_art_id plus the three-source icon cascade
+(`iconUrl()`: art-store icon → old convention file → category icon), which
+item-card, item page and shop page all use. Slugs are minted once, never
+editable, no deletion — the guard for the starter gift and loot tables
+that name items by slug; `referencesFor()` says so on the editor page
+(`StarterCreatureService::STARTER_TREATS` went public for it, and the
+loot-table slugs are collected from config in `public/index.php`).
+
+**Shops** grew their keeper (name, greeting, refusal — Ruinily seeded
+verbatim by the migration, so nothing read differently on deploy day),
+two art slots (Background/Portrait kinds), status, and WRITES incl. the
+shelves: `putListing`/`removeListing` with the 2026-08-12 seasonal dates,
+which `findItems()` AND `findSoldItem()` now honour along with
+`status='published'` — the purchase-time lookup filters identically to the
+page, so buying a draft or out-of-season item is impossible however the
+request was built. `ShopEditorService::putListing` refuses drafts and
+nonsense date ranges; a shop's snapshot includes its shelves, so revert
+restores stock. The player-facing shopfront (background behind the header,
+portrait, greeting on solid parchment; refusal line from the shop's own
+words) lives in `templates/pages/shop.php` + `public/css/shopfront.css`.
+
+**Screens**: `/admin/items`, `/admin/items/{id}` (+icon picker),
+`/admin/shops`, `/admin/shops/{id}` (+two picture slots, the shelves) —
+all Role::Artist behind the gate, all in the `AdminGateTest` matrix (60
+routes now). The art picker became a shared template
+(`pages/admin-art-picker.php`); the species editor's own picker is its
+older twin, a tidy-up candidate.
+
+**Tests**: `ContentEditorsTest` — margin refusal at save, draft
+unshelvable/unofferable/unbuyable, seasons honoured both ways and
+from>to refused, wrong-kind icons refused, keeper words reaching the real
+page, script-tag names inert, revert incl. shelves. The smoke test builds
+an item and a keeper through the real forms and watches the real shop obey.
+
+**For the artist**: `docs/artist-guide-items.md`, `docs/artist-guide-shops.md`.

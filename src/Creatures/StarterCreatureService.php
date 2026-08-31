@@ -45,7 +45,10 @@ final class StarterCreatureService
      * everyday one and one of the comforting one — enough to try both kinds of
      * thing a treat can be, not enough to skip the game.
      */
-    private const STARTER_TREATS = [
+    // PUBLIC since M2.4: the item editor shows "part of the starter gift"
+    // on these items' own pages, so an artist understands why their slugs
+    // are spoken for. Read elsewhere, never modified elsewhere.
+    public const STARTER_TREATS = [
         'acorn-treat' => 2,
         'honey-treat' => 1,
     ];

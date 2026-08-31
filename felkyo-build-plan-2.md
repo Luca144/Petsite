@@ -138,6 +138,14 @@ Tests: create, edit, preview, publish, revert; invalid or incomplete input refus
 Panel sections for **items**, **shops** (NPC art, dialogue lines, offerings), **postcards** (art plus its fixed message), and **themes**. Same conventions throughout: validate before saving, say plainly what's missing, preview before publishing, undo available.
 Write the "how to add one" recipe in `docs/` for each, for a reader who has never programmed.
 
+> **Re-scoped 2026-08-31 with sign-off** (`docs/plan/decisions.md`): M2.4
+> builds the item and shop editors. The **postcard editor rides with M6**
+> (which defines what a postcard is) and the **theme editor with M4**
+> (whose contrast-check requirement must be built into it) — principle
+> (b2) kept: each content type still ships with its editor, together, in
+> its own milestone. Item categories stay a documented manual recipe
+> until the M4 theme editor moves colours and icons into data.
+
 **M2.5 — Bulk entry for tables.**
 Loot tables are hundreds of rows across twelve areas and four activities. Web forms one row at a time would be miserable and is where this kind of project stalls.
 Build a **live editable table**: type or paste rows directly, with validation shown inline. Areas cannot be duplicated wholesale — drops are nearly unique per area — but the **category structure** (forage / hunt / mine / fish) can be duplicated as an empty scaffold so a new area starts with its shape rather than a blank page.

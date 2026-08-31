@@ -24,8 +24,17 @@ use Felkyo\Http\Controllers\ArtController;
 use Felkyo\Creatures\MoodCalculator;
 use Felkyo\Creatures\SpeciesEditorService;
 use Felkyo\Creatures\SpeciesRepository;
-use Felkyo\Creatures\SpeciesVersionRepository;
+use Felkyo\Admin\ContentVersionRepository;
 use Felkyo\Economy\InventoryRepository;
+use Felkyo\Economy\ItemEditorService;
+use Felkyo\Economy\ItemRepository;
+use Felkyo\Economy\ShopEditorService;
+use Felkyo\Economy\ShopRepository;
+use Felkyo\Http\Controllers\AdminItemEditController;
+use Felkyo\Http\Controllers\AdminItemsController;
+use Felkyo\Http\Controllers\AdminShopEditController;
+use Felkyo\Http\Controllers\AdminShopsController;
+use Felkyo\Creatures\StarterCreatureService;
 use Felkyo\Auth\PasswordHasher;
 use Felkyo\Auth\Session;
 use Felkyo\Http\Controllers\AdminAuditController;
@@ -73,10 +82,14 @@ final class AdminWorld
     public VolumeImageStore $imageStore;
     public array $artConfig;
     public SpeciesRepository $speciesRepo;
-    public SpeciesVersionRepository $speciesVersions;
+    public ContentVersionRepository $speciesVersions;
     public SpeciesEditorService $speciesEditor;
     /** @var string[] the growth stages, from config. */
     public array $stageNames;
+    public ItemRepository $itemRepo;
+    public ItemEditorService $itemEditor;
+    public ShopRepository $shopRepo;
+    public ShopEditorService $shopEditor;
 
     // Where test uploads land: a throwaway folder in the system temp dir, so
     // a test can never write into the project's real art folder.
@@ -145,28 +158,73 @@ final class AdminWorld
 
         // The species editor (M2.3), wired as the front controller wires it.
         $world->stageNames = array_keys($config['gameplay']['growth']['stage_start_levels']);
-        $world->speciesVersions = new SpeciesVersionRepository($connection);
+        $world->speciesVersions = new ContentVersionRepository($connection);
         $world->speciesEditor = new SpeciesEditorService(
             $connection, $world->speciesRepo, $world->speciesVersions, $world->pictures,
             $world->auditLog, $config['art'], $world->stageNames
         );
         $creaturesController = new AdminCreaturesController(
             $templates, $world->session, $world->csrf, $world->users, $world->speciesRepo,
-            $world->speciesEditor, $rateLimiter, $security['rate_limit_species_save'], $world->stageNames
+            $world->speciesEditor, $rateLimiter, $security['rate_limit_content_save'], $world->stageNames
         );
         $creatureEditController = new AdminCreatureEditController(
             $templates, $world->session, $world->csrf, $world->users, $world->speciesRepo,
             $world->speciesVersions, $world->speciesEditor, new InventoryRepository($connection),
-            $rateLimiter, $security['rate_limit_species_save'], $world->stageNames
+            $rateLimiter, $security['rate_limit_content_save'], $world->stageNames
         );
         $creaturePickerController = new AdminCreaturePickerController(
             $templates, $world->session, $world->csrf, $world->users, $world->speciesRepo,
             $world->pictures, $world->speciesEditor, $rateLimiter,
-            $security['rate_limit_species_save'], $world->stageNames
+            $security['rate_limit_content_save'], $world->stageNames
         );
         $creaturePreviewController = new AdminCreaturePreviewController(
             $templates, $world->session, $world->speciesRepo,
             new MoodCalculator($config['gameplay']['mood']), $config['gameplay']['growth']
+        );
+
+        // The item and shop editors (M2.4), wired as the front controller
+        // wires them — including the same referenced-slugs assembly.
+        $referencedItemSlugs = [];
+        foreach (array_keys(StarterCreatureService::STARTER_TREATS) as $starterSlug) {
+            $referencedItemSlugs[$starterSlug][] = 'part of every new player\'s starter gift';
+        }
+        foreach ($config['gameplay']['exploration']['areas'] as $area) {
+            foreach ($area['loot'] as $lootEntry) {
+                if (($lootEntry['type'] ?? '') === 'item' && isset($lootEntry['item'])) {
+                    // Appended, not assigned — an item can be several things
+                    // at once, exactly as the front controller builds it.
+                    $referencedItemSlugs[$lootEntry['item']][] = 'found while exploring ' . $area['name'];
+                }
+            }
+        }
+        $world->itemRepo = new ItemRepository($connection);
+        $world->shopRepo = new ShopRepository($connection);
+        $world->itemEditor = new ItemEditorService(
+            $connection, $world->itemRepo, $world->speciesVersions, $world->pictures, $world->auditLog,
+            $config['art'] + ['maximum_sell_fraction_of_price' => $config['gameplay']['economy']['maximum_sell_fraction_of_price']],
+            $referencedItemSlugs
+        );
+        $world->shopEditor = new ShopEditorService(
+            $connection, $world->shopRepo, $world->itemRepo, $world->speciesVersions,
+            $world->pictures, $world->auditLog, $config['art']
+        );
+        $itemsController = new AdminItemsController(
+            $templates, $world->session, $world->csrf, $world->users, $world->itemRepo,
+            $world->itemEditor, $rateLimiter, $security['rate_limit_content_save']
+        );
+        $itemEditController = new AdminItemEditController(
+            $templates, $world->session, $world->csrf, $world->users, $world->itemRepo,
+            $world->speciesVersions, $world->itemEditor, $world->pictures, $rateLimiter,
+            $security['rate_limit_content_save']
+        );
+        $shopsController = new AdminShopsController(
+            $templates, $world->session, $world->csrf, $world->users, $world->shopRepo,
+            $world->shopEditor, $rateLimiter, $security['rate_limit_content_save']
+        );
+        $shopEditController = new AdminShopEditController(
+            $templates, $world->session, $world->csrf, $world->users, $world->shopRepo,
+            $world->itemRepo, $world->speciesVersions, $world->shopEditor, $world->pictures,
+            $rateLimiter, $security['rate_limit_content_save']
         );
         $picturesController = new AdminPicturesController(
             $templates, $world->session, $world->csrf, $world->users, $world->pictures,
@@ -204,6 +262,28 @@ final class AdminWorld
         $world->router->get('/admin/creatures/{id}/picture/{slot}', $gate->protect(Role::Artist, [$creaturePickerController, 'show']));
         $world->router->post('/admin/creatures/{id}/picture/{slot}', $gate->protect(Role::Artist, [$creaturePickerController, 'choose']));
         $world->router->get('/admin/creatures/{id}/preview', $gate->protect(Role::Artist, [$creaturePreviewController, 'show']));
+        $world->router->get('/admin/items', $gate->protect(Role::Artist, [$itemsController, 'show']));
+        $world->router->post('/admin/items/create', $gate->protect(Role::Artist, [$itemsController, 'create']));
+        $world->router->get('/admin/items/{id}', $gate->protect(Role::Artist, [$itemEditController, 'show']));
+        $world->router->post('/admin/items/{id}/words', $gate->protect(Role::Artist, [$itemEditController, 'saveWords']));
+        $world->router->post('/admin/items/{id}/numbers', $gate->protect(Role::Artist, [$itemEditController, 'saveNumbers']));
+        $world->router->post('/admin/items/{id}/publish', $gate->protect(Role::Artist, [$itemEditController, 'publish']));
+        $world->router->post('/admin/items/{id}/unpublish', $gate->protect(Role::Artist, [$itemEditController, 'unpublish']));
+        $world->router->post('/admin/items/{id}/revert', $gate->protect(Role::Artist, [$itemEditController, 'revert']));
+        $world->router->get('/admin/items/{id}/icon', $gate->protect(Role::Artist, [$itemEditController, 'pickIcon']));
+        $world->router->post('/admin/items/{id}/icon', $gate->protect(Role::Artist, [$itemEditController, 'chooseIcon']));
+        $world->router->get('/admin/shops', $gate->protect(Role::Artist, [$shopsController, 'show']));
+        $world->router->post('/admin/shops/create', $gate->protect(Role::Artist, [$shopsController, 'create']));
+        $world->router->get('/admin/shops/{id}', $gate->protect(Role::Artist, [$shopEditController, 'show']));
+        $world->router->post('/admin/shops/{id}/words', $gate->protect(Role::Artist, [$shopEditController, 'saveWords']));
+        $world->router->post('/admin/shops/{id}/keeper', $gate->protect(Role::Artist, [$shopEditController, 'saveKeeper']));
+        $world->router->post('/admin/shops/{id}/publish', $gate->protect(Role::Artist, [$shopEditController, 'publish']));
+        $world->router->post('/admin/shops/{id}/unpublish', $gate->protect(Role::Artist, [$shopEditController, 'unpublish']));
+        $world->router->post('/admin/shops/{id}/revert', $gate->protect(Role::Artist, [$shopEditController, 'revert']));
+        $world->router->post('/admin/shops/{id}/shelf', $gate->protect(Role::Artist, [$shopEditController, 'putListing']));
+        $world->router->post('/admin/shops/{id}/shelf/{itemId}/remove', $gate->protect(Role::Artist, [$shopEditController, 'removeListing']));
+        $world->router->get('/admin/shops/{id}/picture/{slot}', $gate->protect(Role::Artist, [$shopEditController, 'pickPicture']));
+        $world->router->post('/admin/shops/{id}/picture/{slot}', $gate->protect(Role::Artist, [$shopEditController, 'choosePicture']));
         $world->router->get('/art/{name}', [$artController, 'show']);
 
         return $world;

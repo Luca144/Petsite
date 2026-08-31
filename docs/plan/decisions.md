@@ -404,11 +404,14 @@ Developer and a coding session for every change.
   spot it fills ship together, per principle (b2). Area backgrounds and
   the bulk loot-table editor are M2.4/M2.5.
 - **A new question, parked for Skerro.** "Clickable points placed on the
-  exploration image" is a new PLAYER mechanic, not a panel screen —
-  exploration today is enter-area-and-search with a weighted table, with
-  no positional hotspots. Whether exploring should become hotspot-based
-  belongs to the artist's design document and the M9+ engine work
-  (foraging/fishing/mining/hunting as one engine). Parked beside the two
+  exploration image" as a PANEL-EDITED thing is not a quick add-on.
+  *(Corrected 2026-08-31: the first version of this entry claimed no
+  positional hotspots exist — wrong. The exploration config DOES place
+  clickable spots by x/y percentage on each area's scene.)* What does not
+  exist is any way to EDIT them, or areas at all, outside config — and the
+  area editor belongs with M2.5's bulk loot tables and the M9+ engine work
+  (foraging/fishing/mining/hunting as one engine), where "what is a spot"
+  gets designed once for all four activities. Parked beside the two
   existing Skerro questions (adoption retirement, minigame rewards) so it
   is decided by design, not slipped in as a panel feature.
 
@@ -436,3 +439,41 @@ as written, with all four open questions decided as recommended:
 - **Unpublish is allowed**: existing creatures keep living and rendering;
   the species leaves the shop and starter pool. The button says so in
   plain words.
+
+---
+
+## 2026-08-31 — M2.4 re-scoped: two editors now, two moved to their homes
+
+Signed off with the M2.4 build plan
+(`docs/plan/2026-08-31-m2-4-build-plan.md`). Written so Skerro can read
+this entry alone and know what changed and why.
+
+**What M2.4 now builds:** the ITEM editor and the SHOP editor — including
+the shop page growing its background, its keeper (name, portrait, greeting,
+and the "we don't have that" line, all editable), and seasonal from/to
+dates on shelf listings (the columns decided 2026-08-12 finally come to
+life).
+
+**What moved, and where to:**
+
+- **The postcard editor moved to M6.** M6 already defines what a postcard
+  IS — an item carrying a fixed pre-authored message. Building its editor
+  now would mean inventing the postcard's data shape ahead of that design
+  and likely reworking it. Principle (b2) — a content type ships WITH its
+  panel screen — is kept, not broken: both arrive together in M6.
+- **The theme editor moved to M4.** M4's design requires contrast checked
+  automatically while colours are picked; a colour editor without that
+  guard is the exact tool that ships an unreadable page. Editor and
+  content type arrive together in M4, guard included.
+- **Item categories stay a manual recipe until M4.** Making them
+  panel-editable means moving colours and icons from files into data —
+  the very machinery the theme editor builds. Eight categories exist,
+  stable, seeded from the design document; the written recipe covers the
+  rare change until then.
+
+**Also decided:** one shared `content_versions` table becomes the undo for
+every editor (species history migrates in — one engine, not three copies);
+and items/shops get the species rules — slugs minted once and never
+editable, no deletion, retiring = back to draft — because starter gifts
+and exploration loot tables reference items by slug, and a rename would
+break them silently.
