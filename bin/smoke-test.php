@@ -65,8 +65,10 @@ function check(string $what, bool $passed, string $detail = ''): void
 /**
  * Fetch a page, keeping cookies between calls so we stay logged in.
  *
- * @param array<string, string> $post Sending this makes it a POST.
- * @return array{status: int, body: string}
+ * @param array<string, string|CURLFile> $post Sending this makes it a POST.
+ *        A CURLFile value makes it a real multipart file upload, exactly as
+ *        a browser's <input type="file"> sends one.
+ * @return array{status: int, body: string, contentType: string}
  */
 function request(string $path, array $post = []): array
 {
@@ -77,18 +79,29 @@ function request(string $path, array $post = []): array
         CURLOPT_COOKIEFILE => sys_get_temp_dir() . '/felkyo-smoke-cookies.txt',
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_TIMEOUT => 20,
+        // curl sends "Expect: 100-continue" with file uploads, and PHP's
+        // built-in development server answers that with "417 Expectation
+        // Failed" instead of the page — so every upload here would fail
+        // for a reason that has nothing to do with the site (the live
+        // server handles the header fine). An empty Expect header tells
+        // curl not to ask.
+        CURLOPT_HTTPHEADER => ['Expect:'],
     ]);
 
     if ($post !== []) {
         curl_setopt($handle, CURLOPT_POST, true);
-        curl_setopt($handle, CURLOPT_POSTFIELDS, http_build_query($post));
+        // An array with a CURLFile in it must be handed to curl AS an array —
+        // that is what makes it multipart. Everything else is a plain form.
+        $hasFile = array_filter($post, static fn ($value): bool => $value instanceof CURLFile) !== [];
+        curl_setopt($handle, CURLOPT_POSTFIELDS, $hasFile ? $post : http_build_query($post));
     }
 
     $body = (string) curl_exec($handle);
     $status = (int) curl_getinfo($handle, CURLINFO_HTTP_CODE);
+    $contentType = (string) curl_getinfo($handle, CURLINFO_CONTENT_TYPE);
     curl_close($handle);
 
-    return ['status' => $status, 'body' => $body];
+    return ['status' => $status, 'body' => $body, 'contentType' => $contentType];
 }
 
 /**
@@ -154,7 +167,10 @@ $serverLog = sys_get_temp_dir() . '/felkyo-smoke-server.log';
 // server starts whether or not "php" happens to be on the system PATH — which on
 // Windows it very often is not, and the failure looks like a hang rather than an
 // error.
-$command = escapeshellarg(PHP_BINARY) . ' -S 127.0.0.1:' . PORT . ' -t ' . escapeshellarg(__DIR__ . '/../public');
+// The router script makes the built-in server hand /art/... addresses to the
+// app instead of answering "no such file" itself — see bin/dev-server-router.php.
+$command = escapeshellarg(PHP_BINARY) . ' -S 127.0.0.1:' . PORT . ' -t ' . escapeshellarg(__DIR__ . '/../public')
+    . ' ' . escapeshellarg(__DIR__ . '/dev-server-router.php');
 $server = proc_open($command . ' > ' . escapeshellarg($serverLog) . ' 2>&1', [], $pipes);
 
 // Give it a moment, then confirm it is actually answering before going further —
@@ -771,6 +787,67 @@ check('revoking it says so', str_contains($afterRevoke['body'], 'no longer has t
 $auditPage = request('/admin/audit')['body'];
 check('the audit log shows the panel entry', str_contains($auditPage, 'entered the panel'));
 check('the audit log shows the role changes', str_contains($auditPage, 'granted a role') && str_contains($auditPage, 'took a role away'));
+
+// ---------------------------------------------------------------------------
+// The art store (M2.2), through the real upload form
+//
+// A real multipart upload of a real animated GIF (built by the test support
+// class, with a comment block and script after the trailer that must NOT come
+// back out), a disguised script that must be refused with a reason, the
+// served picture's headers, and the delete button.
+// ---------------------------------------------------------------------------
+
+echo "\nThe art store:\n";
+
+$picturesPage = request('/admin/pictures');
+check('the Pictures screen renders for an owner', str_contains($picturesPage['body'], 'Add a picture'));
+
+// A frame delay unique to this run makes the bytes — and so the content
+// hash — unique to this run. Otherwise a picture left behind by an earlier
+// run (or by gui-shots, which uploads the same test GIF) would answer
+// "already here" instead of "is in".
+$animatedGif = sys_get_temp_dir() . '/felkyo-smoke-anim.gif';
+file_put_contents($animatedGif, Felkyo\Tests\Support\Pictures::animatedGif(random_int(11, 60000)));
+$afterUpload = request('/admin/pictures/upload', [
+    '_csrf_token' => tokenIn($picturesPage['body']),
+    'kind' => 'sprite',
+    'picture' => new CURLFile($animatedGif, 'image/gif', 'smoke-anim.gif'),
+]);
+check('uploading an animated GIF says it is in', str_contains($afterUpload['body'], 'is in'));
+check('the grid shows it, labelled animated', str_contains($afterUpload['body'], 'smoke-anim.gif') && str_contains($afterUpload['body'], 'animated'));
+
+preg_match('~/art/([a-f0-9]{64}\.gif)~', $afterUpload['body'], $artMatch);
+$servedPicture = request('/art/' . ($artMatch[1] ?? 'missing'));
+check('the picture is served as image/gif', str_starts_with($servedPicture['contentType'], 'image/gif'), $servedPicture['contentType']);
+check('the served bytes are a GIF', str_starts_with($servedPicture['body'], 'GIF89a'));
+check('the comment block did not survive upload', !str_contains($servedPicture['body'], 'secret-note'));
+check('the bytes after the trailer did not survive upload', !str_contains($servedPicture['body'], 'after-the-end'));
+
+$disguised = sys_get_temp_dir() . '/felkyo-smoke-disguised.gif';
+file_put_contents($disguised, '<?php echo "not a picture"; ?>');
+$refused = request('/admin/pictures/upload', [
+    '_csrf_token' => tokenIn($afterUpload['body']),
+    'kind' => 'sprite',
+    'picture' => new CURLFile($disguised, 'image/gif', 'sneaky.gif'),
+]);
+// The page escapes the apostrophe (&#039;), so compare against the decoded text.
+check('a script called .gif is refused with a reason', str_contains(html_entity_decode($refused['body'], ENT_QUOTES), 'isn\'t a GIF, PNG or WebP'));
+check('and does not appear in the grid', !str_contains($refused['body'], 'sneaky.gif'));
+
+// The delete form INSIDE OUR picture's card — not the first delete form on the
+// page, which may belong to a picture an earlier run or gui-shots left behind.
+$ourCard = substr($refused['body'], (int) strpos($refused['body'], 'smoke-anim.gif'));
+preg_match('~/admin/pictures/(\d+)/delete~', $ourCard, $deleteMatch);
+$afterDelete = request('/admin/pictures/' . ($deleteMatch[1] ?? '0') . '/delete', [
+    '_csrf_token' => tokenIn($refused['body']),
+]);
+// The confirmation sentence itself names the file, so "gone from the grid"
+// is checked on the grid's own markup — the <img alt> — not the whole page.
+check('deleting says so', str_contains($afterDelete['body'], 'is deleted'));
+check('and the picture is gone from the grid', !str_contains($afterDelete['body'], 'alt="smoke-anim.gif"'));
+check('and it is no longer served', request('/art/' . ($artMatch[1] ?? 'missing'))['status'] === 404);
+@unlink($animatedGif);
+@unlink($disguised);
 
 // ---------------------------------------------------------------------------
 // Logging out

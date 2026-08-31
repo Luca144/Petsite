@@ -31,6 +31,15 @@ declare(strict_types=1);
  *    fade-in animation and half-loaded images photograph as a washed-out ghost
  *    page. --virtual-time-budget fast-forwards through both.
  *
+ * 3. LARGE ANIMATED GIFs MAY NOT PAINT AT ALL in headless screenshot mode.
+ *    The 679 KB not-found.gif photographs as an empty frame however it is
+ *    served — proven by an A/B shot of the SAME file from the static assets
+ *    path and from /art/, both blank, while curl and GD read the bytes fine
+ *    and small GIFs on the same page render. So: an empty frame where a big
+ *    animated picture should be is (probably) this renderer, not the site —
+ *    confirm in a real browser before treating it as a bug. An hour went
+ *    into ruling out the site; it was innocent.
+ *
  * The pages are fetched as a REAL logged-in player (fresh account, starred
  * creature, written bio) so every component that only an owner sees is in shot.
  */
@@ -91,6 +100,9 @@ $serverLog = sys_get_temp_dir() . '/felkyo-gui-server.log';
 $server = proc_open(
     escapeshellarg(PHP_BINARY) . ' -S 127.0.0.1:' . PORT
     . ' -t ' . escapeshellarg(dirname(__DIR__) . '/public')
+    // The router script: without it the built-in server answers /art/...
+    // with its own 404 and every uploaded picture renders broken.
+    . ' ' . escapeshellarg(__DIR__ . '/dev-server-router.php')
     . ' > ' . escapeshellarg($serverLog) . ' 2>&1',
     [],
     $pipes
@@ -106,10 +118,15 @@ $fetch = static function (string $path, array $post = []) use ($cookieJar): stri
         CURLOPT_COOKIEFILE => $cookieJar,
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_TIMEOUT => 20,
+        // No "Expect: 100-continue" — PHP's built-in server answers it with
+        // a 417 and the upload never happens (see bin/smoke-test.php).
+        CURLOPT_HTTPHEADER => ['Expect:'],
     ]);
     if ($post !== []) {
         curl_setopt($h, CURLOPT_POST, true);
-        curl_setopt($h, CURLOPT_POSTFIELDS, http_build_query($post));
+        // A CURLFile in the fields means a real multipart upload (the art store).
+        $hasFile = array_filter($post, static fn ($value): bool => $value instanceof CURLFile) !== [];
+        curl_setopt($h, CURLOPT_POSTFIELDS, $hasFile ? $post : http_build_query($post));
     }
     $body = (string) curl_exec($h);
     curl_close($h);
@@ -204,9 +221,26 @@ $fetch('/admin/roles/grant', [
     'role' => 'artist',
 ]);
 
+// Two pictures in the art store, so the grid has something to show: the
+// site's own animated 404 creature (a real sprite) and a hand-built one.
+$shotArt = sys_get_temp_dir() . '/felkyo-gui-anim.gif';
+file_put_contents($shotArt, Felkyo\Tests\Support\Pictures::animatedGif(random_int(11, 60000)));
+foreach ([
+    [dirname(__DIR__) . '/public/assets/art/not-found.gif', 'bramble-lost.gif', 'sprite'],
+    [$shotArt, 'tiny-test.gif', 'icon'],
+] as [$file, $shownAs, $kind]) {
+    $fetch('/admin/pictures/upload', [
+        '_csrf_token' => $token($fetch('/admin/pictures')),
+        'kind' => $kind,
+        'picture' => new CURLFile($file, 'image/gif', $shownAs),
+    ]);
+}
+@unlink($shotArt);
+
 $save('admin-home', $fetch('/admin'));
 $save('admin-roles', $fetch('/admin/roles'));
 $save('admin-audit', $fetch('/admin/audit'));
+$save('admin-pictures', $fetch('/admin/pictures'));
 
 // ---- Render ----
 echo "Rendering with " . basename($browser) . "...\n";
@@ -215,7 +249,11 @@ $shoot = static function (string $file, string $size, string $png) use ($browser
     exec(
         '"' . $browser . '" --headless=new --disable-gpu --hide-scrollbars'
         . ' --force-device-scale-factor=1 --user-data-dir=' . escapeshellarg($profile)
-        . ' --virtual-time-budget=10000 --window-size=' . $size
+        // 30s of virtual time, not 10: the Pictures page pulls real uploads
+        // through the single-threaded dev server, and a big animated GIF was
+        // still streaming when the 10s clock ran out — it photographed as an
+        // empty frame while loading perfectly in a real browser.
+        . ' --virtual-time-budget=30000 --window-size=' . $size
         . ' --screenshot=' . escapeshellarg($outDir . '/' . $png)
         . ' ' . escapeshellarg('file:///' . str_replace('\\', '/', $outDir) . '/pages/' . $file)
         . ' 2>nul'

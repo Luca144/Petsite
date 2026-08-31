@@ -1,0 +1,129 @@
+/**
+ * The Pictures screen (M2.2): the upload form and the grid of the art store.
+ *
+ * Reuses the panel's radio-card rules from admin.css for the "what kind"
+ * choice. Mobile-first: one column of cards on a phone, more with room.
+ */
+
+.admin-pictures__total {
+    display: block;
+    margin-top: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+}
+
+/* The disk warning is a sentence with a gold border — text carries the
+   meaning, the border only draws the eye (never colour alone). */
+.admin-pictures__warning {
+    margin: 0.75rem 0 0;
+    padding: 0.75rem;
+    background: var(--panel);
+    border: 1px solid var(--gold);
+    border-radius: var(--radius-sm);
+}
+
+/* The native file control: a real, keyboard-reachable input, given the
+   site's padding so the tap target is honest. */
+.admin-pictures__file {
+    padding: 0.6rem;
+}
+
+/* ---- The grid ---- */
+
+.admin-pictures__grid {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 1rem;
+}
+
+.admin-pictures__card {
+    display: grid;
+    gap: 0.35rem;
+}
+
+/* A fixed frame with the picture centred inside. Pictures larger than the
+   frame are scaled DOWN to fit (backgrounds); small sprites are shown at
+   their natural size and stay crisp. */
+.admin-pictures__frame {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 140px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.5rem;
+    overflow: hidden;
+}
+
+.admin-pictures__image {
+    max-width: 100%;
+    max-height: 220px;
+    width: auto;
+    height: auto;
+    /* Pixel art stays pixel art when the browser scales it. */
+    image-rendering: pixelated;
+}
+
+.admin-pictures__name {
+    margin: 0.25rem 0 0;
+    font-weight: 700;
+    /* A long export name must never push the card wider than the grid. */
+    overflow-wrap: anywhere;
+}
+
+.admin-pictures__meta {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+}
+
+/* "animated" is said in words; the chip just makes it easy to spot. */
+.admin-pictures__animated {
+    display: inline-block;
+    background: var(--plum);
+    color: var(--gold);
+    border-radius: var(--radius-pill);
+    padding: 0 0.5rem;
+}
+
+.admin-pictures__delete {
+    margin-top: 0.25rem;
+    justify-self: start;
+}
+
+/* The quiet button: a small, underlined word for the destructive action,
+   with padding carrying the 44px tap target rather than loud styling. */
+.btn--quiet {
+    background: none;
+    border: none;
+    color: var(--purple);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    text-decoration: underline;
+    padding: 0.75rem 0.5rem;
+    cursor: pointer;
+}
+
+.btn--quiet:hover,
+.btn--quiet:focus-visible {
+    color: var(--plum);
+}
+
+/* ---- Desktop refinements ---- */
+
+@media (min-width: 720px) {
+    .admin-pictures__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1100px) {
+    .admin-pictures__grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}

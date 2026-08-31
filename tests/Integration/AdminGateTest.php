@@ -51,6 +51,10 @@ final class AdminGateTest extends DatabaseTestCase
             ['POST', '/admin/roles/grant', Role::Owner],
             ['POST', '/admin/roles/revoke', Role::Owner],
             ['GET', '/admin/audit', Role::Owner],
+            // The art store (M2.2): the artist's screens.
+            ['GET', '/admin/pictures', Role::Artist],
+            ['POST', '/admin/pictures/upload', Role::Artist],
+            ['POST', '/admin/pictures/999/delete', Role::Artist],
         ];
     }
 
@@ -108,13 +112,16 @@ final class AdminGateTest extends DatabaseTestCase
             foreach ($this->protectedRoutes() as [$method, $path, $required]) {
                 $response = $this->dispatch($method, $path);
 
-                if ($required === null) {
-                    // The panel home: any staff role may see it.
-                    $this->assertSame(200, $response->statusCode(),
-                        "{$role->value} should see {$method} {$path}");
+                if ($required === null || $required === $role) {
+                    // A screen this role may see (the panel home for
+                    // everyone; the artist's own screens for the artist).
+                    // GETs render, POSTs flash-and-redirect; neither is ever
+                    // a refusal status.
+                    $this->assertContains($response->statusCode(), [200, 302],
+                        "{$role->value} should pass {$method} {$path}");
                 } else {
-                    // An owner-only screen: refused with the plain-words 403,
-                    // which names the missing role.
+                    // Somebody else's screen: refused with the plain-words
+                    // 403, which names the missing role.
                     $this->assertSame(403, $response->statusCode(),
                         "{$role->value} should be refused on {$method} {$path}");
                     $this->assertStringContainsString($required->label(), $response->body());

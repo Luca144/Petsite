@@ -1885,3 +1885,76 @@ an `AuditEntry` in the same transaction as the change.
 **Where the knobs are.** `config/config.php` → `security`: the door's
 freshness window, the door rate limit (keyed on user AND IP together), and
 the role-change rate limit. All signed off 2026-08-20.
+
+## Increment M2.2 — Image upload, and where the pictures live
+
+Two documents precede the code and explain the WHY: the decision memo
+(`docs/plan/2026-08-21-m2-2-where-files-live.md` — a Railway volume, chosen
+over object storage because R2 needs a domain the site does not own yet)
+and the build plan (`docs/plan/2026-08-21-m2-2-build-plan.md`, with the
+three security questions). This is the map of WHAT exists.
+
+**The shape.** `src/Art/` holds it all. `ImageStore` is the one interface
+between the site and its disk (put / get / delete / has); `VolumeImageStore`
+is its only implementation — a folder OUTSIDE the web root, so nothing in it
+can ever be executed or reached by URL. When Felkyo has a domain and moves
+its art to R2, that is a second implementation of those four methods, and
+nothing else changes. `ArtRepository` owns the `art_files` table (the site's
+memory of what is on the disk); `ArtService` owns the rules (upload, the
+delete rule, the audit entries, the transaction); `ArtKind` is the allow-list
+of what a picture is for.
+
+**The gate every picture passes.** `ImageValidator`, in this order, and the
+order is the security: (1) PHP's own upload verdict and the size cap;
+(2) the real format from the FIRST BYTES — the browser's filename and
+declared type are ignored entirely; (3) the dimensions from the file's
+HEADER against the cap, before anything decodes pixels (a forged
+100000×100000 header costs no memory); (4) a structural walk of the whole
+file by the format's reader, which refuses anything cut short and returns
+the bytes to store. Three readers, one each: `GifFile`, `PngFile`,
+`WebpFile`. Each walks its format's real grammar — blocks, chunks, RIFF
+chunks — and copies out everything except metadata (GIF comments and XMP,
+PNG text/time/EXIF chunks, WebP EXIF/XMP chunks). Animated files are never
+decoded (CLAUDE.md forbids flattening them); a STILL PNG is additionally
+re-encoded through GD, which is why `ext-gd` joined `composer.json`.
+
+**Serving.** `GET /art/{name}` (`ArtController`) is the only door to the
+folder. It refuses any name that is not exactly `sha256.ext`, looks the
+name up in `art_files`, and only then reads bytes — served with the type
+the site recorded, `X-Content-Type-Options: nosniff`, and a one-year
+immutable cache. The cache is safe because the name IS the content: a
+replaced picture is a new name. That is M2.3's "replacement defeats
+caching", solved here once.
+
+**The screen.** `/admin/pictures` (Artist role; owner passes everything):
+upload form with the kind as radio cards, the grid, delete under the
+pictures you may delete. Owners delete anything; an artist only their own
+uploads — checked in `ArtService::mayDelete()` against the row's
+`uploaded_by_user_id`, never against the form.
+
+**The knobs.** `config/config.php` → `art` (storage path with its three
+fallbacks, `max_bytes`, `max_dimension`, `volume_warning_bytes`) and
+`security.rate_limit_art_upload`. The live server's own upload cap is
+raised in `php.ini` at the project root (Railpack reads it); the Pictures
+screen warns if the server it runs on allows less than the site does.
+
+**For the artist:** `docs/artist-guide-pictures.md` — export rules in plain
+words. **For the deploy:** deployment guide, "The art volume".
+
+**Tests.** `ImageValidatorTest` (every refusal, every strip, pixel identity
+on the PNG re-encode; fixtures from `tests/Support/Pictures.php`, which
+hand-builds animated GIF/PNG/WebP files with metadata planted where a bug
+would miss it), `ArtStoreTest` (the real routes: upload, serve, headers,
+the delete rule, CSRF), and the `AdminGateTest` matrix, which now knows
+the Pictures routes. The smoke test uploads a real animated GIF through the
+real form and checks the served bytes lost their comment block.
+
+**Two things the smoke test found that the plan did not.** (1) PHP's
+built-in dev server answers a missing `/art/….gif` with its own 404 and
+never asks the app — so `bin/dev-server-router.php` now accompanies every
+`php -S` (the setup guide, the smoke test and gui-shots all use it); the
+live server's Caddy never had the problem. (2) PHP's default cap on one
+uploaded file is 2 MB, under the site's 5 MB — `php.ini` at the project
+root raises it for Railway, and the Pictures screen warns if the server it
+runs on ever allows less than the site does. Neither test suite could have
+seen either; the smoke test saw both.

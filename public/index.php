@@ -26,6 +26,10 @@ use Felkyo\Admin\RoleAssignmentService;
 use Felkyo\Admin\RoleRepository;
 use Felkyo\Admin\SecondFactorRepository;
 use Felkyo\Admin\Totp;
+use Felkyo\Art\ArtRepository;
+use Felkyo\Art\ArtService;
+use Felkyo\Art\ImageValidator;
+use Felkyo\Art\VolumeImageStore;
 use Felkyo\Auth\Authenticator;
 use Felkyo\Auth\PasswordHasher;
 use Felkyo\Auth\RegistrationService;
@@ -72,7 +76,9 @@ use Felkyo\Http\Controllers\AdminAuditController;
 use Felkyo\Http\Controllers\AdminDoorController;
 use Felkyo\Http\Controllers\AdminEnrolController;
 use Felkyo\Http\Controllers\AdminHomeController;
+use Felkyo\Http\Controllers\AdminPicturesController;
 use Felkyo\Http\Controllers\AdminRolesController;
+use Felkyo\Http\Controllers\ArtController;
 use Felkyo\Http\Controllers\BioController;
 use Felkyo\Http\Controllers\BrowseController;
 use Felkyo\Http\Controllers\CollectionController;
@@ -173,6 +179,29 @@ if ($pendingMigrations > 0) {
         . '<h1>Felkyo is having a quiet moment</h1>'
         . '<p>We&rsquo;re part-way through some tidying up. Please try again in a little while.</p>'
         . '</body></html>';
+    exit;
+}
+
+// ---- Uploaded pictures are served HERE, before anything else is built ----
+//
+// A creature page will embed several /art/... pictures (M2.3), and each one
+// is its own request. Letting those run the whole front controller would
+// start a session, mint a CSRF token and run the sidebar's queries — per
+// picture, for nothing: an image response uses none of it. Worse than waste,
+// the session added headers that FOUGHT the image's own caching (PHP's
+// session machinery sends "Expires: 1981 / no-cache" with everything, plus a
+// Set-Cookie — meaning cookie-less fetchers minted a session file per image).
+//
+// So pictures exit early: database connected (needed for the lookup),
+// migrations checked, and nothing else. ArtController owns everything about
+// serving safely — see its file-level docblock.
+if (str_starts_with($request->path(), '/art/')) {
+    $artRouter = new Router();
+    $artRouter->get('/art/{name}', [
+        new ArtController(new ArtRepository($pdo), new VolumeImageStore($config['art']['storage_path'])),
+        'show',
+    ]);
+    $artRouter->dispatch($request)->send();
     exit;
 }
 
@@ -634,6 +663,21 @@ $adminRolesController = new AdminRolesController(
 );
 $adminAuditController = new AdminAuditController($templates, $auditLogRepository);
 
+// The art store (M2.2). The bytes live on the Railway volume (a folder on a
+// development machine) behind ImageStore; the table remembers what is there.
+// See docs/plan/2026-08-21-m2-2-where-files-live.md for why a volume.
+// SERVING a picture is not wired here — /art/ requests exited early, near
+// the top of this file, before the session existed. This block is only the
+// panel's side: uploading, listing, deleting.
+$imageStore = new VolumeImageStore($config['art']['storage_path']);
+$artRepository = new ArtRepository($pdo);
+$artService = new ArtService($pdo, $artRepository, $imageStore, $auditLogRepository, $roleRepository);
+$adminPicturesController = new AdminPicturesController(
+    $templates, $session, $csrf, $userRepository, $artRepository, $artService,
+    new ImageValidator($config['art']), $rateLimiter,
+    $config['security']['rate_limit_art_upload'], $config['art']
+);
+
 // ---- Routes ----
 $router = new Router();
 
@@ -683,6 +727,14 @@ $router->get('/admin/roles', $adminGate->protect(Role::Owner, [$adminRolesContro
 $router->post('/admin/roles/grant', $adminGate->protect(Role::Owner, [$adminRolesController, 'grant']));
 $router->post('/admin/roles/revoke', $adminGate->protect(Role::Owner, [$adminRolesController, 'revoke']));
 $router->get('/admin/audit', $adminGate->protect(Role::Owner, [$adminAuditController, 'show']));
+// The art store: the artist's screens (owner passes everything).
+$router->get('/admin/pictures', $adminGate->protect(Role::Artist, [$adminPicturesController, 'show']));
+$router->post('/admin/pictures/upload', $adminGate->protect(Role::Artist, [$adminPicturesController, 'upload']));
+$router->post('/admin/pictures/{id}/delete', $adminGate->protect(Role::Artist, [$adminPicturesController, 'delete']));
+
+// (Serving an uploaded picture — GET /art/{name} — is NOT registered here:
+// it is dispatched near the top of this file, before the session and the
+// rest of the world are built. See the comment there.)
 
 // The player's own collection of creatures.
 $router->get('/creatures', [$collectionController, 'show']);

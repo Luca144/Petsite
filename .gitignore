@@ -35,3 +35,10 @@ Thumbs.db
 
 # Rendered GUI screenshots (bin/gui-shots.php) — regenerated on demand, never committed.
 /gui-shots/
+
+# Pictures uploaded through the creator's panel (M2.2). On the live site they
+# live on the Railway volume; locally in this folder. Never in the repository —
+# the whole point of the panel is that art no longer needs a developer's commit.
+# The folder itself is kept (storage/art/.gitkeep) so a fresh checkout works.
+/storage/art/*
+!/storage/art/.gitkeep

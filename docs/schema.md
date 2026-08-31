@@ -353,6 +353,29 @@ Indexes: (`actor_user_id`, `created_at`) for one person's history;
 Index (`user_id`, `used_at`): "this account's unspent codes", checked at the
 panel door.
 
+### `art_files` — the site's memory of its uploaded pictures (M2.2)
+
+One row per picture in the art store. The BYTES live on the Railway volume
+(a folder locally) behind `ImageStore`; this table records what is there.
+Serving (`/art/{name}`) looks a picture up here by name before reading any
+byte from disk.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | int unsigned | Primary key. |
+| `stored_name` | varchar(70), NOT NULL, UNIQUE | `sha256(bytes)` + extension. Same bytes → same name (a duplicate upload is a no-op); changed bytes → new name (a year-long browser cache can never show a stale picture). |
+| `kind` | varchar(20), NOT NULL | sprite / icon / portrait / card / background / library — allow-listed in `src/Art/ArtKind.php`. |
+| `original_name` | varchar(100), NOT NULL | The browser's filename, sanitised, for **display only**. Never a path. |
+| `type` | varchar(10), NOT NULL | gif / png / webp — decided by reading the bytes, never the name. |
+| `width` / `height` | int unsigned, NOT NULL | Pixels, from the file's header. |
+| `bytes` | int unsigned, NOT NULL | Size of the stored file. `SUM(bytes)` is the "disk getting full" number. |
+| `is_animated` | boolean, NOT NULL | More than one frame. Animated files were stored byte-for-byte (minus metadata blocks); still ones re-encoded. |
+| `uploaded_by_user_id` | int unsigned, NULL, FK → `users.id` (SET NULL) | The delete rule (an artist may only delete their own) is checked against this column. SET NULL: an artist leaving must not take the site's sprites with them. |
+| `created_at` | timestamp, NOT NULL | When. |
+
+Index (`kind`, `created_at`): the Pictures screen lists by kind, and M2.3
+will ask "every sprite".
+
 ---
 
 ## What is intentionally NOT here (yet)

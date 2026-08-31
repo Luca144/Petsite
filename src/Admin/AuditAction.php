@@ -40,6 +40,10 @@ enum AuditAction: string
     // should see (one spent code is a lost phone; several is an attack).
     case RecoveryCodeUsed = 'recovery_code.used';
 
+    // A picture was uploaded to, or removed from, the art store (M2.2).
+    case ArtUploaded = 'art.uploaded';
+    case ArtDeleted = 'art.deleted';
+
     /**
      * What a person reading the audit page sees, in plain words.
      */
@@ -52,6 +56,8 @@ enum AuditAction: string
             self::SecondFactorEnrolled => 'connected an authenticator app',
             self::SecondFactorReset => 'reset an authenticator app',
             self::RecoveryCodeUsed => 'used a recovery code at the door',
+            self::ArtUploaded => 'uploaded a picture',
+            self::ArtDeleted => 'deleted a picture',
         };
     }
 }

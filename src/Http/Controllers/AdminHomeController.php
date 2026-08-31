@@ -76,6 +76,12 @@ final class AdminHomeController
 
         if ($isOwner || in_array(Role::Artist, $heldRoles, true)) {
             $sections[] = [
+                'title' => 'Pictures',
+                'sentence' => 'The art store — upload sprites, icons, portraits, cards and backgrounds.',
+                'href' => '/admin/pictures',
+                'arrives' => null,
+            ];
+            $sections[] = [
                 'title' => 'Creatures & content',
                 'sentence' => 'Species, items, shops, cards and themes — one page per creature.',
                 'href' => null,

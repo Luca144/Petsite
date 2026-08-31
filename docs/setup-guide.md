@@ -114,11 +114,16 @@ See [schema.md](schema.md) for what every table is and how to make schema change
 ## 5. Run the site
 
 Use PHP's built-in web server, pointed at the `public/` folder (the site's front
-door):
+door), with the small router script that makes it behave like the live server:
 
 ```powershell
-C:\xampp\php\php.exe -S 127.0.0.1:8000 -t public
+C:\xampp\php\php.exe -S 127.0.0.1:8000 -t public bin/dev-server-router.php
 ```
+
+(The router matters since M2.2: uploaded pictures are served by the app at
+addresses like `/art/….gif`, and without it the built-in server answers those
+with its own "no such file" instead of asking the app — every uploaded picture
+would look broken locally. See the comment at the top of that script.)
 
 Then open <http://127.0.0.1:8000/> in your browser. You should see the Felkyo
 welcome page. Press `Ctrl+C` in the terminal to stop the server.

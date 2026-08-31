@@ -257,6 +257,40 @@ return [
                                       // changes are rare; a burst of them is
                                       // an incident, not a workflow.
         ],
+        'rate_limit_art_upload' => [
+            'max_attempts' => 60,     // 60 picture uploads...
+            'window_seconds' => 3600, // ...per hour, per uploading staff
+                                      // member. A whole species is ~10 files:
+                                      // generous for a person, slow for a
+                                      // script trying to fill the disk.
+        ],
+    ],
+
+    // Pictures uploaded through the creator's panel (M2.2). Where they live
+    // and how big they may be. Signed off by the Lead Developer 2026-08-21
+    // (docs/plan/2026-08-21-m2-2-build-plan.md).
+    'art' => [
+        // The folder the picture bytes are written to. Three fallbacks, in
+        // order: an explicit setting; Railway's own variable (set for us the
+        // moment a volume is attached to the app service); and, on a
+        // development machine, a folder inside the project. The volume is
+        // what makes uploads survive a deploy — see the M2.2 memo.
+        'storage_path' => $readEnv('ART_STORAGE_PATH')
+            ?? $readEnv('RAILWAY_VOLUME_MOUNT_PATH')
+            ?? dirname(__DIR__) . '/storage/art',
+
+        // The largest file the panel accepts. The artist's current exports
+        // are 515–630 KB; backgrounds will be bigger.
+        'max_bytes' => 5 * 1024 * 1024, // 5 MB
+
+        // The widest/tallest picture accepted, read from the file's header
+        // BEFORE anything decodes it — so a tiny file claiming to be a
+        // 100000×100000 image is refused without costing any memory.
+        'max_dimension' => 2048, // pixels, each side
+
+        // The Pictures screen warns from here that the art disk is getting
+        // full. The Hobby-plan volume is 5 GB; 4 GB leaves room to notice.
+        'volume_warning_bytes' => 4 * 1024 * 1024 * 1024,
     ],
 
     // Gameplay tunables — the documented home for "knobs" so a beginner can

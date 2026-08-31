@@ -355,6 +355,55 @@ obvious alternative and it is worse: several containers can boot at once, and a
 migration that fails half way through leaves a half-changed schema, which is a
 much harder afternoon than typing one command.
 
+### The art volume (M2.2) — where uploaded pictures live
+
+Pictures uploaded through the creator's panel are written to disk. A Railway
+container's own disk is thrown away on every deploy, so **the pictures need a
+volume** — a persistent disk attached to the app service. Without one, every
+upload vanishes at the next push. (The whole reasoning, and the options that
+were passed over, is in `docs/plan/2026-08-21-m2-2-where-files-live.md`.)
+
+**One-time setup, in the Railway dashboard — do this before the first
+upload:**
+
+1. **Attach a volume.** Open the project → right-click the **app service**
+   (not the database) → **Attach Volume** (or `Ctrl + K` → "Attach
+   Volume"). Railway asks for a **mount path**: enter `/app/storage/art`.
+   Confirm; the service redeploys with the disk attached.
+   - Railway sets the variable `RAILWAY_VOLUME_MOUNT_PATH` for you when it
+     does this, and the app reads it — so **no variable to add**. (You only
+     need `ART_STORAGE_PATH` if you ever mount the disk somewhere else.)
+2. **Switch on backups.** Click the volume → **Backups** → enable **Daily**
+   and **Weekly**. Daily keeps six days, weekly keeps a month. Both together
+   cost pennies at this size, and **without this step there is no backup**.
+3. **Check it worked.** Log into the panel → **Pictures**. If the screen
+   shows a warning about the server's upload limit or the disk, read it —
+   it says what to do. Upload a small test picture; push any commit; check
+   the picture is still there afterwards. That survives-a-deploy check is
+   the whole point.
+
+**Two things to know about a service with a volume:**
+- **Each deploy has a few seconds of downtime** (Railway unmounts the disk
+  before the new container takes it, so two never write to it at once).
+  Visitors see the "quiet moment" page for those seconds.
+- **Wiping the volume deletes its backups too**, and restores only work
+  within the same project. The backups protect against mistakes and disk
+  failure, not against the Railway account itself going away — keep the
+  originals off the platform as well (the artist's own files).
+
+**The upload size limit lives in `php.ini` at the project root.** PHP's own
+default is 2 MB per file; the site allows 5 MB, so that file raises PHP's
+cap to 6 MB (and the whole-form cap to 8 MB). Railpack reads it on build.
+If the Pictures screen ever says "this server only lets N MB through", that
+file is what to check.
+
+**Restoring a picture** somebody deleted by mistake: Volume → Backups →
+pick the backup from before the deletion → Restore. Railway stages the
+change and asks you to confirm; the service redeploys with the old disk.
+The database row is gone though (the panel deleted it), so the picture
+comes back to disk but not to the panel — a coder can re-insert the row
+from the audit log's "before" snapshot, which records the stored name.
+
 ### Changing the demo password
 
 Two steps, in this order:

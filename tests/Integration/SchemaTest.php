@@ -60,6 +60,8 @@ final class SchemaTest extends TestCase
             'admin_audit_log',
             'admin_second_factors',
             'admin_recovery_codes',
+            // The art store (M2.2).
+            'art_files',
         ];
 
         foreach ($expectedTables as $tableName) {

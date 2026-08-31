@@ -11,6 +11,12 @@ use Felkyo\Admin\RoleAssignmentService;
 use Felkyo\Admin\RoleRepository;
 use Felkyo\Admin\SecondFactorRepository;
 use Felkyo\Admin\Totp;
+use Felkyo\Art\ArtRepository;
+use Felkyo\Art\ArtService;
+use Felkyo\Art\ImageValidator;
+use Felkyo\Art\VolumeImageStore;
+use Felkyo\Http\Controllers\AdminPicturesController;
+use Felkyo\Http\Controllers\ArtController;
 use Felkyo\Auth\PasswordHasher;
 use Felkyo\Auth\Session;
 use Felkyo\Http\Controllers\AdminAuditController;
@@ -53,6 +59,14 @@ final class AdminWorld
     public AdminGate $gate;
     public PasswordHasher $hasher;
     public RoleAssignmentService $assignments;
+    public ArtRepository $pictures;
+    public ArtService $artService;
+    public VolumeImageStore $imageStore;
+    public array $artConfig;
+
+    // Where test uploads land: a throwaway folder in the system temp dir, so
+    // a test can never write into the project's real art folder.
+    public string $artFolder;
 
     // The one password every test account uses. A constant, not a secret.
     public const PASSWORD = 'a-good-password';
@@ -103,6 +117,21 @@ final class AdminWorld
         );
         $auditController = new AdminAuditController($templates, $world->auditLog);
 
+        // The art store, pointed at a temp folder (see $artFolder).
+        $world->artConfig = $config['art'];
+        $world->artFolder = sys_get_temp_dir() . '/felkyo-test-art-' . getmypid();
+        $world->imageStore = new VolumeImageStore($world->artFolder);
+        $world->pictures = new ArtRepository($connection);
+        $world->artService = new ArtService(
+            $connection, $world->pictures, $world->imageStore, $world->auditLog, $world->roles
+        );
+        $picturesController = new AdminPicturesController(
+            $templates, $world->session, $world->csrf, $world->users, $world->pictures,
+            $world->artService, new ImageValidator($world->artConfig), $rateLimiter,
+            $security['rate_limit_art_upload'], $world->artConfig
+        );
+        $artController = new ArtController($world->pictures, $world->imageStore);
+
         // The routes, EXACTLY as public/index.php registers them — every one
         // through the gate. A route added there must be added here (and to
         // the AdminGateTest matrix), or the matrix stops proving coverage.
@@ -117,8 +146,26 @@ final class AdminWorld
         $world->router->post('/admin/roles/grant', $gate->protect(Role::Owner, [$rolesController, 'grant']));
         $world->router->post('/admin/roles/revoke', $gate->protect(Role::Owner, [$rolesController, 'revoke']));
         $world->router->get('/admin/audit', $gate->protect(Role::Owner, [$auditController, 'show']));
+        $world->router->get('/admin/pictures', $gate->protect(Role::Artist, [$picturesController, 'show']));
+        $world->router->post('/admin/pictures/upload', $gate->protect(Role::Artist, [$picturesController, 'upload']));
+        $world->router->post('/admin/pictures/{id}/delete', $gate->protect(Role::Artist, [$picturesController, 'delete']));
+        $world->router->get('/art/{name}', [$artController, 'show']);
 
         return $world;
+    }
+
+    /**
+     * Throw the test art folder away. Call from tearDown.
+     */
+    public function cleanUpArtFolder(): void
+    {
+        if (!is_dir($this->artFolder)) {
+            return;
+        }
+        foreach (glob($this->artFolder . '/*') ?: [] as $file) {
+            @unlink($file);
+        }
+        @rmdir($this->artFolder);
     }
 
     /**

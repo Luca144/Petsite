@@ -26,6 +26,8 @@ final class Request
      * @param array  $postData   Submitted form values (name => value).
      * @param string $clientIp   The visitor's IP address (used for rate limiting).
      * @param array  $queryData  Values from the "?name=value" part of the address.
+     * @param array  $files      Uploaded files, in PHP's $_FILES shape
+     *                           (name => [name, type, tmp_name, error, size]).
      */
     public function __construct(
         private string $method,
@@ -33,6 +35,7 @@ final class Request
         private array $postData,
         private string $clientIp,
         private array $queryData = [],
+        private array $files = [],
     ) {
     }
 
@@ -49,7 +52,37 @@ final class Request
 
         $clientIp = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
 
-        return new self($method, $path, $_POST, $clientIp, $_GET);
+        return new self($method, $path, $_POST, $clientIp, $_GET, $_FILES);
+    }
+
+    /**
+     * Read one uploaded file by its form field name, or null if none was sent.
+     *
+     * Returns PHP's own description of the upload — an array with 'name' (what
+     * the browser called it), 'tmp_name' (where PHP put the bytes for the
+     * length of this request), 'size', and 'error' (0 means it arrived
+     * whole). NOTHING here is trusted yet: the name is just text the browser
+     * sent, and the declared 'type' is deliberately not offered at all,
+     * because the only honest way to know what a file is is to read it
+     * (see Felkyo\Art\ImageValidator). This method's whole job is to hand the
+     * upload to that validator in a predictable shape.
+     *
+     * @return array{name: string, tmp_name: string, size: int, error: int}|null
+     */
+    public function file(string $key): ?array
+    {
+        $upload = $this->files[$key] ?? null;
+
+        if (!is_array($upload) || !isset($upload['tmp_name'], $upload['error'])) {
+            return null;
+        }
+
+        return [
+            'name' => is_string($upload['name'] ?? null) ? $upload['name'] : '',
+            'tmp_name' => (string) $upload['tmp_name'],
+            'size' => (int) ($upload['size'] ?? 0),
+            'error' => (int) $upload['error'],
+        ];
     }
 
     public function method(): string
