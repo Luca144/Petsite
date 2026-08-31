@@ -376,6 +376,45 @@ byte from disk.
 Index (`kind`, `created_at`): the Pictures screen lists by kind, and M2.3
 will ask "every sprite".
 
+### The species editor's additions (M2.3)
+
+The `species` table gained: `status` (varchar(10), `'draft'`/`'published'`,
+**default `'published'`** — deliberately, so seeds and old fixtures stay
+live content; the panel's create path writes `'draft'` explicitly),
+`updated_at` (datetime NULL), `lore` (text NULL, for the library milestone),
+and `library_art_id` (int unsigned NULL, FK → `art_files` **SET NULL**).
+Index on `status`. The acquisition queries (`findAdoptable`,
+`findStarters`) require `status = 'published'`; `findById`/`all` do NOT —
+players may own creatures of a re-drafted species and those must render.
+
+### `species_stages` — one row per (species, stage)
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | int unsigned | Primary key. |
+| `species_id` | int unsigned, NOT NULL, FK → `species.id` (CASCADE) | |
+| `stage` | varchar(20), NOT NULL | Validated in PHP against config `growth.stage_start_levels` keys. |
+| `sprite_art_id` | int unsigned, NULL, FK → `art_files.id` (SET NULL) | The stage's picture in the art store; NULL = the old convention path carries it (the three original species). |
+| `blurb` | text, NULL | Words for this stage, shown instead of the flavour text. |
+
+UNIQUE (`species_id`, `stage`) — saves are upserts. Index on
+`sprite_art_id`: "which species use this picture?", the art delete-guard's
+question.
+
+### `species_versions` — the editor's undo
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | int unsigned | Primary key. |
+| `species_id` | int unsigned, NOT NULL, FK → `species.id` (CASCADE) | |
+| `snapshot` | text, NOT NULL | The whole editable state as JSON — art as REFERENCES, never bytes. |
+| `saved_by_user_id` | int unsigned, NULL, FK → `users.id` (SET NULL) | |
+| `created_at` | timestamp, NOT NULL | |
+
+One snapshot per save, pruned to the newest N (config
+`art.species_versions_kept`, 20). Restoring applies whitelisted fields only
+and never touches `status`.
+
 ---
 
 ## What is intentionally NOT here (yet)

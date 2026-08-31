@@ -62,6 +62,9 @@ final class SchemaTest extends TestCase
             'admin_recovery_codes',
             // The art store (M2.2).
             'art_files',
+            // The species editor (M2.3): per-stage content and the undo.
+            'species_stages',
+            'species_versions',
         ];
 
         foreach ($expectedTables as $tableName) {

@@ -242,6 +242,32 @@ $save('admin-roles', $fetch('/admin/roles'));
 $save('admin-audit', $fetch('/admin/audit'));
 $save('admin-pictures', $fetch('/admin/pictures'));
 
+// ---- The species editor (M2.3): a species mid-build, for honest shots ----
+$speciesEditor = $fetch('/admin/creatures/create', [
+    '_csrf_token' => $token($fetch('/admin/creatures')),
+    'name' => 'Bramble Wisp',
+]);
+preg_match('~action="/admin/creatures/(\d+)/words"~', $speciesEditor, $sm);
+$shotSpeciesId = $sm[1] ?? '0';
+// Link the uploaded sprite to the baby stage so the editor shows a real
+// mix: one stage with art, the others honestly saying "no picture yet".
+$pickerPage = $fetch('/admin/creatures/' . $shotSpeciesId . '/picture/baby');
+preg_match('~name="art_id" value="(\d+)"~', $pickerPage, $am);
+$fetch('/admin/creatures/' . $shotSpeciesId . '/picture/baby', [
+    '_csrf_token' => $token($pickerPage),
+    'art_id' => $am[1] ?? '0',
+]);
+$fetch('/admin/creatures/' . $shotSpeciesId . '/words', [
+    '_csrf_token' => $token($pickerPage),
+    'name' => 'Bramble Wisp',
+    'flavour_text' => 'A tangle of thorns that decided to be friendly.',
+    'lore' => '',
+]);
+$save('admin-creatures', $fetch('/admin/creatures'));
+$save('admin-creature-edit', $fetch('/admin/creatures/' . $shotSpeciesId));
+$save('admin-creature-picker', $fetch('/admin/creatures/' . $shotSpeciesId . '/picture/juvenile'));
+$save('admin-creature-preview', $fetch('/admin/creatures/' . $shotSpeciesId . '/preview'));
+
 // ---- Render ----
 echo "Rendering with " . basename($browser) . "...\n";
 $shoot = static function (string $file, string $size, string $png) use ($browser, $outDir): void {

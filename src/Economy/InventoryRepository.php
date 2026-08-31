@@ -111,6 +111,36 @@ final class InventoryRepository
     }
 
     /**
+     * Every treat that EXISTS — not just what one player carries. The
+     * species editor's taste picker asks this: "which item does a Foxlen
+     * adore?" has to offer every feedable thing.
+     *
+     * Deliberately the same condition as findTreatsForUser above — "a treat
+     * is any item that does something when eaten" is defined ONCE, in these
+     * two adjacent queries, and a new food joins both by being given a
+     * bonus. Ordered by name: the picker is a list a person scans.
+     *
+     * @return array<int, Item>
+     */
+    public function findAllTreats(): array
+    {
+        $statement = $this->connection->query(
+            'SELECT ' . self::ITEM_COLUMNS . '
+               FROM items
+               JOIN item_categories ON item_categories.id = items.category_id
+              WHERE items.happiness_bonus > 0 OR items.energy_bonus > 0
+              ORDER BY items.name'
+        );
+
+        $treats = [];
+        foreach ($statement->fetchAll() as $row) {
+            $treats[] = Item::fromRow($row);
+        }
+
+        return $treats;
+    }
+
+    /**
      * Find one pile this user owns, or null if they do not own any.
      *
      * The user id is part of the lookup rather than something checked afterwards,

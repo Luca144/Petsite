@@ -15,9 +15,10 @@ use Felkyo\Design\PixelArt;
 
 $creature = $summary['creature'];
 $species = $summary['species'];
-$slug = $species?->slug ?? '';
-// Same image convention as the creature page: slug + current stage.
-$image = '/assets/creatures/' . rawurlencode($slug) . '/' . rawurlencode($summary['stage']) . '.gif';
+// THE sprite address comes from the species itself (art-store picture if one
+// is linked, the old convention path if not) — one resolver instead of the
+// six copies of a path this file used to be one of. See Species::spriteUrlFor.
+$image = $species?->spriteUrlFor($summary['stage']) ?? '';
 
 // The sprite's honest size: the largest WHOLE multiple of its native pixels that
 // fits the frame. A fractional scale smears pixel art — see PixelArt.

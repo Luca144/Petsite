@@ -257,6 +257,14 @@ return [
                                       // changes are rare; a burst of them is
                                       // an incident, not a workflow.
         ],
+        'rate_limit_species_save' => [
+            'max_attempts' => 120,    // 120 saves/publishes/reverts...
+            'window_seconds' => 3600, // ...per hour, per staff member. The
+                                      // editor saves section by section, so an
+                                      // afternoon building one species is many
+                                      // small saves — generous for a person,
+                                      // slow for a script.
+        ],
         'rate_limit_art_upload' => [
             'max_attempts' => 60,     // 60 picture uploads...
             'window_seconds' => 3600, // ...per hour, per uploading staff
@@ -287,6 +295,14 @@ return [
         // BEFORE anything decodes it — so a tiny file claiming to be a
         // 100000×100000 image is refused without costing any memory.
         'max_dimension' => 2048, // pixels, each side
+
+        // ---- The species editor (M2.3) ----
+        // How much word-space each species text may take, and how much undo
+        // history each species keeps. Signed off 2026-08-31.
+        'species_name_max_length' => 60,     // matches the column
+        'species_blurb_max_length' => 500,   // a paragraph per stage
+        'species_lore_max_length' => 5000,   // the library's long read
+        'species_versions_kept' => 20,       // newest snapshots per species
 
         // The Pictures screen warns from here that the art disk is getting
         // full. The volume actually attached in Railway is 500 MB (its

@@ -15,8 +15,17 @@ use Felkyo\Art\ArtRepository;
 use Felkyo\Art\ArtService;
 use Felkyo\Art\ImageValidator;
 use Felkyo\Art\VolumeImageStore;
+use Felkyo\Http\Controllers\AdminCreatureEditController;
+use Felkyo\Http\Controllers\AdminCreaturePickerController;
+use Felkyo\Http\Controllers\AdminCreaturePreviewController;
+use Felkyo\Http\Controllers\AdminCreaturesController;
 use Felkyo\Http\Controllers\AdminPicturesController;
 use Felkyo\Http\Controllers\ArtController;
+use Felkyo\Creatures\MoodCalculator;
+use Felkyo\Creatures\SpeciesEditorService;
+use Felkyo\Creatures\SpeciesRepository;
+use Felkyo\Creatures\SpeciesVersionRepository;
+use Felkyo\Economy\InventoryRepository;
 use Felkyo\Auth\PasswordHasher;
 use Felkyo\Auth\Session;
 use Felkyo\Http\Controllers\AdminAuditController;
@@ -63,6 +72,11 @@ final class AdminWorld
     public ArtService $artService;
     public VolumeImageStore $imageStore;
     public array $artConfig;
+    public SpeciesRepository $speciesRepo;
+    public SpeciesVersionRepository $speciesVersions;
+    public SpeciesEditorService $speciesEditor;
+    /** @var string[] the growth stages, from config. */
+    public array $stageNames;
 
     // Where test uploads land: a throwaway folder in the system temp dir, so
     // a test can never write into the project's real art folder.
@@ -122,8 +136,37 @@ final class AdminWorld
         $world->artFolder = sys_get_temp_dir() . '/felkyo-test-art-' . getmypid();
         $world->imageStore = new VolumeImageStore($world->artFolder);
         $world->pictures = new ArtRepository($connection);
+        $world->speciesRepo = new SpeciesRepository($connection);
         $world->artService = new ArtService(
-            $connection, $world->pictures, $world->imageStore, $world->auditLog, $world->roles
+            $connection, $world->pictures, $world->imageStore, $world->auditLog, $world->roles,
+            $world->speciesRepo
+        );
+        \Felkyo\Design\PixelArt::configureArtFolder($world->artFolder);
+
+        // The species editor (M2.3), wired as the front controller wires it.
+        $world->stageNames = array_keys($config['gameplay']['growth']['stage_start_levels']);
+        $world->speciesVersions = new SpeciesVersionRepository($connection);
+        $world->speciesEditor = new SpeciesEditorService(
+            $connection, $world->speciesRepo, $world->speciesVersions, $world->pictures,
+            $world->auditLog, $config['art'], $world->stageNames
+        );
+        $creaturesController = new AdminCreaturesController(
+            $templates, $world->session, $world->csrf, $world->users, $world->speciesRepo,
+            $world->speciesEditor, $rateLimiter, $security['rate_limit_species_save'], $world->stageNames
+        );
+        $creatureEditController = new AdminCreatureEditController(
+            $templates, $world->session, $world->csrf, $world->users, $world->speciesRepo,
+            $world->speciesVersions, $world->speciesEditor, new InventoryRepository($connection),
+            $rateLimiter, $security['rate_limit_species_save'], $world->stageNames
+        );
+        $creaturePickerController = new AdminCreaturePickerController(
+            $templates, $world->session, $world->csrf, $world->users, $world->speciesRepo,
+            $world->pictures, $world->speciesEditor, $rateLimiter,
+            $security['rate_limit_species_save'], $world->stageNames
+        );
+        $creaturePreviewController = new AdminCreaturePreviewController(
+            $templates, $world->session, $world->speciesRepo,
+            new MoodCalculator($config['gameplay']['mood']), $config['gameplay']['growth']
         );
         $picturesController = new AdminPicturesController(
             $templates, $world->session, $world->csrf, $world->users, $world->pictures,
@@ -149,6 +192,18 @@ final class AdminWorld
         $world->router->get('/admin/pictures', $gate->protect(Role::Artist, [$picturesController, 'show']));
         $world->router->post('/admin/pictures/upload', $gate->protect(Role::Artist, [$picturesController, 'upload']));
         $world->router->post('/admin/pictures/{id}/delete', $gate->protect(Role::Artist, [$picturesController, 'delete']));
+        $world->router->get('/admin/creatures', $gate->protect(Role::Artist, [$creaturesController, 'show']));
+        $world->router->post('/admin/creatures/create', $gate->protect(Role::Artist, [$creaturesController, 'create']));
+        $world->router->get('/admin/creatures/{id}', $gate->protect(Role::Artist, [$creatureEditController, 'show']));
+        $world->router->post('/admin/creatures/{id}/words', $gate->protect(Role::Artist, [$creatureEditController, 'saveWords']));
+        $world->router->post('/admin/creatures/{id}/stage/{stage}', $gate->protect(Role::Artist, [$creatureEditController, 'saveStage']));
+        $world->router->post('/admin/creatures/{id}/settings', $gate->protect(Role::Artist, [$creatureEditController, 'saveSettings']));
+        $world->router->post('/admin/creatures/{id}/publish', $gate->protect(Role::Artist, [$creatureEditController, 'publish']));
+        $world->router->post('/admin/creatures/{id}/unpublish', $gate->protect(Role::Artist, [$creatureEditController, 'unpublish']));
+        $world->router->post('/admin/creatures/{id}/revert', $gate->protect(Role::Artist, [$creatureEditController, 'revert']));
+        $world->router->get('/admin/creatures/{id}/picture/{slot}', $gate->protect(Role::Artist, [$creaturePickerController, 'show']));
+        $world->router->post('/admin/creatures/{id}/picture/{slot}', $gate->protect(Role::Artist, [$creaturePickerController, 'choose']));
+        $world->router->get('/admin/creatures/{id}/preview', $gate->protect(Role::Artist, [$creaturePreviewController, 'show']));
         $world->router->get('/art/{name}', [$artController, 'show']);
 
         return $world;

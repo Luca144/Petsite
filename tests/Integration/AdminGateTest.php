@@ -55,6 +55,19 @@ final class AdminGateTest extends DatabaseTestCase
             ['GET', '/admin/pictures', Role::Artist],
             ['POST', '/admin/pictures/upload', Role::Artist],
             ['POST', '/admin/pictures/999/delete', Role::Artist],
+            // The species editor (M2.3): the artist's screens.
+            ['GET', '/admin/creatures', Role::Artist],
+            ['POST', '/admin/creatures/create', Role::Artist],
+            ['GET', '/admin/creatures/999', Role::Artist],
+            ['POST', '/admin/creatures/999/words', Role::Artist],
+            ['POST', '/admin/creatures/999/stage/baby', Role::Artist],
+            ['POST', '/admin/creatures/999/settings', Role::Artist],
+            ['POST', '/admin/creatures/999/publish', Role::Artist],
+            ['POST', '/admin/creatures/999/unpublish', Role::Artist],
+            ['POST', '/admin/creatures/999/revert', Role::Artist],
+            ['GET', '/admin/creatures/999/picture/baby', Role::Artist],
+            ['POST', '/admin/creatures/999/picture/baby', Role::Artist],
+            ['GET', '/admin/creatures/999/preview', Role::Artist],
         ];
     }
 

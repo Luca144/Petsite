@@ -17,9 +17,8 @@
  * hear the sentence once, not the name twice.
  */
 $creature = $moment['summary']['creature'];
-$slug = $moment['summary']['species']?->slug ?? '';
-// Same image convention as creature-card.php: slug + current growth stage.
-$image = '/assets/creatures/' . rawurlencode($slug) . '/' . rawurlencode($moment['summary']['stage']) . '.gif';
+// One resolver for every sprite address — see Species::spriteUrlFor.
+$image = $moment['summary']['species']?->spriteUrlFor($moment['summary']['stage']) ?? '';
 ?>
 <a class="creature-moment" href="/creature/<?= $this->e((string) $creature->id) ?>">
     <img class="creature-moment__img pixelated"

@@ -33,6 +33,20 @@ final class PixelArt
     private static array $nativeSizes = [];
 
     /**
+     * Where UPLOADED art lives on disk (the M2.2 volume/folder). Sprites can
+     * come from two places since M2.3: shipped files under public/, and
+     * uploaded files served at /art/{hash}. The second kind is not under
+     * public/ — deliberately, nothing there may execute — so this class
+     * needs telling where those bytes really are. Set once at bootstrap.
+     */
+    private static ?string $artFolder = null;
+
+    public static function configureArtFolder(string $folder): void
+    {
+        self::$artFolder = $folder;
+    }
+
+    /**
      * The display size for a sprite inside a square box: the largest integer
      * multiple of its native size that fits, as [width, height].
      *
@@ -61,13 +75,30 @@ final class PixelArt
     private static function nativeSize(string $publicPath): array
     {
         if (!isset(self::$nativeSizes[$publicPath])) {
-            $file = dirname(__DIR__, 2) . '/public' . $publicPath;
-            $info = is_file($file) ? @getimagesize($file) : false;
+            $file = self::fileFor($publicPath);
+            $info = $file !== null && is_file($file) ? @getimagesize($file) : false;
             self::$nativeSizes[$publicPath] = $info === false
                 ? [0, 0]
                 : [(int) $info[0], (int) $info[1]];
         }
 
         return self::$nativeSizes[$publicPath];
+    }
+
+    /**
+     * The real file behind a sprite URL — public/ for shipped art, the art
+     * folder for uploaded art (see $artFolder). basename() strips any path
+     * play before the name touches the filesystem; art names are content
+     * hashes, so there is nothing else in them anyway.
+     */
+    private static function fileFor(string $publicPath): ?string
+    {
+        if (str_starts_with($publicPath, '/art/')) {
+            return self::$artFolder === null
+                ? null
+                : rtrim(self::$artFolder, '/\\') . DIRECTORY_SEPARATOR . basename($publicPath);
+        }
+
+        return dirname(__DIR__, 2) . '/public' . $publicPath;
     }
 }

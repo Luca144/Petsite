@@ -92,8 +92,8 @@ $this->layout('layout', ['title' => $profile->username . ' — Felkyo Creatures'
     <?php if ($spotlight !== null): ?>
         <?php
         $star = $spotlight['creature'];
-        $spotlightImage = '/assets/creatures/' . rawurlencode($spotlight['species']?->slug ?? '')
-            . '/' . rawurlencode($spotlight['stage']) . '.gif';
+        // One resolver for every sprite address — see Species::spriteUrlFor.
+        $spotlightImage = $spotlight['species']?->spriteUrlFor($spotlight['stage']) ?? '';
         // Whole-multiple sizing — a fractional scale smears pixel art (PixelArt).
         [$artWidth, $artHeight] = \Felkyo\Design\PixelArt::displaySize($spotlightImage, 170);
         ?>

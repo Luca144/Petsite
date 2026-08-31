@@ -850,6 +850,83 @@ check('and it is no longer served', request('/art/' . ($artMatch[1] ?? 'missing'
 @unlink($disguised);
 
 // ---------------------------------------------------------------------------
+// The species editor (M2.3): a whole species built through the real forms
+//
+// The M2 definition of done, walked by machine ahead of the artist: start a
+// draft, hang a real uploaded sprite on every stage, write its words, watch
+// the shop REFUSE to show a draft, publish, and watch the shop shelve it.
+// ---------------------------------------------------------------------------
+
+echo "\nThe species editor:\n";
+
+$speciesName = 'Wumple' . random_int(1000, 9999);
+$creaturesPage = request('/admin/creatures');
+check('the species list renders for an owner', str_contains($creaturesPage['body'], 'Start a new species'));
+
+$editorPage = request('/admin/creatures/create', [
+    '_csrf_token' => tokenIn($creaturesPage['body']),
+    'name' => $speciesName,
+]);
+check('creating a species lands on its editor', str_contains($editorPage['body'], $speciesName));
+preg_match('~action="/admin/creatures/(\d+)/words"~', $editorPage['body'], $speciesMatch);
+$speciesId = $speciesMatch[1] ?? '0';
+
+// A sprite for it, uploaded fresh so this run owns it.
+$spriteFile = sys_get_temp_dir() . '/felkyo-smoke-species.gif';
+file_put_contents($spriteFile, Felkyo\Tests\Support\Pictures::animatedGif(random_int(11, 60000)));
+$afterSpriteUpload = request('/admin/pictures/upload', [
+    '_csrf_token' => tokenIn($editorPage['body']),
+    'kind' => 'sprite',
+    'picture' => new CURLFile($spriteFile, 'image/gif', $speciesName . '.gif'),
+]);
+@unlink($spriteFile);
+
+// Hang it on every stage through the real picker pages.
+$stagesLinked = true;
+foreach (['baby', 'juvenile', 'adult'] as $stageName) {
+    $pickerPage = request('/admin/creatures/' . $speciesId . '/picture/' . $stageName);
+    preg_match('~name="art_id" value="(\d+)"~', $pickerPage['body'], $artMatch2);
+    $chose = request('/admin/creatures/' . $speciesId . '/picture/' . $stageName, [
+        '_csrf_token' => tokenIn($pickerPage['body']),
+        'art_id' => $artMatch2[1] ?? '0',
+    ]);
+    $stagesLinked = $stagesLinked && str_contains($chose['body'], 'Picture linked');
+}
+check('a sprite can be chosen for every stage', $stagesLinked);
+
+$afterWords = request('/admin/creatures/' . $speciesId . '/words', [
+    '_csrf_token' => tokenIn($editorPage['body']),
+    'name' => $speciesName,
+    'flavour_text' => 'A small brave smoke-being.',
+    'lore' => 'Its long story waits for the library.',
+]);
+check('its words save', str_contains($afterWords['body'], 'Words saved'));
+
+$afterSettings = request('/admin/creatures/' . $speciesId . '/settings', [
+    '_csrf_token' => tokenIn($afterWords['body']),
+    'gem_price' => '5', 'is_adoptable' => '1',
+    'favourite_item_id' => '', 'disliked_item_id' => '',
+]);
+check('its settings save', str_contains($afterSettings['body'], 'Settings saved'));
+
+// THE refusal that matters: a draft, adoptable and priced, must not be on
+// the shop shelf.
+check('the shop does NOT shelve a draft', !str_contains(request('/shop')['body'], $speciesName));
+
+$previewPage = request('/admin/creatures/' . $speciesId . '/preview?stage=juvenile');
+check('the preview shows it on the real sheet', str_contains($previewPage['body'], $speciesName) && str_contains($previewPage['body'], 'juvenile'));
+
+$afterPublish = request('/admin/creatures/' . $speciesId . '/publish', [
+    '_csrf_token' => tokenIn($afterSettings['body']),
+]);
+check('publishing says it is live', str_contains($afterPublish['body'], 'is live'));
+check('and NOW the shop shelves it', str_contains(request('/shop')['body'], $speciesName));
+
+// Tidy the shelf: back to draft so repeated runs do not fill the shop.
+request('/admin/creatures/' . $speciesId . '/unpublish', ['_csrf_token' => tokenIn($afterPublish['body'])]);
+check('back to draft, off the shelf again', !str_contains(request('/shop')['body'], $speciesName));
+
+// ---------------------------------------------------------------------------
 // Logging out
 //
 // This runs LAST, because everything after it would be a logged-out request.

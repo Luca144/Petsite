@@ -10,16 +10,40 @@ namespace Felkyo\Creatures;
  * @package Felkyo\Creatures
  *
  * WHAT THIS IS: a plain, read-only value object describing a species (e.g.
- * "Foxlen"). Species are content stored as data, so adding a new one is a new row
- * in the species table, not new code (build plan section 2).
+ * "Foxlen"). Species are content stored as data; since M2.3 they are BUILT in
+ * the creator's panel — drafted, given per-stage art and words, published.
  *
- * The species' animated images are NOT stored here. They are found by convention:
- * public/assets/creatures/{slug}/{stage}.gif — for example, for a "foxlen" at the
- * "baby" stage, public/assets/creatures/foxlen/baby.gif. This keeps the data
- * simple: add a species row and drop its images into a folder named after its slug.
+ * WHERE A SPRITE COMESS FROM — one method, two sources. spriteUrlFor() is the
+ * ONLY place on the whole site that turns "this species at this stage" into
+ * an image address (every template calls it; none builds a path of its own —
+ * that used to be copied out six times and is exactly what made art
+ * impossible to replace in one click):
+ *   1. If the stage has a picture linked from the art store (M2.2), the
+ *      art-store URL is returned. Its name is a content hash, so replacing
+ *      the picture changes the URL and no browser cache can show the old one.
+ *   2. Otherwise the pre-panel convention path,
+ *      public/assets/creatures/{slug}/{stage}.gif — which is how the three
+ *      original species still carry their repo art. New species never use it.
+ *
+ * DRAFT vs PUBLISHED: a draft is a species the artist is still building. It
+ * must never be ACQUIRABLE (shop, starters, exploration filter it out — see
+ * SpeciesRepository) but must still RENDER, because a player may already own
+ * a creature of a species that was put back into draft for rework.
  */
 final class Species
 {
+    // The two states a species can be in. Plain constants rather than an
+    // enum: they travel into SQL and templates constantly, and two values
+    // do not earn a type of their own.
+    public const STATUS_DRAFT = 'draft';
+    public const STATUS_PUBLISHED = 'published';
+
+    /**
+     * @param array<string, array{art_id: ?int, art_name: ?string, blurb: ?string}> $stageArt
+     *        Per-stage editor content, keyed by stage name ('baby', ...).
+     *        Loaded by SpeciesRepository alongside the row; empty for a
+     *        species whose stages were never edited (the convention carries it).
+     */
     public function __construct(
         public readonly int $id,
         public readonly string $slug,
@@ -28,7 +52,6 @@ final class Species
         public readonly bool $isStarter,
         /** Can a player come to own one of these at all? */
         public readonly bool $isAdoptable,
-        /** What one costs in the shop. */
         public readonly int $gemPrice = 0,
         /** The item this species adores, if it has one. */
         public readonly ?int $favouriteItemId = null,
@@ -40,26 +63,81 @@ final class Species
          * leave a creature worse off than before it was fed.
          */
         public readonly ?int $dislikedItemId = null,
+        public readonly string $status = self::STATUS_PUBLISHED,
+        /** The library's long text (authored in M2.3; the library page is M5). */
+        public readonly ?string $lore = null,
+        public readonly ?int $libraryArtId = null,
+        /** The library picture's stored (content-hash) name, or null. */
+        public readonly ?string $libraryArtName = null,
+        public readonly ?string $updatedAt = null,
+        public readonly array $stageArt = [],
     ) {
     }
 
-    /**
-     * Does this species adore that item?
-     */
+    /** Does this species adore that item? */
     public function adores(int $itemId): bool
     {
         return $this->favouriteItemId !== null && $this->favouriteItemId === $itemId;
     }
 
-    /**
-     * Would this species rather not have that item?
-     */
+    /** Would this species rather not have that item? */
     public function dislikes(int $itemId): bool
     {
         return $this->dislikedItemId !== null && $this->dislikedItemId === $itemId;
     }
 
-    public static function fromRow(array $row): self
+    public function isPublished(): bool
+    {
+        return $this->status === self::STATUS_PUBLISHED;
+    }
+
+    /**
+     * THE sprite address for this species at a stage — see the class note
+     * for the two sources. Every template goes through here.
+     */
+    public function spriteUrlFor(string $stage): string
+    {
+        $artName = $this->stageArt[$stage]['art_name'] ?? null;
+        if (is_string($artName) && $artName !== '') {
+            return '/art/' . $artName;
+        }
+
+        return $this->conventionPathFor($stage);
+    }
+
+    /** The art-store id linked to a stage, or null (editor screens need it). */
+    public function spriteArtIdFor(string $stage): ?int
+    {
+        return $this->stageArt[$stage]['art_id'] ?? null;
+    }
+
+    /** The stage's own words, or null if none were written. */
+    public function blurbFor(string $stage): ?string
+    {
+        return $this->stageArt[$stage]['blurb'] ?? null;
+    }
+
+    /** The library picture's address, or null if none is linked. */
+    public function libraryArtUrl(): ?string
+    {
+        return $this->libraryArtName !== null && $this->libraryArtName !== ''
+            ? '/art/' . $this->libraryArtName
+            : null;
+    }
+
+    /**
+     * The pre-panel convention path (see class note). Public because the
+     * editor shows honestly which source a stage is using.
+     */
+    public function conventionPathFor(string $stage): string
+    {
+        return '/assets/creatures/' . rawurlencode($this->slug) . '/' . rawurlencode($stage) . '.gif';
+    }
+
+    /**
+     * @param array<string, array{art_id: ?int, art_name: ?string, blurb: ?string}> $stageArt
+     */
+    public static function fromRow(array $row, array $stageArt = []): self
     {
         return new self(
             (int) $row['id'],
@@ -72,17 +150,12 @@ final class Species
             (int) ($row['gem_price'] ?? 0),
             isset($row['favourite_item_id']) ? (int) $row['favourite_item_id'] : null,
             isset($row['disliked_item_id']) ? (int) $row['disliked_item_id'] : null,
+            (string) ($row['status'] ?? self::STATUS_PUBLISHED),
+            $row['lore'] ?? null,
+            isset($row['library_art_id']) ? (int) $row['library_art_id'] : null,
+            $row['library_art_name'] ?? null,
+            $row['updated_at'] ?? null,
+            $stageArt,
         );
-    }
-
-    /**
-     * The picture of one of these at a given life stage.
-     *
-     * Built from the slug by convention, exactly as item art is, so adding a
-     * species never means typing a path.
-     */
-    public function imagePathFor(string $stage): string
-    {
-        return '/assets/creatures/' . rawurlencode($this->slug) . '/' . rawurlencode($stage) . '.gif';
     }
 }

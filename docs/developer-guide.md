@@ -1958,3 +1958,55 @@ uploaded file is 2 MB, under the site's 5 MB — `php.ini` at the project
 root raises it for Railway, and the Pictures screen warns if the server it
 runs on ever allows less than the site does. Neither test suite could have
 seen either; the smoke test saw both.
+
+## Increment M2.3 — One page per creature
+
+The plan (`docs/plan/2026-08-31-m2-3-build-plan.md`, signed off with all
+four open questions decided) called this the panel's most important screen.
+The map of what exists:
+
+**The one sprite resolver.** `Species::spriteUrlFor($stage)` is now the ONLY
+place that turns "this species at this stage" into an image address —
+art-store URL when a picture is linked, the pre-panel convention path
+(`/assets/creatures/{slug}/{stage}.gif`) when not. It replaced six copies of
+that path written out in six templates; every template now calls it, which
+is what makes "choose a different picture" update every page at once (plus
+M2.2's content-hash URLs defeating caches). `PixelArt` learned to measure
+art-store files via `configureArtFolder()` (set in `public/index.php`).
+
+**The draft asymmetry** — the load-bearing rule, pinned by tests both ways:
+`findById()`/`all()` return drafts (players may own creatures of a
+re-drafted species; they must render), while `findAdoptable()` and
+`findStarters()` require `status='published'` — and those two are what the
+shop, the purchase re-check, starter grants and exploration finds all draw
+from. Nothing can ACQUIRE a draft.
+
+**The pieces.** `SpeciesRepository` grew writes (create/updateWords/
+updateSettings/setStageArt/setStageBlurb/setLibraryArt/setStatus) — all
+called only by `SpeciesEditorService`, which owns the rules: allow-lists
+(stages from config keys, art of the right `ArtKind` per slot), length caps
+(config `art.species_*`), the publish minimum (sprite per stage + name +
+flavour, refusals naming each missing piece), and `withHistory()` — the one
+shape every mutation passes through: transaction, mutate, version snapshot,
+audit entry. `SpeciesVersionRepository` keeps the newest 20 snapshots per
+species; revert applies whitelisted fields and never touches status.
+`ArtService::delete` gained the promised guard: a picture a species uses
+refuses deletion, naming the species.
+
+**The screens** (all `Role::Artist` behind the gate): `/admin/creatures`
+(list, status as words, drafts saying what they still need),
+`/admin/creatures/{id}` (THE page — sectioned forms, save as you go),
+`.../picture/{slot}` (the picker: a grid of the right kind only),
+`.../preview` (the REAL creature sheet — `partials/creature-sheet.php`,
+extracted so the live page and the preview are the same file — with a stage
+switcher). Twelve routes, all in the `AdminGateTest` matrix.
+
+**Deferred by decision** (decisions.md 2026-08-31): alternate forms wait
+for M5, where "what a form is" gets designed; species deletion is not
+offered (back-to-draft is the retirement path).
+
+**Tests**: `SpeciesEditorTest` (the asymmetry both ways, publish refusals
+with named pieces, the kind rule, the delete guard, revert incl. the
+cross-species refusal, script-tag names inert). The smoke test builds a
+whole species through the real forms and watches the shop refuse the draft
+and shelve the published one.

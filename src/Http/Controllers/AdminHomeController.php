@@ -82,10 +82,16 @@ final class AdminHomeController
                 'arrives' => null,
             ];
             $sections[] = [
-                'title' => 'Creatures & content',
-                'sentence' => 'Species, items, shops, cards and themes — one page per creature.',
+                'title' => 'Creatures',
+                'sentence' => 'One page per species — sprites, words, stats; draft it, preview it, publish it.',
+                'href' => '/admin/creatures',
+                'arrives' => null,
+            ];
+            $sections[] = [
+                'title' => 'Items, shops & more',
+                'sentence' => 'The same one-sitting editors for items, shops, cards and themes.',
                 'href' => null,
-                'arrives' => 'M2.3',
+                'arrives' => 'M2.4',
             ];
         }
 

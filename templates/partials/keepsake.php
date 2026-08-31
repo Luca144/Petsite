@@ -30,10 +30,8 @@ $mood = $summary['mood'];
 $species = $summary['species'];
 $treats = $treats ?? [];
 
-// Same image convention as the creature page and the collection card: the
-// species slug and the creature's current life stage.
-$image = '/assets/creatures/' . rawurlencode($species?->slug ?? '')
-    . '/' . rawurlencode($summary['stage']) . '.gif';
+// One resolver for every sprite address — see Species::spriteUrlFor.
+$image = $species?->spriteUrlFor($summary['stage']) ?? '';
 
 // The largest WHOLE multiple of the sprite's native pixels that fits its frame —
 // a fractional scale smears pixel art (see PixelArt).

@@ -51,7 +51,9 @@ use Felkyo\Creatures\PettingRepository;
 use Felkyo\Creatures\PettingService;
 use Felkyo\Creatures\PlayableGames;
 use Felkyo\Creatures\PlayService;
+use Felkyo\Creatures\SpeciesEditorService;
 use Felkyo\Creatures\SpeciesRepository;
+use Felkyo\Creatures\SpeciesVersionRepository;
 use Felkyo\Creatures\StarterCreatureService;
 use Felkyo\Economy\InventoryRepository;
 use Felkyo\Economy\ItemFinder;
@@ -76,6 +78,10 @@ use Felkyo\Http\Controllers\AdminAuditController;
 use Felkyo\Http\Controllers\AdminDoorController;
 use Felkyo\Http\Controllers\AdminEnrolController;
 use Felkyo\Http\Controllers\AdminHomeController;
+use Felkyo\Http\Controllers\AdminCreatureEditController;
+use Felkyo\Http\Controllers\AdminCreaturePickerController;
+use Felkyo\Http\Controllers\AdminCreaturePreviewController;
+use Felkyo\Http\Controllers\AdminCreaturesController;
 use Felkyo\Http\Controllers\AdminPicturesController;
 use Felkyo\Http\Controllers\AdminRolesController;
 use Felkyo\Http\Controllers\ArtController;
@@ -671,11 +677,40 @@ $adminAuditController = new AdminAuditController($templates, $auditLogRepository
 // panel's side: uploading, listing, deleting.
 $imageStore = new VolumeImageStore($config['art']['storage_path']);
 $artRepository = new ArtRepository($pdo);
-$artService = new ArtService($pdo, $artRepository, $imageStore, $auditLogRepository, $roleRepository);
+$artService = new ArtService($pdo, $artRepository, $imageStore, $auditLogRepository, $roleRepository, $speciesRepository);
+// Sprites can live on the art volume since M2.3; PixelArt has to know where
+// that is to measure them (see PixelArt::configureArtFolder).
+\Felkyo\Design\PixelArt::configureArtFolder($config['art']['storage_path']);
 $adminPicturesController = new AdminPicturesController(
     $templates, $session, $csrf, $userRepository, $artRepository, $artService,
     new ImageValidator($config['art']), $rateLimiter,
     $config['security']['rate_limit_art_upload'], $config['art']
+);
+
+// The species editor (M2.3) — one page per creature. The stage list comes
+// from the growth config's keys, so the screens and the validator follow a
+// fourth stage the day config grows one.
+$stageNames = array_keys($config['gameplay']['growth']['stage_start_levels']);
+$speciesVersionRepository = new SpeciesVersionRepository($pdo);
+$speciesEditorService = new SpeciesEditorService(
+    $pdo, $speciesRepository, $speciesVersionRepository, $artRepository,
+    $auditLogRepository, $config['art'], $stageNames
+);
+$adminCreaturesController = new AdminCreaturesController(
+    $templates, $session, $csrf, $userRepository, $speciesRepository,
+    $speciesEditorService, $rateLimiter, $config['security']['rate_limit_species_save'], $stageNames
+);
+$adminCreatureEditController = new AdminCreatureEditController(
+    $templates, $session, $csrf, $userRepository, $speciesRepository,
+    $speciesVersionRepository, $speciesEditorService, $inventoryRepository,
+    $rateLimiter, $config['security']['rate_limit_species_save'], $stageNames
+);
+$adminCreaturePickerController = new AdminCreaturePickerController(
+    $templates, $session, $csrf, $userRepository, $speciesRepository, $artRepository,
+    $speciesEditorService, $rateLimiter, $config['security']['rate_limit_species_save'], $stageNames
+);
+$adminCreaturePreviewController = new AdminCreaturePreviewController(
+    $templates, $session, $speciesRepository, $moodCalculator, $config['gameplay']['growth']
 );
 
 // ---- Routes ----
@@ -731,6 +766,19 @@ $router->get('/admin/audit', $adminGate->protect(Role::Owner, [$adminAuditContro
 $router->get('/admin/pictures', $adminGate->protect(Role::Artist, [$adminPicturesController, 'show']));
 $router->post('/admin/pictures/upload', $adminGate->protect(Role::Artist, [$adminPicturesController, 'upload']));
 $router->post('/admin/pictures/{id}/delete', $adminGate->protect(Role::Artist, [$adminPicturesController, 'delete']));
+// The species editor — one page per creature (M2.3).
+$router->get('/admin/creatures', $adminGate->protect(Role::Artist, [$adminCreaturesController, 'show']));
+$router->post('/admin/creatures/create', $adminGate->protect(Role::Artist, [$adminCreaturesController, 'create']));
+$router->get('/admin/creatures/{id}', $adminGate->protect(Role::Artist, [$adminCreatureEditController, 'show']));
+$router->post('/admin/creatures/{id}/words', $adminGate->protect(Role::Artist, [$adminCreatureEditController, 'saveWords']));
+$router->post('/admin/creatures/{id}/stage/{stage}', $adminGate->protect(Role::Artist, [$adminCreatureEditController, 'saveStage']));
+$router->post('/admin/creatures/{id}/settings', $adminGate->protect(Role::Artist, [$adminCreatureEditController, 'saveSettings']));
+$router->post('/admin/creatures/{id}/publish', $adminGate->protect(Role::Artist, [$adminCreatureEditController, 'publish']));
+$router->post('/admin/creatures/{id}/unpublish', $adminGate->protect(Role::Artist, [$adminCreatureEditController, 'unpublish']));
+$router->post('/admin/creatures/{id}/revert', $adminGate->protect(Role::Artist, [$adminCreatureEditController, 'revert']));
+$router->get('/admin/creatures/{id}/picture/{slot}', $adminGate->protect(Role::Artist, [$adminCreaturePickerController, 'show']));
+$router->post('/admin/creatures/{id}/picture/{slot}', $adminGate->protect(Role::Artist, [$adminCreaturePickerController, 'choose']));
+$router->get('/admin/creatures/{id}/preview', $adminGate->protect(Role::Artist, [$adminCreaturePreviewController, 'show']));
 
 // (Serving an uploaded picture — GET /art/{name} — is NOT registered here:
 // it is dispatched near the top of this file, before the session and the

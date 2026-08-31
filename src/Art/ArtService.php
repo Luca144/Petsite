@@ -9,6 +9,7 @@ use Felkyo\Admin\AuditEntry;
 use Felkyo\Admin\AuditLogRepository;
 use Felkyo\Admin\Role;
 use Felkyo\Admin\RoleRepository;
+use Felkyo\Creatures\SpeciesRepository;
 use Felkyo\Users\User;
 use PDO;
 
@@ -40,6 +41,7 @@ final class ArtService
         private ImageStore $store,
         private AuditLogRepository $auditLog,
         private RoleRepository $roles,
+        private SpeciesRepository $species,
     ) {
     }
 
@@ -101,6 +103,17 @@ final class ArtService
             return ArtResult::refused(
                 'You can only delete pictures you uploaded yourself. An owner can delete any picture.'
             );
+        }
+
+        // The guard M2.2 promised M2.3 would bring: a picture a species is
+        // USING refuses deletion, and the refusal says who — never a dead
+        // end, always the way to proceed (golden rule 3).
+        $usedBy = $this->species->namesUsingArt($picture->id);
+        if ($usedBy !== []) {
+            return ArtResult::refused(sprintf(
+                '%s still uses this picture — unlink it on the species page first, then it can go.',
+                implode(' and ', array_slice($usedBy, 0, 3))
+            ));
         }
 
         $this->connection->beginTransaction();

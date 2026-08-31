@@ -44,6 +44,15 @@ enum AuditAction: string
     case ArtUploaded = 'art.uploaded';
     case ArtDeleted = 'art.deleted';
 
+    // The species editor (M2.3). Saves snapshot before/after; publish and
+    // unpublish are their own entries because "when did this go live?" is
+    // the question the log will actually be asked.
+    case SpeciesCreated = 'species.created';
+    case SpeciesSaved = 'species.saved';
+    case SpeciesPublished = 'species.published';
+    case SpeciesUnpublished = 'species.unpublished';
+    case SpeciesReverted = 'species.reverted';
+
     /**
      * What a person reading the audit page sees, in plain words.
      */
@@ -58,6 +67,11 @@ enum AuditAction: string
             self::RecoveryCodeUsed => 'used a recovery code at the door',
             self::ArtUploaded => 'uploaded a picture',
             self::ArtDeleted => 'deleted a picture',
+            self::SpeciesCreated => 'started a new species',
+            self::SpeciesSaved => 'saved a species',
+            self::SpeciesPublished => 'published a species',
+            self::SpeciesUnpublished => 'took a species back to draft',
+            self::SpeciesReverted => 'restored an older version of a species',
         };
     }
 }

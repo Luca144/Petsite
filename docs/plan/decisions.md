@@ -414,3 +414,25 @@ Developer and a coding session for every change.
 
 **Order unchanged:** M2.3 (one page per creature) stays next — M2's
 definition of done hangs on it — then M2.4 brings the shop editor.
+
+---
+
+## 2026-08-31 — M2.3 signed off, and alternate forms wait for the library
+
+The build plan (`docs/plan/2026-08-31-m2-3-build-plan.md`) was signed off
+as written, with all four open questions decided as recommended:
+
+- **Alternate forms are DEFERRED to M5 (the library)** — written down so it
+  reads as chosen, not forgotten. No game mechanic assigns or displays a
+  form today; building their storage and UI now would put dead weight on
+  the panel's most important screen. M5 is where forms first appear, and a
+  `form` column on `species_stages` is one small migration then. What a
+  form even IS (a colour? a rare variant? seasonal?) is Skerro's design
+  call to make at that point.
+- **Publish minimum**: every stage has a sprite, plus name and flavour
+  text. Blurbs, lore and library art stay optional until the library
+  exists.
+- **Versions**: the newest 20 per species are kept.
+- **Unpublish is allowed**: existing creatures keep living and rendering;
+  the species leaves the shop and starter pool. The button says so in
+  plain words.
