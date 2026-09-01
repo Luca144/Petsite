@@ -288,6 +288,12 @@ return [
                                       // thirty unread notices; a script
                                       // probing notice ids does.
         ],
+        'rate_limit_settings' => [
+            'max_attempts' => 30,     // 30 setting changes / maintenance
+            'window_seconds' => 3600, // actions per hour, per Coder. Tuning
+                                      // is a handful of changes; a burst is
+                                      // an incident for the audit log.
+        ],
 
         // Moderation's own knobs (M2.7). The forced names are OUR words —
         // a moderator never types a name — and the durations are a fixed

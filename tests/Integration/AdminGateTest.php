@@ -92,6 +92,12 @@ final class AdminGateTest extends DatabaseTestCase
             ['POST', '/admin/shops/999/shelf/1/remove', Role::Artist],
             ['GET', '/admin/shops/999/picture/portrait', Role::Artist],
             ['POST', '/admin/shops/999/picture/portrait', Role::Artist],
+            // Settings & maintenance (M2.8).
+            ['GET', '/admin/settings', Role::Coder],
+            ['POST', '/admin/settings/registration_open', Role::Coder],
+            ['POST', '/admin/settings/registration_open/reset', Role::Coder],
+            ['POST', '/admin/maintenance/clear-rate-limits', Role::Coder],
+            ['GET', '/admin/maintenance/art-backup', Role::Coder],
             // Moderation (M2.7): the queue, its actions, account history.
             ['GET', '/admin/reports', Role::Moderator],
             ['POST', '/admin/reports/999/dismiss', Role::Moderator],

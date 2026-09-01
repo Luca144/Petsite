@@ -523,3 +523,20 @@ between increments; the full test round with Skerro after M2.9). Plan:
 
 Still to set before moderation is used in anger: the real appeal address
 in `config` under `security.moderation.appeal_email`.
+
+---
+
+## 2026-09-01 — M2.8: settings become a database override, maintenance stays named buttons
+
+Plan: `docs/plan/2026-09-01-m2-8-build-plan.md`. Two decisions worth a line:
+
+- **Config remains the single place values are defined and explained**;
+  the panel writes overrides to `site_settings`, merged at boot. Only a
+  fixed catalog is editable (`SettingsCatalog`) — growing it is adding
+  an entry, and there will never be a free-form config editor: that is a
+  query console wearing a cardigan.
+- **The art backup button is the backup story.** The Railway volume has
+  no platform backups on this plan (learned the hard way, 2026-08-21),
+  so "Download the backup" on the settings screen — one ZIP of the whole
+  store — is what stands between the art and a lost volume. Press it
+  after big art days.

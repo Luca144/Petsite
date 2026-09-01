@@ -36,7 +36,10 @@ use Felkyo\Exploration\LootLineParser;
 use Felkyo\Http\Controllers\AdminAreaEditController;
 use Felkyo\Http\Controllers\AdminAreasController;
 use Felkyo\Http\Controllers\AdminUnfinishedController;
+use Felkyo\Admin\SettingsCatalog;
+use Felkyo\Admin\SiteSettingsRepository;
 use Felkyo\Admin\UnfinishedListService;
+use Felkyo\Http\Controllers\AdminSettingsController;
 use Felkyo\Http\Controllers\AdminAccountController;
 use Felkyo\Http\Controllers\AdminReportsController;
 use Felkyo\Moderation\ModerationRepository;
@@ -356,6 +359,18 @@ final class AdminWorld
         $world->router->post('/admin/accounts/{id}/suspend', $gate->protect(Role::Moderator, [$accountController, 'suspend']));
         $world->router->post('/admin/accounts/{id}/unmute', $gate->protect(Role::Moderator, [$accountController, 'unmute']));
         $world->router->post('/admin/accounts/{id}/unsuspend', $gate->protect(Role::Moderator, [$accountController, 'unsuspend']));
+
+        // Settings & maintenance (M2.8), wired as the front controller wires it.
+        $settingsController = new AdminSettingsController(
+            $templates, $world->session, $world->csrf, $world->users, new SettingsCatalog(),
+            new SiteSettingsRepository($connection), new \Felkyo\Security\RateLimitRepository($connection),
+            $world->auditLog, $rateLimiter, $security['rate_limit_settings'], $config
+        );
+        $world->router->get('/admin/settings', $gate->protect(Role::Coder, [$settingsController, 'show']));
+        $world->router->post('/admin/settings/{key}', $gate->protect(Role::Coder, [$settingsController, 'save']));
+        $world->router->post('/admin/settings/{key}/reset', $gate->protect(Role::Coder, [$settingsController, 'reset']));
+        $world->router->post('/admin/maintenance/clear-rate-limits', $gate->protect(Role::Coder, [$settingsController, 'clearRateLimits']));
+        $world->router->get('/admin/maintenance/art-backup', $gate->protect(Role::Coder, [$settingsController, 'artBackup']));
         // The unfinished list (M2.6): read-only, so the controller is built inline.
         $world->router->get('/admin/unfinished', $gate->protect(Role::Artist, [new AdminUnfinishedController($templates, new UnfinishedListService($world->speciesRepo, $world->itemRepo, $world->shopRepo, $world->areaRepo, $world->speciesEditor, $world->itemEditor, $world->areaEditor)), 'show']));
         $world->router->get('/art/{name}', [$artController, 'show']);

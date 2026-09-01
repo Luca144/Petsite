@@ -368,3 +368,59 @@
 .admin-unfinished__needs {
     color: var(--ink-soft);
 }
+
+/* ---- Settings & maintenance (M2.8) ----
+   (This file runs a little over the 400-line guide with these: they are
+   the panel's shared concern, and a 40-line file of their own would be
+   noise. Split by screen if the panel grows again.) */
+
+.admin-setting__source {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-left: 0.4rem;
+    color: var(--ink-soft);
+}
+
+.admin-setting__source--changed {
+    color: var(--purple);
+    font-weight: 700;
+}
+
+.admin-setting__number {
+    max-width: 10rem;
+}
+
+.admin-setting__words {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+}
+
+/* The toggle and the confirm tick: a real checkbox with a real sentence,
+   sized for thumbs. */
+.admin-setting__toggle,
+.admin-setting__confirm {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    cursor: pointer;
+}
+
+.admin-setting__toggle input,
+.admin-setting__confirm input {
+    width: 1.4rem;
+    height: 1.4rem;
+    accent-color: var(--purple);
+}
+
+.admin-setting__job {
+    border-top: 1px solid var(--border);
+    padding-top: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.admin-setting__job h4 {
+    margin: 0 0 0.25rem;
+}

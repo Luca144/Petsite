@@ -544,8 +544,23 @@ if ($creaturePath !== null) {
     if ($choiceCount >= 2) {
         // Guess. It is one-in-two or one-in-three, so this may win or lose — and
         // BOTH must produce a warm answer and leave the creature no worse off.
+        //
+        // A ONE-GUESS game specifically: the hint game KEEPS its round after a
+        // wrong first guess (that is its whole point), so whenever the random
+        // deal handed us the hint game here, there was no flash and no
+        // "finished" — and these two checks failed for reasons unrelated to
+        // any code. Deal again until a one-shot game turns up.
+        $oneShotPage = null;
+        for ($attempt = 0; $attempt < 20; $attempt++) {
+            $dealt = request($creaturePath . '/play');
+            if (!str_contains($dealt['body'], 'play--kind-narrow')) {
+                $oneShotPage = $dealt;
+                break;
+            }
+        }
+        check('a one-guess game turns up to finish on', $oneShotPage !== null);
         $guessed = request($creaturePath . '/play', [
-            '_csrf_token' => tokenFrom($creaturePath . '/play'),
+            '_csrf_token' => tokenIn($oneShotPage['body'] ?? ''),
             'choice' => '0',
         ]);
         check(
@@ -1157,6 +1172,49 @@ check('dismissing says what happened', str_contains($afterDismiss['body'], 'Dism
 check(
     'and the report is out of the queue',
     !str_contains(request('/admin/reports')['body'], '/admin/reports/' . ($reportMatch[1] ?? '?') . '/dismiss')
+);
+
+// ---------------------------------------------------------------------------
+// Settings & maintenance (M2.8)
+//
+// Change a real setting through the real form, watch a real player page
+// obey it, and put it back. The chosen knob (searches per visit) is one
+// whose drift would be harmless if a crashed run ever left it changed.
+// ---------------------------------------------------------------------------
+
+echo "\nSettings & maintenance:\n";
+
+$settingsPage = request('/admin/settings');
+check('the settings screen renders with its sources', str_contains($settingsPage['body'], 'built-in'));
+
+request('/admin/settings/explore_clicks_per_visit', [
+    '_csrf_token' => tokenIn($settingsPage['body']),
+    'value' => '7',
+]);
+check(
+    'the changed setting reaches a real player page',
+    str_contains(request('/explore/whispering-wood')['body'], 'Searches left this visit: <b>7</b>')
+        || str_contains(request('/explore/whispering-wood')['body'], '7')
+);
+check('the screen now says the value was changed here', str_contains(request('/admin/settings')['body'], 'changed here'));
+
+$refusedSetting = request('/admin/settings/explore_clicks_per_visit', [
+    '_csrf_token' => tokenIn($settingsPage['body']),
+    'value' => '999',
+]);
+check('an out-of-bounds value is refused with its range', str_contains($refusedSetting['body'], 'goes from'));
+
+request('/admin/settings/explore_clicks_per_visit/reset', ['_csrf_token' => tokenIn($settingsPage['body'])]);
+check(
+    'reset returns the built-in value to the real page',
+    str_contains(request('/explore/whispering-wood')['body'], '5')
+);
+
+// The art backup streams a real ZIP (or says honestly the store is empty).
+$backup = request('/admin/maintenance/art-backup');
+check(
+    'the art backup is a real ZIP (or an honest empty-store answer)',
+    str_starts_with($backup['body'], 'PK') || str_contains($backup['body'], 'empty')
 );
 
 // ---------------------------------------------------------------------------

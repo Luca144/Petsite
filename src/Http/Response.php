@@ -52,6 +52,28 @@ final class Response
     }
 
     /**
+     * Make a file-download response. The body stays EMPTY and the file is
+     * streamed straight from disk in send() — the art backup (M2.8) can be
+     * hundreds of megabytes, and pulling that into a PHP string first
+     * would be a memory bomb. $downloadName is what the browser saves it
+     * as; it is our own generated name, never user input.
+     */
+    public static function fileDownload(string $filePath, string $downloadName): self
+    {
+        $response = new self('', 200, [
+            'Content-Type' => 'application/octet-stream',
+            'Content-Disposition' => 'attachment; filename="' . $downloadName . '"',
+            'Content-Length' => (string) (filesize($filePath) ?: 0),
+        ]);
+        $response->filePath = $filePath;
+
+        return $response;
+    }
+
+    // Set only by fileDownload(); send() streams this instead of the body.
+    private ?string $filePath = null;
+
+    /**
      * Emit this response to the browser: status code, then headers, then body.
      * This is the only method that actually produces output, and it is called
      * once, from the front controller.
@@ -64,7 +86,21 @@ final class Response
             header($name . ': ' . $value);
         }
 
+        if ($this->filePath !== null) {
+            // Stream from disk in chunks (see fileDownload). readfile() does
+            // exactly that without buffering the whole file.
+            readfile($this->filePath);
+
+            return;
+        }
+
         echo $this->body;
+    }
+
+    /** The file this response streams, if it is a download (for tests). */
+    public function downloadPath(): ?string
+    {
+        return $this->filePath;
     }
 
     // --- Read-only accessors, used mainly by tests to check what was returned. ---

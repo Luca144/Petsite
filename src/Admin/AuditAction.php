@@ -84,6 +84,12 @@ enum AuditAction: string
     case PlayerSuspended = 'player.suspended';
     case PlayerUnsuspended = 'player.unsuspended';
 
+    // Settings & maintenance (M2.8).
+    case SettingChanged = 'setting.changed';
+    case SettingReset = 'setting.reset';
+    case RateLimitsCleared = 'maintenance.rate_limits_cleared';
+    case ArtBackupDownloaded = 'maintenance.art_backup_downloaded';
+
     /**
      * What a person reading the audit page sees, in plain words.
      */
@@ -128,6 +134,10 @@ enum AuditAction: string
             self::PlayerUnmuted => 'lifted a player\'s mute',
             self::PlayerSuspended => 'suspended an account for a while',
             self::PlayerUnsuspended => 'lifted an account\'s suspension',
+            self::SettingChanged => 'changed a site setting',
+            self::SettingReset => 'put a site setting back to its built-in value',
+            self::RateLimitsCleared => 'cleared the rate-limit slate',
+            self::ArtBackupDownloaded => 'downloaded the art backup',
         };
     }
 }

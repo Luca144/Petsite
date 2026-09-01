@@ -132,8 +132,8 @@ final class AdminHomeController
             $sections[] = [
                 'title' => 'Settings & maintenance',
                 'sentence' => 'The game\'s tunable numbers, and the named maintenance buttons.',
-                'href' => null,
-                'arrives' => 'M2.8',
+                'href' => '/admin/settings',
+                'arrives' => null,
             ];
         }
 

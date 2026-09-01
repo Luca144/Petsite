@@ -521,6 +521,21 @@ player is told what happened, not who did it; the audit log carries who.
 
 Index: `(user_id, read_at)` — the every-page "any unread notices?" query.
 
+### `site_settings` — the panel's overrides on config (M2.8)
+Config stays where every tunable value is DEFINED, explained and
+defaulted; this table holds only what the panel CHANGED. A missing row
+means "the built-in value", so deleting a row is the reset button.
+`setting_key` is a catalog key from the fixed allow-list in
+`SettingsCatalog` — never a config path; unknown keys and out-of-bounds
+values in this table are ignored on read, so the table cannot smuggle
+what the settings form refuses.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `setting_key` | varchar(60), PRIMARY KEY | The catalog key, e.g. `xp_per_level`. |
+| `value` | text, NOT NULL | JSON — a number, a bool, or a word list ride the same column. |
+| `updated_at` | datetime, NOT NULL | When it was last changed. |
+
 ## What is intentionally NOT here (yet)
 
 These are future extensions for the successor to build on this foundation; they

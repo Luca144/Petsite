@@ -2203,3 +2203,39 @@ unhides, forced skeleton, duration allow-list, self/staff refusals),
 suspended login refused without becoming an oracle, notice ack is
 own-only), a muted-about test in `ProfileControllerTest`, and 13 new gate
 matrix routes.
+
+## Increment M2.8 — Site settings and safe maintenance
+
+Plan: `docs/plan/2026-09-01-m2-8-build-plan.md`. The Coder role's screen.
+
+**Settings are a database override on config**, never a replacement:
+`SettingsCatalog` (the fixed allow-list — path, type, bounds, and the
+plain-words explanation the screen shows) + `SiteSettingsRepository`
+(the tiny JSON key/value table) + one merge in the front controller,
+right after the migration guard, so every consumer keeps reading plain
+config arrays. Bounds hold at save AND at read: a row planted straight
+into the table that fails validation is ignored. The blocklist may
+shrink but never be emptied. **To make another value editable: add a
+catalog entry — nothing else.** There is deliberately no free-form key
+editor; that is a slower query console, and the rule against those is
+absolute.
+
+**Maintenance is named buttons only**: the art backup (one ZIP of the
+whole store, streamed via the new `Response::fileDownload` so a
+500 MB store never passes through a PHP string — and BACKUP-CRITICAL:
+the Railway volume has no platform backups, this button is the backup
+story), and clear-the-rate-limit-slate (confirmed with a ticked box,
+`RateLimitRepository::clearAll`). Both audited, like every setting
+change (before/after per change).
+
+**Screens/routes**: `/admin/settings` (+ per-key save/reset),
+`/admin/maintenance/clear-rate-limits`, `/admin/maintenance/art-backup`
+— all Role::Coder, all in the gate matrix. The screen also shows how
+full the art volume is against its warning line.
+
+**Tests**: `SettingsTest` — the read-path effect (a changed number
+reaches merged config; registration off reaches `app.registration_open`),
+bounds refused at save, catalog-only keys, blocklist never empty, reset,
+planted-row ignored, the confirm-tick on clearing. The smoke test turns
+a real knob (searches per visit), watches the real explore page obey,
+and puts it back.

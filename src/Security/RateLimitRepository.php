@@ -67,4 +67,15 @@ final class RateLimitRepository
             ':identifier' => $identifier,
         ]);
     }
+
+    /**
+     * Empty the whole slate — the named maintenance button (M2.8), for
+     * the day somebody rate-limits themselves out while testing. Returns
+     * how many counters were cleared, for the confirmation sentence.
+     * Deletes only throttle bookkeeping; no game data lives here.
+     */
+    public function clearAll(): int
+    {
+        return (int) $this->connection->exec('DELETE FROM rate_limit_hits');
+    }
 }

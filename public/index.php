@@ -26,6 +26,8 @@ use Felkyo\Admin\RoleAssignmentService;
 use Felkyo\Admin\RoleRepository;
 use Felkyo\Admin\SecondFactorRepository;
 use Felkyo\Admin\Totp;
+use Felkyo\Admin\SettingsCatalog;
+use Felkyo\Admin\SiteSettingsRepository;
 use Felkyo\Admin\UnfinishedListService;
 use Felkyo\Moderation\ModerationRepository;
 use Felkyo\Moderation\ModerationService;
@@ -84,6 +86,7 @@ use Felkyo\Exploration\ExplorationRepository;
 use Felkyo\Exploration\LootLineParser;
 use Felkyo\Http\Controllers\AdminAreaEditController;
 use Felkyo\Http\Controllers\AdminAreasController;
+use Felkyo\Http\Controllers\AdminSettingsController;
 use Felkyo\Http\Controllers\AdminUnfinishedController;
 use Felkyo\Http\Controllers\AdminReportsController;
 use Felkyo\Http\Controllers\AdminAccountController;
@@ -208,6 +211,18 @@ if ($pendingMigrations > 0) {
         . '</body></html>';
     exit;
 }
+
+// ---- Panel-tuned settings lie over config from here on (M2.8) ----
+//
+// Config stays where every value is DEFINED and explained; the panel's
+// changes are OVERRIDES from the site_settings table, merged here so
+// everything below keeps reading plain config arrays. The catalog
+// re-validates every stored value, so a bad row is ignored, never
+// applied. (This runs after the migration guard above, so the table is
+// guaranteed to exist by the time it is read.)
+$settingsCatalog = new SettingsCatalog();
+$siteSettingsRepository = new SiteSettingsRepository($pdo);
+$config = $settingsCatalog->apply($config, $siteSettingsRepository->overrides());
 
 // ---- Uploaded pictures are served HERE, before anything else is built ----
 //
@@ -853,6 +868,14 @@ $noticeController = new NoticeController(
     $session, $csrf, $noticeRepository, $rateLimiter, $config['security']['rate_limit_notice_ack']
 );
 
+// Settings & maintenance (M2.8): the Coder's screen. It gets the LIVE
+// (already-overridden) config so it shows each setting's honest value.
+$adminSettingsController = new AdminSettingsController(
+    $templates, $session, $csrf, $userRepository, $settingsCatalog, $siteSettingsRepository,
+    $rateLimitRepository, $auditLogRepository, $rateLimiter,
+    $config['security']['rate_limit_settings'], $config
+);
+
 // ---- Routes ----
 $router = new Router();
 
@@ -961,6 +984,12 @@ $router->post('/admin/accounts/{id}/unmute', $adminGate->protect(Role::Moderator
 $router->post('/admin/accounts/{id}/unsuspend', $adminGate->protect(Role::Moderator, [$adminAccountController, 'unsuspend']));
 // The player's one notice action: "I've read this."
 $router->post('/notices/{id}/read', [$noticeController, 'acknowledge']);
+// Settings & maintenance (M2.8), behind the most technical role.
+$router->get('/admin/settings', $adminGate->protect(Role::Coder, [$adminSettingsController, 'show']));
+$router->post('/admin/settings/{key}', $adminGate->protect(Role::Coder, [$adminSettingsController, 'save']));
+$router->post('/admin/settings/{key}/reset', $adminGate->protect(Role::Coder, [$adminSettingsController, 'reset']));
+$router->post('/admin/maintenance/clear-rate-limits', $adminGate->protect(Role::Coder, [$adminSettingsController, 'clearRateLimits']));
+$router->get('/admin/maintenance/art-backup', $adminGate->protect(Role::Coder, [$adminSettingsController, 'artBackup']));
 $router->get('/admin/areas', $adminGate->protect(Role::Artist, [$adminAreasController, 'show']));
 $router->post('/admin/areas/create', $adminGate->protect(Role::Artist, [$adminAreasController, 'create']));
 $router->get('/admin/areas/{id}', $adminGate->protect(Role::Artist, [$adminAreaEditController, 'show']));

@@ -249,6 +249,13 @@ password and reports what it did.
 
 ### Backups — what Railway actually does
 
+> **Since M2.8 the ART has its own backup button**: Panel → Settings &
+> maintenance → *Download the backup* bundles every uploaded picture
+> into one ZIP. The art volume has NO platform backups on this plan, so
+> that button is the art's whole backup story — press it after big art
+> days and keep the file somewhere safe. Everything below is about the
+> DATABASE, which is a separate concern.
+
 **The short version: Railway does not back your database up unless you tell it to.**
 Backups exist, but they are a *schedule you switch on per volume*, not something that
 happens quietly in the background because you are paying. Assuming otherwise is the
