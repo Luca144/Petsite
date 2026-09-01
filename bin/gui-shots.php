@@ -312,6 +312,32 @@ $fetch('/admin/areas/' . $shotAreaId . '/picture', [
     '_csrf_token' => $token($areaPicker),
     'art_id' => $sceneM[1] ?? '0',
 ]);
+// ---- Moderation (M2.7): a real notice, a real queue row, then tidy ----
+// The shot account's own id, read from the database it was just made in.
+$shotUserId = (int) $pdo->query("SELECT id FROM users WHERE username = " . $pdo->quote($name))->fetchColumn();
+// A notice card on the home page: sent directly (the panel refuses to
+// moderate staff, and the shot account IS staff), removed after the shot.
+$pdo->prepare('INSERT INTO moderation_notices (user_id, kind) VALUES (?, ?)')->execute([$shotUserId, 'warned']);
+$save('home-with-notice', $fetch('/'));
+$pdo->prepare('DELETE FROM moderation_notices WHERE user_id = ?')->execute([$shotUserId]);
+// A queue with one real row: any two other accounts stand in as reporter
+// and reported (dev databases have plenty); the row is removed after.
+$standIns = $pdo->query(
+    "SELECT u.id FROM users u LEFT JOIN user_roles r ON r.user_id = u.id
+      WHERE r.user_id IS NULL AND u.id <> {$shotUserId} ORDER BY u.id LIMIT 2"
+)->fetchAll(PDO::FETCH_COLUMN);
+if (count($standIns) === 2) {
+    $pdo->prepare(
+        "INSERT INTO reports (reporter_user_id, subject_type, subject_id, about_user_id, category, priority, status)
+         VALUES (?, 'username', ?, ?, 'rude_words', 4, 'open')"
+    )->execute([$standIns[0], $standIns[1], $standIns[1]]);
+    $save('admin-reports', $fetch('/admin/reports'));
+    $pdo->exec("DELETE FROM reports WHERE reporter_user_id = {$standIns[0]} AND subject_id = {$standIns[1]} AND status = 'open'");
+    $save('admin-account', $fetch('/admin/accounts/' . $standIns[1]));
+} else {
+    $save('admin-reports', $fetch('/admin/reports')); // the honest empty queue
+}
+
 $save('admin-unfinished', $fetch('/admin/unfinished')); // the M2.6 list
 $save('admin-areas', $fetch('/admin/areas'));
 $save('admin-area-edit', $fetch('/admin/areas/' . $shotAreaId));

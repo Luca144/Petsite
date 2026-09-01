@@ -9,6 +9,7 @@ use Felkyo\Auth\Session;
 use Felkyo\Http\Csrf;
 use Felkyo\Http\Request;
 use Felkyo\Http\Response;
+use Felkyo\Moderation\ModerationRepository;
 use Felkyo\Security\RateLimiter;
 use Felkyo\Users\UserRepository;
 use League\Plates\Engine;
@@ -30,6 +31,7 @@ final class LoginController
         private Session $session,
         private Authenticator $authenticator,
         private UserRepository $users,
+        private ModerationRepository $moderation,
         private RateLimiter $rateLimiter,
         private array $securityConfig,
     ) {
@@ -90,6 +92,24 @@ final class LoginController
                 ['The username or password is incorrect.'],
                 $request,
                 401
+            );
+        }
+
+        // 3½. A suspended account cannot log in (M2.7). Checked AFTER the
+        // password, so only the account's real owner ever learns of the
+        // suspension — to anyone else, wrong-password and suspended look
+        // identical. The dates and the appeal address are named plainly:
+        // a pause with no end and no door is a dead end (golden rule 3).
+        $state = $this->moderation->stateFor($user->id);
+        if ($state['is_suspended']) {
+            return $this->renderForm(
+                [sprintf(
+                    'This account is paused until %s. If you think this is a mistake, write to %s — a person will read it.',
+                    substr((string) $state['suspended_until'], 0, 10),
+                    $this->securityConfig['moderation']['appeal_email']
+                )],
+                $request,
+                403
             );
         }
 

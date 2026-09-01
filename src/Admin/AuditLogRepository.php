@@ -83,4 +83,34 @@ final class AuditLogRepository
 
         return $statement->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Every logged action ABOUT one player's account, newest first — the
+     * moderation half of the account-history page (M2.7). Same row shape
+     * as recent(), so the templates read both the same way.
+     *
+     * Only subject_type='user' rows: actions on a player's CREATURES are
+     * found through the reports beside them on that page, and mixing
+     * subject kinds here would double-count what the page already shows.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function aboutUser(int $userId, int $limit = 100): array
+    {
+        $limit = max(1, min(500, $limit));
+
+        $statement = $this->connection->prepare(
+            'SELECT a.actor_user_id, u.username AS actor_username, a.action,
+                    a.subject_type, a.subject_id, a.detail_before, a.detail_after,
+                    a.ip, a.created_at
+               FROM admin_audit_log a
+               LEFT JOIN users u ON u.id = a.actor_user_id
+              WHERE a.subject_type = \'user\' AND a.subject_id = :user
+              ORDER BY a.created_at DESC, a.id DESC
+              LIMIT ' . $limit
+        );
+        $statement->execute([':user' => $userId]);
+
+        return $statement->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

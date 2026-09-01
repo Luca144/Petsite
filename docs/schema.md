@@ -492,6 +492,35 @@ weight ≥ 1), so the reward roll never divides by zero.
 | `message` | varchar(200), NOT NULL | What the player reads. |
 | `position` | smallint unsigned, NOT NULL | The table's line order. |
 
+### Moderation's additions (M2.7)
+
+**`users` gained** `muted_until` and `suspended_until` (both datetime,
+NULL). NULL is good standing; a time in the past has expired on its own —
+every timed state has a built-in end, so a forgotten mute cannot quietly
+become forever. Muting pauses NEW free text only (bios, about texts,
+names, guestbook signing — enforced where those forms land, via
+`MutedVoice`); suspension refuses login and ends a live session at its
+next request (checked in the front controller).
+
+### `moderation_notices` — the one-way channel (M2.7)
+Official notices to players: a card at the top of every page until
+acknowledged. `kind` is a TEMPLATE KEY (the words live in
+`ModerationNotice`, written once and calmly) — never typed text, so even
+staff have no free-text channel to a player. `detail` is machine-formatted
+(today: the until-date on timed states). No staff id on the row: the
+player is told what happened, not who did it; the audit log carries who.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | int unsigned | Primary key. |
+| `user_id` | int unsigned, NOT NULL, FK → `users.id` (CASCADE) | Who it is for. |
+| `kind` | varchar(40), NOT NULL | The template key, e.g. `bio_removed`. Unknown keys render a safe generic card. |
+| `detail` | varchar(60), NULL | Machine-formatted detail (a date). Never typed input. |
+| `created_at` | timestamp, NOT NULL | |
+| `read_at` | datetime, NULL | When "I've read this" was pressed. NULL = the card still shows. Kept, not deleted, so account history can show what was said. |
+
+Index: `(user_id, read_at)` — the every-page "any unread notices?" query.
+
 ## What is intentionally NOT here (yet)
 
 These are future extensions for the successor to build on this foundation; they

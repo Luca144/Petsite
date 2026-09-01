@@ -274,6 +274,32 @@ return [
                                       // generous for a person, slow for a
                                       // script trying to fill the disk.
         ],
+        'rate_limit_moderation' => [
+            'max_attempts' => 60,     // 60 moderation actions...
+            'window_seconds' => 3600, // ...per hour, per moderator. A busy
+                                      // evening of queue-clearing fits; a
+                                      // script mass-actioning accounts does
+                                      // not — and a burst here is an
+                                      // incident to read in the audit log.
+        ],
+        'rate_limit_notice_ack' => [
+            'max_attempts' => 30,     // 30 "I've read this" clicks...
+            'window_seconds' => 3600, // ...per hour, per player. Nobody has
+                                      // thirty unread notices; a script
+                                      // probing notice ids does.
+        ],
+
+        // Moderation's own knobs (M2.7). The forced names are OUR words —
+        // a moderator never types a name — and the durations are a fixed
+        // offer, so there is no number to fat-finger.
+        'moderation' => [
+            'neutral_player_prefix' => 'Wanderer',  // + the account id, e.g. Wanderer4821
+            'neutral_creature_name' => 'Little One',
+            'timeout_days' => [1, 7, 30],           // the offered mute/suspend lengths
+            // Where appeals go — named on every notice card. SET THIS to the
+            // real team address before moderation is used in anger.
+            'appeal_email' => 'team@felkyo.example',
+        ],
     ],
 
     // Pictures uploaded through the creator's panel (M2.2). Where they live

@@ -53,7 +53,9 @@ final class BioControllerTest extends DatabaseTestCase
         $rateLimiter = new RateLimiter(new RateLimitRepository($this->connection));
 
         $controller = new BioController(
-            $session, $this->csrf, $this->creatures, $bioService, $rateLimiter,
+            $session, $this->csrf, $this->creatures, $bioService,
+            new \Felkyo\Moderation\MutedVoice(new \Felkyo\Moderation\ModerationRepository($this->connection)),
+            $rateLimiter,
             $config['security']['rate_limit_bio']
         );
 

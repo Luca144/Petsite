@@ -158,3 +158,10 @@ rather than adding it quietly. Concretely:
 3. Add a `ReportSubject` case, and answer `hidesUntilReviewed()` deliberately.
 4. Put a report link beside it wherever it is shown.
 5. Add its innocent cases to `TextSafetyTest` — not only its refusals.
+6. Ask `MutedVoice->refusalFor()` in its controller before saving (M2.7):
+   muting works only if EVERY free-text door checks it, and yours is the
+   door most likely to be forgotten, being the newest.
+
+*(The requirement above was met in M2.7: the queue shows each reporter's
+dismissal record on every row, and the account-history page counts their
+reports by outcome.)*

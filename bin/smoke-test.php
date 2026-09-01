@@ -1096,6 +1096,70 @@ check(
 );
 
 // ---------------------------------------------------------------------------
+// Moderation (M2.7)
+//
+// The queue and the account-history page render over real HTTP, and the
+// self-moderation guard refuses through the real form — the deeper flows
+// (dismiss/rename/mute and the notices) live in the integration tests,
+// which build their own players to act on.
+// ---------------------------------------------------------------------------
+
+echo "\nModeration:\n";
+
+// The whole loop, through the real forms: a report filed the way a player
+// files one, the queue showing it, the account page reached through the
+// queue's own link, and dismiss tidying it all away again.
+preg_match('~/creature/(\d+)~', $creaturePath, $ownMatch);
+$ownCreatureId = (int) ($ownMatch[1] ?? 0);
+
+// Reporting something of your OWN is refused kindly — the button's most
+// common misunderstanding, answered without filing anything.
+$ownReportPage = request('/report/creature_name/' . $ownCreatureId);
+$selfReport = request('/report', [
+    '_csrf_token' => tokenIn($ownReportPage['body']),
+    'subject' => 'creature_name', 'subject_id' => (string) $ownCreatureId,
+    'reason' => 'rude_words',
+]);
+check('reporting your own creature is refused kindly', str_contains($selfReport['body'], 'yours'));
+
+// Somebody else's creature (earlier runs leave plenty behind on purpose).
+preg_match_all('~/creature/(\d+)~', request('/browse')['body'], $browseMatches);
+$reportedId = null;
+foreach (array_unique($browseMatches[1]) as $candidateId) {
+    if ((int) $candidateId !== $ownCreatureId) {
+        $reportedId = (int) $candidateId;
+        break;
+    }
+}
+check('somebody else\'s creature is there to report', $reportedId !== null);
+
+$reportPage = request('/report/creature_name/' . $reportedId);
+request('/report', [
+    '_csrf_token' => tokenIn($reportPage['body']),
+    'subject' => 'creature_name', 'subject_id' => (string) $reportedId,
+    'reason' => 'rude_words',
+]);
+
+$queuePage = request('/admin/reports');
+check('the filed report is in the queue with its reason', str_contains($queuePage['body'], 'rude word'));
+preg_match('~/admin/accounts/(\d+)~', $queuePage['body'], $accountMatch);
+preg_match('~/admin/reports/(\d+)/dismiss~', $queuePage['body'], $reportMatch);
+check('the queue links to the account behind the report', isset($accountMatch[1]));
+
+$accountPage = request('/admin/accounts/' . ($accountMatch[1] ?? '0'));
+check('the account-history page renders', str_contains($accountPage['body'], 'Account #' . ($accountMatch[1] ?? '?')));
+
+// Dismiss through the real form — which is also the tidy-up.
+$afterDismiss = request('/admin/reports/' . ($reportMatch[1] ?? '0') . '/dismiss', [
+    '_csrf_token' => tokenIn($queuePage['body']),
+]);
+check('dismissing says what happened', str_contains($afterDismiss['body'], 'Dismissed'));
+check(
+    'and the report is out of the queue',
+    !str_contains(request('/admin/reports')['body'], '/admin/reports/' . ($reportMatch[1] ?? '?') . '/dismiss')
+);
+
+// ---------------------------------------------------------------------------
 // Logging out
 //
 // This runs LAST, because everything after it would be a logged-out request.

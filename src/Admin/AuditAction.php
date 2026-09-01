@@ -72,6 +72,18 @@ enum AuditAction: string
     case AreaUnpublished = 'area.unpublished';
     case AreaReverted = 'area.reverted';
 
+    // Moderation (M2.7) — the report queue and the account actions.
+    case ReportDismissed = 'report.dismissed';
+    case CreatureTextRemoved = 'creature.text_removed';
+    case PlayerTextRemoved = 'player.text_removed';
+    case CreatureRenamed = 'creature.renamed';
+    case PlayerRenamed = 'player.renamed';
+    case PlayerWarned = 'player.warned';
+    case PlayerMuted = 'player.muted';
+    case PlayerUnmuted = 'player.unmuted';
+    case PlayerSuspended = 'player.suspended';
+    case PlayerUnsuspended = 'player.unsuspended';
+
     /**
      * What a person reading the audit page sees, in plain words.
      */
@@ -106,6 +118,16 @@ enum AuditAction: string
             self::AreaPublished => 'published an area',
             self::AreaUnpublished => 'took an area back to draft',
             self::AreaReverted => 'restored an older version of an area',
+            self::ReportDismissed => 'dismissed a report',
+            self::CreatureTextRemoved => 'removed a creature\'s bio',
+            self::PlayerTextRemoved => 'removed a player\'s about text',
+            self::CreatureRenamed => 'gave a creature a neutral name',
+            self::PlayerRenamed => 'gave a player a neutral name',
+            self::PlayerWarned => 'sent a player a warning notice',
+            self::PlayerMuted => 'muted a player for a while',
+            self::PlayerUnmuted => 'lifted a player\'s mute',
+            self::PlayerSuspended => 'suspended an account for a while',
+            self::PlayerUnsuspended => 'lifted an account\'s suspension',
         };
     }
 }

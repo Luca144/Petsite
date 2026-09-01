@@ -92,6 +92,20 @@ final class AdminGateTest extends DatabaseTestCase
             ['POST', '/admin/shops/999/shelf/1/remove', Role::Artist],
             ['GET', '/admin/shops/999/picture/portrait', Role::Artist],
             ['POST', '/admin/shops/999/picture/portrait', Role::Artist],
+            // Moderation (M2.7): the queue, its actions, account history.
+            ['GET', '/admin/reports', Role::Moderator],
+            ['POST', '/admin/reports/999/dismiss', Role::Moderator],
+            ['POST', '/admin/reports/999/warn', Role::Moderator],
+            ['POST', '/admin/reports/999/remove-text', Role::Moderator],
+            ['POST', '/admin/reports/999/rename', Role::Moderator],
+            ['POST', '/admin/reports/999/mute', Role::Moderator],
+            ['POST', '/admin/reports/999/suspend', Role::Moderator],
+            ['GET', '/admin/accounts/999', Role::Moderator],
+            ['POST', '/admin/accounts/999/warn', Role::Moderator],
+            ['POST', '/admin/accounts/999/mute', Role::Moderator],
+            ['POST', '/admin/accounts/999/suspend', Role::Moderator],
+            ['POST', '/admin/accounts/999/unmute', Role::Moderator],
+            ['POST', '/admin/accounts/999/unsuspend', Role::Moderator],
             // The unfinished list (M2.6).
             ['GET', '/admin/unfinished', Role::Artist],
             // The area editor (M2.5).

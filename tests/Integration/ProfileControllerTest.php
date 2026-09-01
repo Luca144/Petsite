@@ -79,6 +79,7 @@ final class ProfileControllerTest extends DatabaseTestCase
                 $this->moodCalculator()
             ),
             $avatars,
+            new \Felkyo\Moderation\MutedVoice(new \Felkyo\Moderation\ModerationRepository($this->connection)),
             new RateLimiter(new RateLimitRepository($this->connection)),
             $limits,
             ['max_attempts' => 20, 'window_seconds' => 3600]
@@ -215,5 +216,23 @@ final class ProfileControllerTest extends DatabaseTestCase
 
         $this->assertNull($this->profiles->findById($this->miraId)->about, "Mira's page was changed by Rowan.");
         $this->assertSame('Rowan was here', $this->profiles->findById($this->rowanId)->about);
+    }
+    public function testAMutedPlayerCannotSaveNewAboutText(): void
+    {
+        // The about text is one of the free-text doors muting pauses (M2.7).
+        $_SESSION["user_id"] = $this->miraId;
+        (new \Felkyo\Moderation\ModerationRepository($this->connection))
+            ->setMutedUntil($this->miraId, date("Y-m-d H:i:s", time() + 3600));
+
+        $this->router->dispatch(new Request("POST", "/profile", [
+            "_csrf_token" => $this->token(),
+            "avatar_key" => "default",
+            "about" => "words while muted",
+            "is_findable" => "yes",
+        ], "127.0.0.1"));
+
+        $this->assertStringContainsString("paused", $_SESSION["flash"] ?? "");
+        $this->assertNotSame("words while muted", $this->profiles->findById($this->miraId)?->about,
+            "the about text must not change while muted");
     }
 }

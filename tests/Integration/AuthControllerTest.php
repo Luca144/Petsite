@@ -89,7 +89,8 @@ final class AuthControllerTest extends DatabaseTestCase
             $security, true
         );
         $loginController = new LoginController(
-            $templates, $this->csrf, $this->session, $authenticator, $this->users, $rateLimiter, $security
+            $templates, $this->csrf, $this->session, $authenticator, $this->users,
+            new \Felkyo\Moderation\ModerationRepository($this->connection), $rateLimiter, $security
         );
         $logoutController = new LogoutController($this->session, $this->csrf);
 

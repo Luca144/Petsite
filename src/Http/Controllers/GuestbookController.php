@@ -11,6 +11,7 @@ use Felkyo\Guestbook\GuestbookService;
 use Felkyo\Http\Csrf;
 use Felkyo\Http\Request;
 use Felkyo\Http\Response;
+use Felkyo\Moderation\MutedVoice;
 use Felkyo\Security\RateLimiter;
 
 /**
@@ -40,6 +41,7 @@ final class GuestbookController
         private CreatureRepository $creatures,
         private GuestbookService $guestbook,
         private GuestbookRepository $guestbookEntries,
+        private MutedVoice $mutedVoice,
         private RateLimiter $rateLimiter,
         private array $rateLimit,
     ) {
@@ -74,6 +76,17 @@ final class GuestbookController
         // send them to the home page rather than confirm the creature exists.
         if (!$creature->isPublic && $creature->ownerId !== $userId) {
             return Response::redirect('/');
+        }
+
+        // A muted player may not write new words (M2.7) — and signing IS
+        // words in front of another player, even chosen from our list: the
+        // harassment a guestbook can carry is the pattern of who keeps
+        // signing. Same check, same sentence as every free-text door.
+        $mutedWords = $this->mutedVoice->refusalFor($userId);
+        if ($mutedWords !== null) {
+            $this->session->flash($mutedWords);
+
+            return Response::redirect($creaturePath);
         }
 
         // Anti-abuse limit per IP. The one-entry-per-creature rule is the real

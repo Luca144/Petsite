@@ -62,6 +62,7 @@ final class GuestbookControllerTest extends DatabaseTestCase
             $creatures,
             $service,
             $this->entries,
+            new \Felkyo\Moderation\MutedVoice(new \Felkyo\Moderation\ModerationRepository($this->connection)),
             new RateLimiter(new RateLimitRepository($this->connection)),
             ['max_attempts' => 20, 'window_seconds' => 3600]
         );

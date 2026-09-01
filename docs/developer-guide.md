@@ -2152,3 +2152,54 @@ are never truncated, so other tests' drafts are on the list too, and a
 page-wide substring check would pass on their account. The smoke test
 checks the list points at the draft item the M2.4 chapter leaves behind —
 real state, not fixture state.
+
+## Increment M2.7 — Moderation tools
+
+Plan: `docs/plan/2026-08-31-m2-7-build-plan.md`. The Moderator role gets
+its tools; the most security-sensitive increment since M2.1.
+
+**The Moderation namespace** (`src/Moderation/`): `ModerationRepository`
+(all the SQL a moderator can reach — deliberately reaching into users/
+creatures/reports directly, so every override lives in one reviewable
+file, apart from the player-facing code paths), `ModerationService`
+(every action, one shape: guard → one transaction holding the change +
+the notice + the audit row + closing the answering report),
+`NoticeRepository` + `ModerationNotice` (the one-way channel; words are
+fixed templates keyed by `kind`, never typed — see the migration's
+notes), and `MutedVoice` (the one question every free-text door asks).
+
+**Two guards on every action**: nobody moderates themselves, and nobody
+moderates STAFF (a moderator muting the owner would be escalation by the
+side door — staff matters go through the roles screen). Forced names are
+config words (`security.moderation`), never typed; renaming a player
+updates the impersonation skeleton with the name.
+
+**The queue** (`/admin/reports`, Role::Moderator) derives every action's
+target from the report SERVER-SIDE — the forms post no target ids. Each
+row shows the reported words (staff see hidden text; judging it is the
+job), the distinct-voices count, and the reporter's own dismissal record
+(the spite-report signal the M1.6 report design required this queue to
+surface). **Account history** (`/admin/accounts/{id}`) is the pattern
+view: reports about and by them, creatures with bios, guestbooks signed
+(`guestbookEntriesBy`), notices sent, and the audit rows about them
+(`AuditLogRepository::aboutUser`).
+
+**Enforcement**: mute is checked in the four controllers that accept
+free text (bio, about, creature rename, guestbook signing) via
+`MutedVoice->refusalFor()` — A NEW FREE-TEXT FEATURE MUST ADD THIS CHECK;
+this sentence is the reminder. Suspension refuses login (after the
+password check, so it is not an account oracle) and ends a live session
+in the front controller before dispatch. Both states are timed and read
+fresh — expiry needs nobody.
+
+**Notices to players**: unread ones render above the flash on every page
+(layout.php) until acknowledged (`POST /notices/{id}/read` — own-row SQL,
+CSRF, rate-limited). The appeal address on every card comes from
+`security.moderation.appeal_email` — **set the real team address there**.
+
+**Tests**: `ModerationActionsTest` (each action + audit + notices, dismiss
+unhides, forced skeleton, duration allow-list, self/staff refusals),
+`ModerationEnforcementTest` (each muted door refuses, expiry self-lifts,
+suspended login refused without becoming an oracle, notice ack is
+own-only), a muted-about test in `ProfileControllerTest`, and 13 new gate
+matrix routes.

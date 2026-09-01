@@ -10,6 +10,7 @@ use Felkyo\Creatures\CreatureRepository;
 use Felkyo\Http\Csrf;
 use Felkyo\Http\Request;
 use Felkyo\Http\Response;
+use Felkyo\Moderation\MutedVoice;
 use Felkyo\Security\RateLimiter;
 use Felkyo\Users\AvatarSet;
 use Felkyo\Users\ProfileRepository;
@@ -46,6 +47,7 @@ final class ProfileController
         private CreatureRepository $creatures,
         private CreatureProfileBuilder $creatureProfiles,
         private AvatarSet $avatars,
+        private MutedVoice $mutedVoice,
         private RateLimiter $rateLimiter,
         private array $limits,
         private array $rateLimit,
@@ -142,6 +144,15 @@ final class ProfileController
             return Response::redirect('/profile/edit');
         }
         $this->rateLimiter->record('profile', $request->clientIp());
+
+        // A muted player may not write new words (M2.7) — the about text is
+        // one of the free-text doors. Same check, same sentence everywhere.
+        $mutedWords = $this->mutedVoice->refusalFor($userId);
+        if ($mutedWords !== null) {
+            $this->session->flash($mutedWords);
+
+            return Response::redirect('/profile/edit');
+        }
 
         $appearance = $this->profileService->saveAppearance(
             $userId,

@@ -10,6 +10,7 @@ use Felkyo\Creatures\CreatureRepository;
 use Felkyo\Http\Csrf;
 use Felkyo\Http\Request;
 use Felkyo\Http\Response;
+use Felkyo\Moderation\MutedVoice;
 use Felkyo\Security\RateLimiter;
 
 /**
@@ -32,6 +33,7 @@ final class BioController
         private Csrf $csrf,
         private CreatureRepository $creatures,
         private CreatureBioService $bioService,
+        private MutedVoice $mutedVoice,
         private RateLimiter $rateLimiter,
         private array $rateLimit,
     ) {
@@ -57,6 +59,15 @@ final class BioController
         $creature = $this->creatures->findById($creatureId);
         if ($creature === null) {
             return Response::redirect('/');
+        }
+
+        // A muted player may not write new words (M2.7). The same check, with
+        // the same kind sentence, guards every free-text door — see MutedVoice.
+        $mutedWords = $this->mutedVoice->refusalFor($userId);
+        if ($mutedWords !== null) {
+            $this->session->flash($mutedWords);
+
+            return Response::redirect($creaturePath);
         }
 
         // Only the owner may edit the bio. Anyone else is refused.

@@ -142,6 +142,18 @@ use Felkyo\Http\AssetUrl;
 
             <!-- The page's own content is dropped in here. -->
             <main id="main">
+                <?php foreach ($unreadNotices ?? [] as $notice): ?>
+                    <?php /* Official notices (M2.7) — the one-way channel. They
+                             sit ABOVE the flash and on every page until the
+                             player presses "I've read this": a notice is the
+                             site formally telling somebody something, and a
+                             card that can be scrolled past unseen would be the
+                             silence-or-suspension gap all over again. */ ?>
+                    <?= $this->insert('partials/notice-card', [
+                        'notice' => $notice,
+                        'appealEmail' => $appealEmail ?? '',
+                    ]) ?>
+                <?php endforeach; ?>
                 <?php if (!empty($flash)): ?>
                     <?php /* The one-time message from whatever just happened, shown
                              for EVERY page rather than by each page separately.

@@ -10,6 +10,7 @@ use Felkyo\Creatures\CreatureRepository;
 use Felkyo\Http\Csrf;
 use Felkyo\Http\Request;
 use Felkyo\Http\Response;
+use Felkyo\Moderation\MutedVoice;
 use Felkyo\Security\RateLimiter;
 
 /**
@@ -30,6 +31,7 @@ final class CreatureRenameController
         private Csrf $csrf,
         private CreatureRepository $creatures,
         private ContentFilter $filter,
+        private MutedVoice $mutedVoice,
         private RateLimiter $rateLimiter,
         private array $rateLimitConfig,
         private int $maxNameLength,
@@ -81,6 +83,15 @@ final class CreatureRenameController
             return Response::redirect($creaturePath);
         }
         $this->rateLimiter->record('rename', $request->clientIp());
+
+        // A muted player may not write new words (M2.7) — a name is words in
+        // front of every other player. Same check, same sentence everywhere.
+        $mutedWords = $this->mutedVoice->refusalFor($userId);
+        if ($mutedWords !== null) {
+            $this->session->flash($mutedWords);
+
+            return Response::redirect($creaturePath);
+        }
 
         // Validate the new name: not empty, not too long.
         $newName = trim((string) $request->input('name'));

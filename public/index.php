@@ -27,6 +27,10 @@ use Felkyo\Admin\RoleRepository;
 use Felkyo\Admin\SecondFactorRepository;
 use Felkyo\Admin\Totp;
 use Felkyo\Admin\UnfinishedListService;
+use Felkyo\Moderation\ModerationRepository;
+use Felkyo\Moderation\ModerationService;
+use Felkyo\Moderation\MutedVoice;
+use Felkyo\Moderation\NoticeRepository;
 use Felkyo\Art\ArtRepository;
 use Felkyo\Art\ArtService;
 use Felkyo\Art\ImageValidator;
@@ -81,6 +85,9 @@ use Felkyo\Exploration\LootLineParser;
 use Felkyo\Http\Controllers\AdminAreaEditController;
 use Felkyo\Http\Controllers\AdminAreasController;
 use Felkyo\Http\Controllers\AdminUnfinishedController;
+use Felkyo\Http\Controllers\AdminReportsController;
+use Felkyo\Http\Controllers\AdminAccountController;
+use Felkyo\Http\Controllers\NoticeController;
 use Felkyo\Exploration\ExplorationService;
 use Felkyo\Exploration\ItemRewardGranter;
 use Felkyo\Exploration\WeightedPicker;
@@ -393,11 +400,27 @@ $explorationService = new ExplorationService(
 // ---- Who is logged in? ----
 // If the session holds a user id, load that user so the layout can greet them and
 // show the log-out control. A guest simply has null here.
+$moderationRepository = new ModerationRepository($pdo);
+$noticeRepository = new NoticeRepository($pdo);
 $currentUser = null;
 $currentUserId = $session->get('user_id');
 if (is_int($currentUserId)) {
     $currentUser = $userRepository->findById($currentUserId);
+
+    // A SUSPENDED account's live session ends here, at its very next
+    // request — before any page or action below can run as them. Checked
+    // fresh every time (M2.7): lifting a suspension works immediately, and
+    // an expired one needs nobody to flip a switch. The login page is
+    // where they land, and it explains the dates when they try to log in.
+    if ($currentUser !== null && $moderationRepository->isSuspended($currentUser->id)) {
+        $session->logout();
+        $currentUser = null;
+    }
 }
+
+// The unread official notices for the top of this player's page (M2.7).
+// One indexed query per logged-in request; empty for almost everyone.
+$unreadNotices = $currentUser !== null ? $noticeRepository->unreadFor($currentUser->id) : [];
 
 // Does the sidebar show the way to the creator's panel? Only for staff. This
 // is CONVENIENCE, not security — the AdminGate re-checks roles on every
@@ -488,6 +511,10 @@ $sidebarOpen = ($_COOKIE['felkyo_sidebar'] ?? 'open') !== 'closed';
 
 // Share these with every template (used by the shared layout's shell).
 $templates->addData([
+    // The official notices (M2.7): cards above the flash until each is
+    // acknowledged, with the appeal address every card names.
+    'unreadNotices' => $unreadNotices,
+    'appealEmail' => $config['security']['moderation']['appeal_email'],
     'flash' => $flash,
     'justPetted' => $justPetted,
     'sidebarOpen' => $sidebarOpen,
@@ -520,7 +547,8 @@ $registerController = new RegisterController(
     $config['security'], $config['app']['registration_open']
 );
 $loginController = new LoginController(
-    $templates, $csrf, $session, $authenticator, $userRepository, $rateLimiter, $config['security']
+    $templates, $csrf, $session, $authenticator, $userRepository, $moderationRepository,
+    $rateLimiter, $config['security']
 );
 $logoutController = new LogoutController($session, $csrf);
 $creatureController = new CreatureController(
@@ -529,14 +557,16 @@ $creatureController = new CreatureController(
     $config['gameplay']['creature_name_max_length']
 );
 $guestbookController = new GuestbookController(
-    $session, $csrf, $creatureRepository, $guestbookService, $guestbookRepository, $rateLimiter,
+    $session, $csrf, $creatureRepository, $guestbookService, $guestbookRepository,
+    new MutedVoice($moderationRepository), $rateLimiter,
     $config['security']['rate_limit_guestbook']
 );
 $petController = new PetController(
     $session, $csrf, $creatureRepository, $pettingService, $rateLimiter, $config['security']['rate_limit_pet']
 );
 $bioController = new BioController(
-    $session, $csrf, $creatureRepository, $creatureBioService, $rateLimiter, $config['security']['rate_limit_bio']
+    $session, $csrf, $creatureRepository, $creatureBioService,
+    new MutedVoice($moderationRepository), $rateLimiter, $config['security']['rate_limit_bio']
 );
 // Renaming reuses the bio rate limit: both are "the owner changing words on their
 // own creature", they happen about as often, and one number is easier to retune
@@ -561,7 +591,8 @@ $feedController = new FeedController(
     $rateLimiter, $config['security']['rate_limit_feed']
 );
 $creatureRenameController = new CreatureRenameController(
-    $session, $csrf, $creatureRepository, new ContentFilter($config['moderation']['blocked_words']), $rateLimiter,
+    $session, $csrf, $creatureRepository, new ContentFilter($config['moderation']['blocked_words']),
+    new MutedVoice($moderationRepository), $rateLimiter,
     $config['security']['rate_limit_bio'],
     $config['gameplay']['creature_name_max_length']
 );
@@ -617,7 +648,8 @@ $profileService = new ProfileService(
 
 $profileController = new ProfileController(
     $templates, $session, $csrf, $profileRepository, $profileService,
-    $creatureRepository, $creatureProfileBuilder, $avatarSet, $rateLimiter,
+    $creatureRepository, $creatureProfileBuilder, $avatarSet,
+    new MutedVoice($moderationRepository), $rateLimiter,
     $config['profile'],
     $config['security']['rate_limit_profile']
 );
@@ -799,6 +831,28 @@ $adminUnfinishedController = new AdminUnfinishedController(
     )
 );
 
+// Moderation (M2.7): the queue's service, the two moderator screens, and
+// the player's notice-acknowledge endpoint. MutedVoice is handed to every
+// controller that accepts free text (bio, about, names, guestbooks).
+$mutedVoice = new MutedVoice($moderationRepository);
+$moderationService = new ModerationService(
+    $pdo, $moderationRepository, $noticeRepository, $auditLogRepository,
+    $roleRepository, $creatureRepository, $profileRepository, $impersonationGuard,
+    $config['security']['moderation']
+);
+$adminReportsController = new AdminReportsController(
+    $templates, $session, $csrf, $userRepository, $moderationService, $moderationRepository,
+    $rateLimiter, $config['security']['rate_limit_moderation'], $config['security']['moderation']
+);
+$adminAccountController = new AdminAccountController(
+    $templates, $session, $csrf, $userRepository, $profileRepository, $creatureRepository,
+    $moderationService, $moderationRepository, $noticeRepository, $auditLogRepository,
+    $rateLimiter, $config['security']['rate_limit_moderation'], $config['security']['moderation']
+);
+$noticeController = new NoticeController(
+    $session, $csrf, $noticeRepository, $rateLimiter, $config['security']['rate_limit_notice_ack']
+);
+
 // ---- Routes ----
 $router = new Router();
 
@@ -891,6 +945,22 @@ $router->get('/admin/shops/{id}/picture/{slot}', $adminGate->protect(Role::Artis
 $router->post('/admin/shops/{id}/picture/{slot}', $adminGate->protect(Role::Artist, [$adminShopEditController, 'choosePicture']));
 // The area editor (M2.5).
 $router->get('/admin/unfinished', $adminGate->protect(Role::Artist, [$adminUnfinishedController, 'show']));
+// Moderation (M2.7): the queue, its per-report actions, and account history.
+$router->get('/admin/reports', $adminGate->protect(Role::Moderator, [$adminReportsController, 'show']));
+$router->post('/admin/reports/{id}/dismiss', $adminGate->protect(Role::Moderator, [$adminReportsController, 'dismiss']));
+$router->post('/admin/reports/{id}/warn', $adminGate->protect(Role::Moderator, [$adminReportsController, 'warn']));
+$router->post('/admin/reports/{id}/remove-text', $adminGate->protect(Role::Moderator, [$adminReportsController, 'removeText']));
+$router->post('/admin/reports/{id}/rename', $adminGate->protect(Role::Moderator, [$adminReportsController, 'rename']));
+$router->post('/admin/reports/{id}/mute', $adminGate->protect(Role::Moderator, [$adminReportsController, 'mute']));
+$router->post('/admin/reports/{id}/suspend', $adminGate->protect(Role::Moderator, [$adminReportsController, 'suspend']));
+$router->get('/admin/accounts/{id}', $adminGate->protect(Role::Moderator, [$adminAccountController, 'show']));
+$router->post('/admin/accounts/{id}/warn', $adminGate->protect(Role::Moderator, [$adminAccountController, 'warn']));
+$router->post('/admin/accounts/{id}/mute', $adminGate->protect(Role::Moderator, [$adminAccountController, 'mute']));
+$router->post('/admin/accounts/{id}/suspend', $adminGate->protect(Role::Moderator, [$adminAccountController, 'suspend']));
+$router->post('/admin/accounts/{id}/unmute', $adminGate->protect(Role::Moderator, [$adminAccountController, 'unmute']));
+$router->post('/admin/accounts/{id}/unsuspend', $adminGate->protect(Role::Moderator, [$adminAccountController, 'unsuspend']));
+// The player's one notice action: "I've read this."
+$router->post('/notices/{id}/read', [$noticeController, 'acknowledge']);
 $router->get('/admin/areas', $adminGate->protect(Role::Artist, [$adminAreasController, 'show']));
 $router->post('/admin/areas/create', $adminGate->protect(Role::Artist, [$adminAreasController, 'create']));
 $router->get('/admin/areas/{id}', $adminGate->protect(Role::Artist, [$adminAreaEditController, 'show']));

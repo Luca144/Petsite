@@ -497,3 +497,29 @@ The shape honours the standing accessibility rule (recorded 2026-08-12 for
 M11 decorating, applied here): the number fields REMAIN the full, keyboard-
 reachable, no-JavaScript way; clicking the scene is a vanilla-JS
 convenience layered on top, never the only way to place anything.
+
+---
+
+## 2026-09-01 — M2.7: moderation ships, with fixed-template notices
+
+Built under the standing arrangement for the rest of M2 (rough review
+between increments; the full test round with Skerro after M2.9). Plan:
+`docs/plan/2026-08-31-m2-7-build-plan.md`. Three decisions worth a line:
+
+- **Notices are template keys, never typed sentences.** Even staff get no
+  free-text channel to a player: a moderator picks an ACTION, and the
+  card's words were written once, calmly, in `ModerationNotice`. What a
+  child reads after a bad evening should not depend on a tired
+  moderator's phrasing.
+- **Mute pauses words, not play.** A muted player cannot write new bios,
+  about texts, names or guestbook signatures — but petting, feeding,
+  exploring and shopping all still work. Free text is the one place a
+  player reaches another player, so muting it IS muting the player,
+  without taking their creatures hostage.
+- **Nobody moderates staff.** Moderation actions refuse any target that
+  holds a role; staff matters go through the owner and the roles screen.
+  A moderator muting the owner would be privilege escalation through the
+  side door.
+
+Still to set before moderation is used in anger: the real appeal address
+in `config` under `security.moderation.appeal_email`.

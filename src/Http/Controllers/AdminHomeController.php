@@ -123,8 +123,8 @@ final class AdminHomeController
             $sections[] = [
                 'title' => 'Moderation',
                 'sentence' => 'The report queue, account history and moderation actions.',
-                'href' => null,
-                'arrives' => 'M2.7',
+                'href' => '/admin/reports',
+                'arrives' => null,
             ];
         }
 
