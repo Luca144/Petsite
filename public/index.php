@@ -27,6 +27,7 @@ use Felkyo\Admin\RoleRepository;
 use Felkyo\Admin\SecondFactorRepository;
 use Felkyo\Admin\Totp;
 use Felkyo\Admin\SettingsCatalog;
+use Felkyo\Admin\SiteStatsService;
 use Felkyo\Admin\SiteSettingsRepository;
 use Felkyo\Admin\UnfinishedListService;
 use Felkyo\Moderation\ModerationRepository;
@@ -87,6 +88,7 @@ use Felkyo\Exploration\LootLineParser;
 use Felkyo\Http\Controllers\AdminAreaEditController;
 use Felkyo\Http\Controllers\AdminAreasController;
 use Felkyo\Http\Controllers\AdminSettingsController;
+use Felkyo\Http\Controllers\AdminStatsController;
 use Felkyo\Http\Controllers\AdminUnfinishedController;
 use Felkyo\Http\Controllers\AdminReportsController;
 use Felkyo\Http\Controllers\AdminAccountController;
@@ -876,6 +878,9 @@ $adminSettingsController = new AdminSettingsController(
     $config['security']['rate_limit_settings'], $config
 );
 
+// The stats page (M2.9): read-only aggregates, the artist's weather report.
+$adminStatsController = new AdminStatsController($templates, new SiteStatsService($pdo));
+
 // ---- Routes ----
 $router = new Router();
 
@@ -990,6 +995,8 @@ $router->post('/admin/settings/{key}', $adminGate->protect(Role::Coder, [$adminS
 $router->post('/admin/settings/{key}/reset', $adminGate->protect(Role::Coder, [$adminSettingsController, 'reset']));
 $router->post('/admin/maintenance/clear-rate-limits', $adminGate->protect(Role::Coder, [$adminSettingsController, 'clearRateLimits']));
 $router->get('/admin/maintenance/art-backup', $adminGate->protect(Role::Coder, [$adminSettingsController, 'artBackup']));
+// The stats page (M2.9).
+$router->get('/admin/stats', $adminGate->protect(Role::Artist, [$adminStatsController, 'show']));
 $router->get('/admin/areas', $adminGate->protect(Role::Artist, [$adminAreasController, 'show']));
 $router->post('/admin/areas/create', $adminGate->protect(Role::Artist, [$adminAreasController, 'create']));
 $router->get('/admin/areas/{id}', $adminGate->protect(Role::Artist, [$adminAreaEditController, 'show']));

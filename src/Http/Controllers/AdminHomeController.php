@@ -112,6 +112,12 @@ final class AdminHomeController
                 'arrives' => null,
             ];
             $sections[] = [
+                'title' => 'Stats',
+                'sentence' => 'The game\'s health in aggregate — who plays, what gets adopted, where people wander.',
+                'href' => '/admin/stats',
+                'arrives' => null,
+            ];
+            $sections[] = [
                 'title' => 'Postcards & themes',
                 'sentence' => 'Each editor arrives with its content: cards with M6, themes with M4.',
                 'href' => null,

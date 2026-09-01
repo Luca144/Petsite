@@ -66,3 +66,4 @@ use Felkyo\Http\AssetUrl;
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/shopfront.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/admin-areas.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/moderation.css') ?>">
+    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/admin-stats.css') ?>">

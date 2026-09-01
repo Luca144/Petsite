@@ -2239,3 +2239,26 @@ bounds refused at save, catalog-only keys, blocklist never empty, reset,
 planted-row ignored, the confirm-tick on clearing. The smoke test turns
 a real knob (searches per visit), watches the real explore page obey,
 and puts it back.
+
+## Increment M2.9 — The stats page
+
+Plan: `docs/plan/2026-09-01-m2-9-build-plan.md`. The last M2 increment
+before the checkpoint, and the smallest: one read-only screen.
+
+**`SiteStatsService`** (Admin namespace): eight aggregate queries —
+players (total/new/active this week), creatures (total/new, and the
+adoption picture per species including the unpicked ones), care (pets
+and guestbook signatures this week), the economy (gems in circulation,
+items in pockets — what the shop SOLD is not knowable without an order
+ledger, and the page says so instead of approximating), and where
+people wander (from exploration's window state, honestly labelled a
+sketch: the visits table keeps windows, not history).
+
+**AGGREGATE ONLY IS THE RULE**, enforced by what the queries select and
+pinned by `StatsTest`: a player's username (and their creature's name)
+must never appear in the page body. The only names on the page are
+content names. Per-person questions belong to the account-history page,
+where looking at one person is the declared job.
+
+**Screen**: `GET /admin/stats`, Role::Artist (it is the artist's
+marketing information), in the gate matrix; styles in `admin-stats.css`.

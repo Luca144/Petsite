@@ -92,6 +92,8 @@ final class AdminGateTest extends DatabaseTestCase
             ['POST', '/admin/shops/999/shelf/1/remove', Role::Artist],
             ['GET', '/admin/shops/999/picture/portrait', Role::Artist],
             ['POST', '/admin/shops/999/picture/portrait', Role::Artist],
+            // The stats page (M2.9).
+            ['GET', '/admin/stats', Role::Artist],
             // Settings & maintenance (M2.8).
             ['GET', '/admin/settings', Role::Coder],
             ['POST', '/admin/settings/registration_open', Role::Coder],

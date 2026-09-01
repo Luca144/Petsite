@@ -371,6 +371,9 @@ final class AdminWorld
         $world->router->post('/admin/settings/{key}/reset', $gate->protect(Role::Coder, [$settingsController, 'reset']));
         $world->router->post('/admin/maintenance/clear-rate-limits', $gate->protect(Role::Coder, [$settingsController, 'clearRateLimits']));
         $world->router->get('/admin/maintenance/art-backup', $gate->protect(Role::Coder, [$settingsController, 'artBackup']));
+        // The stats page (M2.9): read-only, so the controller is built inline.
+        $world->router->get('/admin/stats', $gate->protect(Role::Artist,
+            [new \Felkyo\Http\Controllers\AdminStatsController($templates, new \Felkyo\Admin\SiteStatsService($connection)), 'show']));
         // The unfinished list (M2.6): read-only, so the controller is built inline.
         $world->router->get('/admin/unfinished', $gate->protect(Role::Artist, [new AdminUnfinishedController($templates, new UnfinishedListService($world->speciesRepo, $world->itemRepo, $world->shopRepo, $world->areaRepo, $world->speciesEditor, $world->itemEditor, $world->areaEditor)), 'show']));
         $world->router->get('/art/{name}', [$artController, 'show']);

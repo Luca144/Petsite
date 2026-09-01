@@ -1,0 +1,74 @@
+/**
+ * The stats page (M2.9): number tiles and the little ranked lists.
+ * Its own small file so admin.css stays within reach of its limit.
+ */
+
+/* Number tiles: the figure large, its meaning underneath. Mobile-first:
+   they wrap into as many columns as fit. */
+.admin-stats__tiles {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.admin-stats__tile {
+    display: grid;
+    justify-items: center;
+    gap: 0.15rem;
+    min-width: 8rem;
+    padding: 0.75rem 1rem;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    text-align: center;
+}
+
+.admin-stats__tile b {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    color: var(--purple);
+}
+
+.admin-stats__tile span {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+}
+
+/* Ranked lists (species, areas): name left, count right, one rule
+   between rows — readable without being a spreadsheet. */
+.admin-stats__bars {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0.4rem;
+}
+
+.admin-stats__bars li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: baseline;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.4rem;
+}
+
+.admin-stats__bars li:last-child {
+    border-bottom: none;
+}
+
+.admin-stats__bar-name {
+    flex: 1 1 10rem;
+}
+
+.admin-stats__bars b {
+    font-family: var(--font-mono);
+}
+
+.admin-stats__quiet {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+}

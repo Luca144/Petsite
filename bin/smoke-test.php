@@ -1218,6 +1218,16 @@ check(
 );
 
 // ---------------------------------------------------------------------------
+// The stats page (M2.9)
+// ---------------------------------------------------------------------------
+
+echo "\nThe stats page:\n";
+
+$statsPage = request('/admin/stats');
+check('the stats page renders its aggregates', str_contains($statsPage['body'], 'gems in circulation'));
+check('and knows the places people wander', str_contains($statsPage['body'], 'The Whispering Wood'));
+
+// ---------------------------------------------------------------------------
 // Logging out
 //
 // This runs LAST, because everything after it would be a logged-out request.

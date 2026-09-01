@@ -340,6 +340,7 @@ if (count($standIns) === 2) {
 
 $save('admin-unfinished', $fetch('/admin/unfinished')); // the M2.6 list
 $save('admin-settings', $fetch('/admin/settings'));     // the M2.8 screen
+$save('admin-stats', $fetch('/admin/stats'));           // the M2.9 screen
 $save('admin-areas', $fetch('/admin/areas'));
 $save('admin-area-edit', $fetch('/admin/areas/' . $shotAreaId));
 $save('explore', $fetch('/explore'));
