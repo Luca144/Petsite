@@ -88,8 +88,12 @@ final class Response
 
         if ($this->filePath !== null) {
             // Stream from disk in chunks (see fileDownload). readfile() does
-            // exactly that without buffering the whole file.
+            // exactly that without buffering the whole file — and the file is
+            // removed afterwards: every download so far is a generated temp
+            // file (the art backup), and leaving those in the system temp dir
+            // was the security review's tidiness note.
             readfile($this->filePath);
+            @unlink($this->filePath);
 
             return;
         }

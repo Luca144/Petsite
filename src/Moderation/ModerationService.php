@@ -273,6 +273,14 @@ final class ModerationService
     /** Lift a mute early. No notice — good news needs no card. */
     public function unmute(User $actor, int $userId, string $ip): ContentEditResult
     {
+        // The same guard as every action, for consistency: staff can never
+        // BE muted, so this refuses nothing new — but an asymmetric guard
+        // is the kind of thing a security review trips over twice.
+        $guard = $this->guardKnownTarget($actor, $userId);
+        if ($guard !== null) {
+            return $guard;
+        }
+
         return $this->withOneBreath(function () use ($actor, $userId, $ip): ContentEditResult {
             $this->moderation->setMutedUntil($userId, null);
             $this->audit($actor, AuditAction::PlayerUnmuted, 'user', $userId, null, null, $ip);
@@ -284,6 +292,11 @@ final class ModerationService
     /** Lift a suspension early. */
     public function unsuspend(User $actor, int $userId, string $ip): ContentEditResult
     {
+        $guard = $this->guardKnownTarget($actor, $userId);
+        if ($guard !== null) {
+            return $guard;
+        }
+
         return $this->withOneBreath(function () use ($actor, $userId, $ip): ContentEditResult {
             $this->moderation->setSuspendedUntil($userId, null);
             $this->audit($actor, AuditAction::PlayerUnsuspended, 'user', $userId, null, null, $ip);

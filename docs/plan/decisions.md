@@ -540,3 +540,22 @@ Plan: `docs/plan/2026-09-01-m2-8-build-plan.md`. Two decisions worth a line:
   so "Download the backup" on the settings screen — one ZIP of the whole
   store — is what stands between the art and a lost volume. Press it
   after big art days.
+
+---
+
+## 2026-09-01 — M2 checkpoint: the panel is whole
+
+M2.5 through M2.9 were built under the standing arrangement (rough
+review between increments) and are committed awaiting push: areas, the
+unfinished list, moderation, settings & maintenance, and the stats
+page. All nine M2 increments now exist; the panel's definition of done
+("Skerro adds a complete new creature alone, start to finish") is what
+the upcoming big test round with him will prove or disprove.
+
+**The first external security review is due NOW**, per the build plan —
+before M3 builds on this code. `docs/security-review-briefing.md` is
+the hand-over document for whoever performs it: scope (roles, admin
+authorisation, the upload path, audit completeness), setup, and the
+known trade-offs so they aren't re-discovered. Finding a reviewer is a
+people-task for Katharina and Skerro; an internal pre-review of the M2
+branch was run at the checkpoint so the external one starts cleaner.
