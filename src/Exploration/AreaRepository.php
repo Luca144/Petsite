@@ -194,13 +194,18 @@ final class AreaRepository
      */
     public function lootItemReferences(): array
     {
+        // ORDER BY a column that is IN the select list: production MySQL 8
+        // refuses DISTINCT with an ORDER BY on an unselected column (error
+        // 3065), while the development MariaDB happily allowed it — this
+        // one line took the whole live site down at boot on deploy day.
+        // Name order is what the editor page reads best anyway.
         $statement = $this->connection->query(
             "SELECT DISTINCT i.slug, a.name
                FROM loot_entries l
                JOIN items i ON i.id = l.item_id
                JOIN areas a ON a.id = l.area_id
               WHERE l.type = 'item'
-              ORDER BY a.id"
+              ORDER BY a.name"
         );
 
         $references = [];
