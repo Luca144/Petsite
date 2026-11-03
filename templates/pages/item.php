@@ -39,6 +39,7 @@ $this->layout('layout', ['title' => $item->name . ' — Felkyo Creatures']);
     </div>
 
     <h2 class="item-detail__name"><?= $this->e($item->name) ?></h2>
+    <p class="library-back"><a href="/library/item/<?= $this->e((string) $item->id) ?>">where does this come from?</a></p>
 
     <p class="item-detail__category">
         <svg class="category-icon" aria-hidden="true" focusable="false">

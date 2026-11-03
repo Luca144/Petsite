@@ -39,7 +39,32 @@ final class LibraryController
         private SpeciesFormRepository $forms,
         private ArticleRepository $articles,
         private array $stages,
+        // Item pages ("where does this come from?"). Optional so older
+        // wiring still builds.
+        private ?\Felkyo\Economy\ItemRepository $items = null,
+        private ?\Felkyo\Library\ItemSourcesRepository $itemSources = null,
     ) {
+    }
+
+    /**
+     * One item's library page: what it is, and where to get it — the shops
+     * that sell it and the areas whose loot can turn it up (Skerro,
+     * 2026-10-13). Only published items have a page.
+     *
+     * @param array{id: string} $parameters
+     */
+    public function item(Request $request, array $parameters): Response
+    {
+        $item = $this->items?->findById((int) ($parameters['id'] ?? 0));
+        if ($item === null || !$item->isPublished() || $this->itemSources === null) {
+            return $this->notFound();
+        }
+
+        return Response::html($this->templates->render('pages/library-item', [
+            'item' => $item,
+            'shops' => $this->itemSources->shopsSelling($item->id),
+            'areas' => $this->itemSources->areasDropping($item->id),
+        ]));
     }
 
     /** The shelf, on one of its two tabs. */
@@ -69,6 +94,14 @@ final class LibraryController
             'species' => $species,
             'stages' => $this->stages,
             'forms' => $this->forms->forSpecies($species->id, true),
+        ]));
+    }
+
+    /** Every site update, newest first — the site's timeline. */
+    public function updates(Request $request): Response
+    {
+        return Response::html($this->templates->render('pages/updates', [
+            'updates' => $this->articles->published(200, \Felkyo\Library\Article::KIND_UPDATE),
         ]));
     }
 

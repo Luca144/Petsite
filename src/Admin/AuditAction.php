@@ -97,6 +97,9 @@ enum AuditAction: string
     case CharacterSaved = 'character.saved';
     // M4 — themes.
     case ThemeSaved = 'theme.saved';
+    // Deleting content for good (draft only, typed confirmation).
+    case SpeciesDeleted = 'species.deleted';
+    case ItemDeleted = 'item.deleted';
 
     /**
      * What a person reading the audit page sees, in plain words.
@@ -150,6 +153,8 @@ enum AuditAction: string
             self::ArticleSaved => 'changed a Gazette article',
             self::CharacterSaved => 'changed traits or titles',
             self::ThemeSaved => 'changed a theme',
+            self::SpeciesDeleted => 'deleted a species',
+            self::ItemDeleted => 'deleted an item',
         };
     }
 }

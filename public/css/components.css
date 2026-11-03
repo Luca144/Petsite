@@ -79,11 +79,14 @@
     50% { box-shadow: var(--shadow-raised), inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 0 30px -4px rgba(232, 201, 90, 0.55); }
 }
 
-/* Secondary action — quieter, for less important choices. */
+/* Secondary action — quieter, for less important choices.
+   Lighter than the card it sits on, with a gold edge that is visible WITHOUT
+   hovering (Skerro, 2026-10-14: the old --border edge vanished against the
+   panel, so the button only seemed to get a border on hover). */
 .btn--secondary {
     color: var(--plum);
-    background: var(--panel);
-    border-color: var(--border);
+    background: var(--parchment);
+    border-color: var(--gold);
     box-shadow: 0 6px 14px -10px rgba(61, 43, 79, 0.5);
 }
 

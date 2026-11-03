@@ -83,6 +83,26 @@ final class ArtRepository
     }
 
     /**
+     * Every picture of one kind, oldest first — used to offer uploaded
+     * avatars to players. Served by the (kind, created_at) index.
+     *
+     * @return ArtFile[]
+     */
+    public function ofKind(ArtKind $kind): array
+    {
+        $statement = $this->connection->prepare(
+            'SELECT ' . self::COLUMNS . '
+               FROM art_files a
+               LEFT JOIN users u ON u.id = a.uploaded_by_user_id
+              WHERE a.kind = :kind
+              ORDER BY a.created_at, a.id'
+        );
+        $statement->execute([':kind' => $kind->value]);
+
+        return array_map([ArtFile::class, 'fromRow'], $statement->fetchAll(PDO::FETCH_ASSOC));
+    }
+
+    /**
      * Record a validated, stored picture. Returns the new row.
      */
     public function insert(UploadedImage $image, ArtKind $kind, ?int $uploadedByUserId): ArtFile

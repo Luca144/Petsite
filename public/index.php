@@ -159,6 +159,8 @@ use Felkyo\Creatures\FreezeService;
 use Felkyo\Pound\PoundRepository;
 use Felkyo\Pound\PoundService;
 use Felkyo\Http\Controllers\PoundController;
+use Felkyo\Http\Controllers\AdminRemovalController;
+use Felkyo\Admin\ContentRemovalService;
 use Felkyo\Http\Controllers\CompanyController;
 use Felkyo\Http\Controllers\PostOfficeController;
 use Felkyo\Social\BottleRepository;
@@ -322,7 +324,17 @@ $auditLogRepository = new AuditLogRepository($pdo);
 // code change (docs/adding-avatars.md). Built here (not further down with the
 // profile controller) because the sidebar on EVERY page shows the logged-in
 // player's avatar, so the layout needs it before any controller runs.
-$avatarSet = new AvatarSet($config['avatars']);
+// The avatar choices: the set in config, plus every picture uploaded to the
+// art store as an "avatar" (keyed art-<id>, so the stored key is still an
+// allow-listed key, never a path a player could send). One small query.
+$uploadedAvatars = [];
+foreach ((new ArtRepository($pdo))->ofKind(\Felkyo\Art\ArtKind::Avatar) as $avatarArt) {
+    $uploadedAvatars['art-' . $avatarArt->id] = [
+        'name' => ucfirst(trim((string) preg_replace('/[-_]+/', ' ', pathinfo($avatarArt->originalName, PATHINFO_FILENAME)))),
+        'path' => $avatarArt->url(),
+    ];
+}
+$avatarSet = new AvatarSet($config['avatars'] + $uploadedAvatars);
 
 // ---- Services (own the business rules) ----
 $passwordHasher = new PasswordHasher();
@@ -609,11 +621,14 @@ $templates->addData([
 
 // ---- Controllers ----
 $homeController = new HomeController(
-    $templates, $session, $creatureRepository, $creatureProfileBuilder, $config['app']['name']
+    $templates, $session, $creatureRepository, $creatureProfileBuilder, $config['app']['name'],
+    $articleRepository
 );
 $libraryController = new LibraryController(
     $templates, $speciesRepository, $speciesFormRepository, $articleRepository,
-    array_keys($config['gameplay']['growth']['stage_start_levels'])
+    array_keys($config['gameplay']['growth']['stage_start_levels']),
+    // Its own ItemRepository: the shared one is built further down the file.
+    new ItemRepository($pdo), new \Felkyo\Library\ItemSourcesRepository($pdo)
 );
 $poundController = new PoundController(
     $templates, $session, $csrf, $poundRepository, $poundService, $freezeService,
@@ -863,6 +878,13 @@ $adminGazetteController = new AdminGazetteController(
     $templates, $session, $csrf, $userRepository, $articleRepository, $artRepository,
     $articleEditorService, $rateLimiter, $config['security']['rate_limit_content_save']
 );
+// Deleting a species or an item for good (draft only, typed name, nobody loses out).
+$adminRemovalController = new AdminRemovalController(
+    $templates, $session, $csrf, $userRepository, $speciesRepository, new ItemRepository($pdo),
+    new ContentRemovalService($pdo, $speciesRepository, new ItemRepository($pdo), $auditLogRepository),
+    $rateLimiter, $config['security']['rate_limit_content_save']
+);
+
 // M4 in the panel: the theme editor.
 $adminThemesController = new AdminThemesController(
     $templates, $session, $csrf, $userRepository, $themeRepository,
@@ -1038,7 +1060,9 @@ $router->post('/creature/{id}/unfreeze', [$poundController, 'unfreeze']);
 // M5 — the library and the Gazette (public, read-only).
 $router->get('/library', [$libraryController, 'index']);
 $router->get('/library/{slug}', [$libraryController, 'species']);
+$router->get('/library/item/{id}', [$libraryController, 'item']);
 $router->get('/gazette/{slug}', [$libraryController, 'article']);
+$router->get('/updates', [$libraryController, 'updates']);
 
 // Accounts.
 $router->get('/register', [$registerController, 'show']);
@@ -1136,6 +1160,12 @@ $router->post('/admin/maintenance/clear-rate-limits', $adminGate->protect(Role::
 $router->get('/admin/maintenance/art-backup', $adminGate->protect(Role::Coder, [$adminSettingsController, 'artBackup']));
 // The stats page (M2.9).
 $router->get('/admin/stats', $adminGate->protect(Role::Artist, [$adminStatsController, 'show']));
+// Deleting for good. Artist role.
+$router->get('/admin/creatures/{id}/delete', $adminGate->protect(Role::Artist, [$adminRemovalController, 'confirmSpecies']));
+$router->post('/admin/creatures/{id}/delete', $adminGate->protect(Role::Artist, [$adminRemovalController, 'deleteSpecies']));
+$router->get('/admin/items/{id}/delete', $adminGate->protect(Role::Artist, [$adminRemovalController, 'confirmItem']));
+$router->post('/admin/items/{id}/delete', $adminGate->protect(Role::Artist, [$adminRemovalController, 'deleteItem']));
+
 // M4 — themes. Artist role.
 $router->get('/admin/themes', $adminGate->protect(Role::Artist, [$adminThemesController, 'index']));
 $router->post('/admin/themes/create', $adminGate->protect(Role::Artist, [$adminThemesController, 'create']));

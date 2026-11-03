@@ -94,7 +94,9 @@
 
 .creature__hearts span {
     position: absolute;
-    color: var(--gold-lit);
+    /* Red, so the hearts stand out against the gold frame (Skerro asked). */
+    color: var(--heart);
+    text-shadow: 0 0 6px var(--gold-lit);
     font-size: 1.6rem;
     opacity: 0;
     animation: heart-float 1.4s ease-out forwards;

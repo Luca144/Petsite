@@ -63,7 +63,9 @@ $createdLabel = $creature->createdAt !== null
     <div class="creature__info">
         <h1><?= $this->e($creature->name) ?></h1>
         <p class="creature__meta">
-            a <b><?= $this->e($speciesName) ?></b>
+            <?php /* The species links to its library page (Skerro, 2026-10-13),
+                     so a visitor can find out what this creature is. */ ?>
+            a <?php if ($species !== null && $species->isPublished()): ?><a href="/library/<?= $this->e(rawurlencode($species->slug)) ?>"><b><?= $this->e($speciesName) ?></b></a><?php else: ?><b><?= $this->e($speciesName) ?></b><?php endif; ?>
             <?php /* The owner's name links to their page, so a creature you liked
                      is a way of finding the person who looks after it. */ ?>
             <?php if ($creature->isAtPound()): ?>

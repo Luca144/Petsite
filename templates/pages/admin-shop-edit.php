@@ -71,11 +71,11 @@ $this->layout('layout', ['title' => $this->e($shop->name) . ' — Shops — Felk
                        value="<?= $this->e((string) $shop->keeperName) ?>">
             </div>
             <div class="field">
-                <label class="field__label" for="keeper_greeting">Their greeting (spoken under the shop&rsquo;s name)</label>
+                <label class="field__label" for="keeper_greeting">Their greeting (spoken under the shop&rsquo;s description)</label>
                 <textarea class="field__input" id="keeper_greeting" name="keeper_greeting" rows="2"><?= $this->e((string) $shop->keeperGreeting) ?></textarea>
             </div>
             <div class="field">
-                <label class="field__label" for="keeper_refusal">What they say when a search finds nothing</label>
+                <label class="field__label" for="keeper_refusal">What they say when a search finds nothing (the shop only shows a search box once it has lots of items, so small shops never need this)</label>
                 <input class="field__input" type="text" id="keeper_refusal" name="keeper_refusal"
                        value="<?= $this->e((string) $shop->keeperRefusal) ?>">
             </div>

@@ -28,6 +28,11 @@
         <?php endif; ?>
         <div class="shopfront__words">
             <h2 class="panel-label"><?= $this->e($shop->name) ?></h2>
+            <?php /* Description first, then the keeper speaks (Skerro's order,
+                     2026-10-14): what the shop IS, then who greets you. */ ?>
+            <?php if ($shop->description !== null): ?>
+                <p><?= $this->e($shop->description) ?></p>
+            <?php endif; ?>
             <?php if ($shop->keeperGreeting !== null): ?>
                 <p class="shopfront__greeting">
                     &ldquo;<?= $this->e($shop->keeperGreeting) ?>&rdquo;
@@ -35,9 +40,6 @@
                         <span class="shopfront__keeper">&mdash; <?= $this->e($shop->keeperName) ?></span>
                     <?php endif; ?>
                 </p>
-            <?php endif; ?>
-            <?php if ($shop->description !== null): ?>
-                <p><?= $this->e($shop->description) ?></p>
             <?php endif; ?>
         </div>
     </div>

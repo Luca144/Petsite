@@ -19,7 +19,7 @@ final class ArticleRepository
 {
     // 'a' is the article, 'pic' its picture's art_files row (LEFT JOIN: most
     // articles may have no picture).
-    private const COLUMNS = 'a.id, a.slug, a.title, a.summary, a.body, a.art_id, a.status,
+    private const COLUMNS = 'a.id, a.slug, a.kind, a.title, a.summary, a.body, a.art_id, a.status,
              a.published_at, pic.stored_name AS art_name';
     private const FROM = ' FROM articles a LEFT JOIN art_files pic ON pic.id = a.art_id ';
 
@@ -33,12 +33,13 @@ final class ArticleRepository
      *
      * @return Article[]
      */
-    public function published(int $limit): array
+    public function published(int $limit, string $kind = Article::KIND_GAZETTE): array
     {
         $statement = $this->connection->prepare(
             'SELECT ' . self::COLUMNS . self::FROM .
-            "WHERE a.status = 'published' ORDER BY a.published_at DESC, a.id DESC LIMIT :limit"
+            "WHERE a.status = 'published' AND a.kind = :kind ORDER BY a.published_at DESC, a.id DESC LIMIT :limit"
         );
+        $statement->bindValue(':kind', $kind);
         $statement->bindValue(':limit', $limit, PDO::PARAM_INT);
         $statement->execute();
 
@@ -105,6 +106,13 @@ final class ArticleRepository
         $this->connection->prepare(
             'UPDATE articles SET title = :title, summary = :summary, body = :body WHERE id = :id'
         )->execute([':title' => $title, ':summary' => $summary, ':body' => $body, ':id' => $id]);
+    }
+
+    /** Gazette story or site update — the caller checks the value. */
+    public function setKind(int $id, string $kind): void
+    {
+        $this->connection->prepare('UPDATE articles SET kind = :kind WHERE id = :id')
+            ->execute([':kind' => $kind, ':id' => $id]);
     }
 
     public function setArt(int $id, ?int $artId): void

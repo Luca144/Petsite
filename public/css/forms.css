@@ -109,6 +109,22 @@
     margin: 0 auto;
 }
 
+/* The log-in / sign-up button: centred and full-width on a phone, where a
+   thumb is aiming at it (Skerro, 2026-10-13); back to its natural size and
+   left edge from 600px up. */
+.auth-card form > .btn[type="submit"] {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+}
+
+@media (min-width: 600px) {
+    .auth-card form > .btn[type="submit"] {
+        display: inline-flex;
+        width: auto;
+    }
+}
+
 /* The "already have an account?" / "new here?" line under an auth form. */
 .auth-alt {
     margin-top: var(--space-4);

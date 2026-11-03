@@ -20,6 +20,11 @@ final class Article
     public const STATUS_DRAFT = 'draft';
     public const STATUS_PUBLISHED = 'published';
 
+    // What kind of piece it is: a Gazette story (library) or a site update
+    // (home page + /updates). Same editor for both.
+    public const KIND_GAZETTE = 'gazette';
+    public const KIND_UPDATE = 'update';
+
     public function __construct(
         public readonly int $id,
         public readonly string $slug,
@@ -30,7 +35,13 @@ final class Article
         public readonly ?string $artName,
         public readonly string $status,
         public readonly ?string $publishedAt,
+        public readonly string $kind = self::KIND_GAZETTE,
     ) {
+    }
+
+    public function isUpdate(): bool
+    {
+        return $this->kind === self::KIND_UPDATE;
     }
 
     public function isPublished(): bool
@@ -71,6 +82,7 @@ final class Article
             $row['art_name'] ?? null,
             (string) $row['status'],
             $row['published_at'] ?? null,
+            (string) ($row['kind'] ?? self::KIND_GAZETTE),
         );
     }
 }

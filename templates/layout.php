@@ -47,10 +47,11 @@ use Felkyo\Http\AssetUrl;
     <!-- Keyboard users can jump straight to the content with this link. -->
     <a class="skip-link" href="#main">Skip to content</a>
 
-    <!-- Decorative drifting sparkles; hidden from screen readers and from anyone
+    <!-- Decorative drifting stars (four-pointed ✦ and ✧ — Skerro asked for stars,
+         not the old floral glyphs, which read as leaves); hidden from screen readers and from anyone
          who prefers reduced motion. They now fall in front of a real sky. -->
     <div class="site-motes" aria-hidden="true">
-        <span>&#10086;</span><span>&#10022;</span><span>&#10087;</span><span>&#10022;</span>
+        <span>&#10022;</span><span>&#10023;</span><span>&#10022;</span><span>&#10023;</span>
     </div>
 
     <?php if (!empty($showDemoNotice)): ?>

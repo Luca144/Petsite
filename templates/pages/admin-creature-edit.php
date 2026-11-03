@@ -47,6 +47,7 @@ $this->layout('layout', ['title' => $this->e($species->name) . ' â€” Creatures â
                     <?= $this->csrf_field() ?>
                     <button class="btn btn--primary" type="submit">Publish</button>
                 </form>
+                <a class="btn--quiet" href="/admin/creatures/<?= $this->e((string) $species->id) ?>/delete">delete this species&hellip;</a>
             <?php endif; ?>
         </div>
     </header>

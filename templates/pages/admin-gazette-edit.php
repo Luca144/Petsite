@@ -39,6 +39,17 @@ $id = (string) $article->id;
         <h3>The words</h3>
         <form method="post" action="/admin/gazette/<?= $this->e($id) ?>/words">
             <?= $this->csrf_field() ?>
+            <fieldset class="admin-trait__choice">
+                <legend class="field__label">Where it appears</legend>
+                <label class="admin-trait__pill">
+                    <input type="radio" name="kind" value="gazette" <?= $article->isUpdate() ? '' : 'checked' ?>>
+                    the Gazette (stories about Felkyo's people)
+                </label>
+                <label class="admin-trait__pill">
+                    <input type="radio" name="kind" value="update" <?= $article->isUpdate() ? 'checked' : '' ?>>
+                    a site update (home page &amp; updates list)
+                </label>
+            </fieldset>
             <div class="field">
                 <label class="field__label" for="title">Headline</label>
                 <input class="field__input" type="text" id="title" name="title" maxlength="120"

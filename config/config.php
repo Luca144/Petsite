@@ -584,7 +584,12 @@ return [
             // are predictable and easy to reason about: a favourite is worth twice
             // as much, a dislike a quarter (rounded UP, so a treat that helped at
             // all still helps at least a little).
-            'favourite_treat_multiplier' => 2,
+            // Raised from 2 to 4 (Skerro, 2026-10-21): a favourite should
+            // clearly matter. The intended pattern: give niche foods (oil,
+            // sugar, raw meat) a SMALL base effect in the item editor, and
+            // set them as the favourite of the creatures that love them —
+            // then they barely help anyone else but delight the right ones.
+            'favourite_treat_multiplier' => 4,
             'disliked_treat_divisor' => 4,
 
             // What each happiness range is CALLED. A word, never a bare number —

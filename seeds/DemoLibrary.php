@@ -64,6 +64,25 @@ final class DemoLibrary extends AbstractSeed
 
         $this->seedFirstArticle($pdo);
         $this->seedPoundResidents($pdo);
+        $this->seedFirstUpdate($pdo);
+    }
+
+    /** One site update, so the home page's "What's new" has something in it. */
+    private function seedFirstUpdate(\PDO $pdo): void
+    {
+        $exists = $pdo->prepare('SELECT 1 FROM articles WHERE slug = :slug');
+        $exists->execute([':slug' => 'the-library-opens']);
+        if ($exists->fetchColumn() !== false) {
+            return;
+        }
+
+        $pdo->prepare(
+            "INSERT INTO articles (slug, kind, title, summary, body, status, published_at)
+             VALUES ('the-library-opens', 'update', 'The library is open!', :summary, :body, 'published', NOW())"
+        )->execute([
+            ':summary' => 'A book for every creature, rarer forms to hope for, a pound with a warm stove, and postcards to send your friends.',
+            ':body' => "So much is new in Felkyo!\n\nThe library has a book for every creature: how it grows up, its story, and the rarer forms it can be born in.\n\nThe pound is open, too, and a few creatures are already waiting for a home. And down at the post office you can send a friend a card, or set a message in a bottle adrift from the shore.",
+        ]);
     }
 
     /**

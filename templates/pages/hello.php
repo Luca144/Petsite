@@ -27,6 +27,8 @@ $summaries = $summaries ?? [];
         <p>Here are the creatures in your care.</p>
     </section>
 
+    <?= $this->insert('partials/latest-updates', ['updates' => $updates ?? []]) ?>
+
     <hr class="rule">
 
     <h2 class="panel-label">Your creatures</h2>

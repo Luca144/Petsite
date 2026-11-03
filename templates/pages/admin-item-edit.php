@@ -51,6 +51,8 @@ $iconSrc = $item->hasStoredIcon()
                     <?= $this->csrf_field() ?>
                     <button class="btn btn--primary" type="submit">Publish</button>
                 </form>
+                <?php /* Only a draft offers deletion (see ContentRemovalService). */ ?>
+                <a class="btn--quiet" href="/admin/items/<?= $this->e((string) $item->id) ?>/delete">delete this item&hellip;</a>
             <?php endif; ?>
         </div>
     </header>

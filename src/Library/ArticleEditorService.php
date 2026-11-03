@@ -59,7 +59,7 @@ final class ArticleEditorService
         return ContentEditResult::ok('Draft started. Write it, then publish it when it\'s ready.', $id);
     }
 
-    public function saveWords(User $actor, int $id, string $title, string $summary, string $body, string $ip): ContentEditResult
+    public function saveWords(User $actor, int $id, string $title, string $summary, string $body, string $ip, string $kind = Article::KIND_GAZETTE): ContentEditResult
     {
         $article = $this->articles->findById($id);
         if ($article === null) {
@@ -79,6 +79,9 @@ final class ArticleEditorService
         }
 
         $this->articles->updateWords($id, $title, $summary === '' ? null : $summary, $body === '' ? null : $body);
+        if (in_array($kind, [Article::KIND_GAZETTE, Article::KIND_UPDATE], true)) {
+            $this->articles->setKind($id, $kind);
+        }
         $this->audit($actor, $id, ['title' => $article->title], ['title' => $title], $ip);
 
         return ContentEditResult::ok('Saved.', $id);

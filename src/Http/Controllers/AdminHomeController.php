@@ -124,8 +124,8 @@ final class AdminHomeController
                 'arrives' => null,
             ];
             $sections[] = [
-                'title' => 'The Gazette',
-                'sentence' => 'Write the newspaper: stories about the people of Felkyo, read in the library.',
+                'title' => 'Gazette & updates',
+                'sentence' => 'Write the newspaper, and post site updates for the home page.',
                 'href' => '/admin/gazette',
                 'arrives' => null,
             ];

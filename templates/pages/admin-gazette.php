@@ -13,7 +13,7 @@ $this->layout('layout', ['title' => 'The Gazette — Felkyo Creatures']);
 <section class="admin-panel">
     <header class="admin-panel__header card">
         <h2>The Felkyo Gazette</h2>
-        <p>News and stories about the people of Felkyo. Published pieces appear in the library, under &ldquo;the gazette&rdquo;, newest first.</p>
+        <p>Two kinds of writing live here: <strong>Gazette</strong> stories about the people of Felkyo (in the library), and <strong>site updates</strong> &mdash; what's new on the site, shown on the home page and at <a href="/updates">/updates</a>. Choose which when you write it.</p>
         <p><a href="/admin">&larr; back to the panel</a> &middot; <a href="/library?tab=gazette">see the Gazette as players do</a></p>
     </header>
 
@@ -41,6 +41,7 @@ $this->layout('layout', ['title' => 'The Gazette — Felkyo Creatures']);
                             <?= $article->isPublished() ? 'published' : 'draft' ?>
                         </span>
                         <a href="/admin/gazette/<?= $this->e((string) $article->id) ?>"><?= $this->e($article->title) ?></a>
+                        <span class="field__hint"><?= $article->isUpdate() ? 'site update' : 'Gazette' ?></span>
                     </li>
                 <?php endforeach; ?>
             </ul>

@@ -30,6 +30,8 @@ final class HomeController
         // shows real portrait cards rather than a bare list of names.
         private CreatureProfileBuilder $profileBuilder,
         private string $appName,
+        // The latest site updates for the home page (optional for old wiring).
+        private ?\Felkyo\Library\ArticleRepository $articles = null,
     ) {
     }
 
@@ -47,6 +49,9 @@ final class HomeController
         $html = $this->templates->render('pages/hello', [
             'appName' => $this->appName,
             'summaries' => $summaries,
+            // The two newest site updates, between the welcome and the
+            // creatures (Skerro, 2026-08-30) — for guests too.
+            'updates' => $this->articles?->published(2, \Felkyo\Library\Article::KIND_UPDATE) ?? [],
         ]);
 
         return Response::html($html);

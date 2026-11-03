@@ -79,7 +79,8 @@ final class AdminGazetteController
         $id = (int) ($parameters['id'] ?? 0);
 
         return $this->handle($request, $id, fn (User $actor) => $this->editor->saveWords(
-            $actor, $id, $request->input('title'), $request->input('summary'), $request->input('body'), $request->clientIp()
+            $actor, $id, $request->input('title'), $request->input('summary'), $request->input('body'), $request->clientIp(),
+            $request->input('kind', 'gazette')
         ));
     }
 

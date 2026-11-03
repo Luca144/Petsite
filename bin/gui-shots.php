@@ -74,6 +74,9 @@ const PAGES = [
     'friends' => '/friends',
     'post-office' => '/post-office',
     'shore' => '/shore',
+    // Skerro's fix list (2026-11-04).
+    'updates' => '/updates',
+    'library-item' => '/library/item/1',
 ];
 
 // ---- Refuse to run anywhere but a development machine ----

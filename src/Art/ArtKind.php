@@ -26,6 +26,8 @@ enum ArtKind: string
     case Card = 'card';
     case Background = 'background';
     case Library = 'library';
+    // A picture players may choose as their avatar (Skerro, 2026-10-14).
+    case Avatar = 'avatar';
 
     /** What a person sees it called. */
     public function label(): string
@@ -37,6 +39,7 @@ enum ArtKind: string
             self::Card => 'Card art',
             self::Background => 'Area background',
             self::Library => 'Library art',
+            self::Avatar => 'Player avatar',
         };
     }
 
@@ -53,6 +56,7 @@ enum ArtKind: string
             self::Card => 'The picture on a postcard.',
             self::Background => 'The scene behind an exploration area.',
             self::Library => 'A larger illustration for the library page.',
+            self::Avatar => 'A face players can choose for their own page — appears in their choices at once.',
         };
     }
 

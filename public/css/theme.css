@@ -74,6 +74,8 @@
     /* A frosty blue for the "kept at this stage" chip (M3.2b), as a tint
        behind plum text: plum on it is 9.4:1. */
     --frost: #CFE0EE;
+    /* Petting hearts: a warm red, decoration only (never text). */
+    --heart: #D8364B;
 
     /* ---- Typography ---- */
     /* Each stack lists real fallback fonts so the site still looks intentional

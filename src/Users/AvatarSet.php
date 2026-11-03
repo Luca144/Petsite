@@ -41,7 +41,9 @@ final class AvatarSet
     public const FALLBACK_KEY = 'default';
 
     /**
-     * @param array<string, array{name: string, file: string}> $avatars Keyed by avatar key.
+     * @param array<string, array{name: string, file?: string, path?: string}> $avatars Keyed by avatar key.
+     *        Config avatars have a 'file'; panel-uploaded ones (key "art-<id>")
+     *        a 'path' — still keys in an allow-list, never addresses a player sends.
      */
     public function __construct(private array $avatars)
     {
@@ -75,6 +77,12 @@ final class AvatarSet
             // so plainly — this can only happen if the config was emptied, which
             // is a setup mistake worth noticing rather than papering over.
             return '/assets/avatars/default.png';
+        }
+
+        // Avatars uploaded through the panel's art store carry their own
+        // address (/art/<content hash>); the original set lives in assets.
+        if (isset($avatar['path'])) {
+            return $avatar['path'];
         }
 
         return '/assets/avatars/' . $avatar['file'];

@@ -147,7 +147,7 @@ $this->layout('layout', ['title' => $shop->name . ' — Felkyo Creatures']);
                 <?php endif; ?>
             </span>
 
-            <span class="shop-item__name"><?= $this->e($item->name) ?></span>
+            <a class="shop-item__name" href="/library/item/<?= $this->e((string) $item->id) ?>"><?= $this->e($item->name) ?></a>
 
             <span class="shop-item__category">
                 <svg class="category-icon" aria-hidden="true" focusable="false">

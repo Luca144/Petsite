@@ -193,8 +193,9 @@ final class FeedingServiceTest extends DatabaseTestCase
 
         $this->feeding->feed($this->ownerId, $this->creature(), $this->honeyTreatId);
 
-        // Honey is +10 happiness; a favourite doubles it. 40 + 20.
-        $this->assertSame(60, $this->creature()->happiness);
+        // Honey is +10 happiness; a favourite is worth four times as much
+        // (config favourite_treat_multiplier, raised from 2 to 4). 40 + 40.
+        $this->assertSame(80, $this->creature()->happiness);
     }
 
     public function testAFavouriteTreatSaysSo(): void

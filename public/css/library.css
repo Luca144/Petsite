@@ -461,3 +461,44 @@
         transform: none;
     }
 }
+
+/* ---------- An item's page (where does this come from?) ---------- */
+
+/* Picture beside the words, tinted by category like every item card. */
+.library-item {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    align-items: flex-start;
+    background: var(--card-tint, var(--panel));
+}
+
+.library-item__art img,
+.library-item__art svg {
+    width: 96px;
+    height: 96px;
+}
+
+.library-item__category {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+}
+
+.library-sources {
+    padding-left: var(--space-5);
+    line-height: 1.9;
+}
+
+/* ---------- Site updates on the home page ---------- */
+
+.latest-updates {
+    margin-top: var(--space-6);
+}
+
+.latest-updates__all {
+    margin: var(--space-2) 0 0;
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+}

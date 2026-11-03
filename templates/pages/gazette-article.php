@@ -14,11 +14,15 @@
 $this->layout('layout', ['title' => $article->title . ' — The Felkyo Gazette']);
 ?>
 
-<p class="library-back"><a href="/library?tab=gazette">&larr; back to the Gazette</a></p>
+<?php if ($article->isUpdate()): ?>
+    <p class="library-back"><a href="/updates">&larr; all updates</a></p>
+<?php else: ?>
+    <p class="library-back"><a href="/library?tab=gazette">&larr; back to the Gazette</a></p>
+<?php endif; ?>
 
 <article class="gazette-article">
     <header class="gazette-article__header">
-        <p class="gazette-masthead__name gazette-article__paper" aria-hidden="true">The Felkyo Gazette</p>
+        <p class="gazette-masthead__name gazette-article__paper" aria-hidden="true"><?= $article->isUpdate() ? 'Felkyo Updates' : 'The Felkyo Gazette' ?></p>
         <h2 class="gazette-article__title"><?= $this->e($article->title) ?></h2>
         <?php if ($article->publishedAt !== null): ?>
             <p class="gazette-list__date"><?= $this->e(date('j F Y', (int) strtotime($article->publishedAt))) ?></p>
