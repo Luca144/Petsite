@@ -51,6 +51,9 @@ final class ProfileController
         private RateLimiter $rateLimiter,
         private array $limits,
         private array $rateLimit,
+        // M6: friends/block buttons and the mantelpiece. Optional so older
+        // test wiring still builds; without it the page leaves them out.
+        private ?\Felkyo\Social\CompanyPanel $companyPanel = null,
     ) {
     }
 
@@ -76,6 +79,7 @@ final class ProfileController
         $creatures = $this->creatures->findForProfile($profile->id, 12);
 
         return Response::html($this->templates->render('pages/profile', [
+            'company' => $this->companyPanel?->forProfile($profile->id, is_int($viewerId) ? $viewerId : null),
             'profile' => $profile,
             'avatarPath' => $this->avatars->imagePathFor($profile->avatarKey),
             'avatarName' => $this->avatars->nameFor($profile->avatarKey),

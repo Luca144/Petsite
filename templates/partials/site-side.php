@@ -97,6 +97,7 @@ if (empty($currentUser)) {
                     <li><a href="/"<?= $isCurrent('/') ? ' aria-current="page"' : '' ?>>home</a></li>
                     <li><a href="/creatures"<?= $isCurrent('/creatures') ? ' aria-current="page"' : '' ?>>my creatures</a></li>
                     <li><a href="/inventory"<?= $isCurrent('/inventory') ? ' aria-current="page"' : '' ?>>inventory</a></li>
+                    <li><a href="/friends"<?= $isCurrent('/friends') ? ' aria-current="page"' : '' ?>>friends</a></li>
                     <?php if (!empty($showPanelLink)): ?>
                         <?php /* Staff only (M2.1). Convenience, not security —
                                  the AdminGate re-checks roles on every admin

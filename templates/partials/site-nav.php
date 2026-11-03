@@ -88,6 +88,9 @@ $isCurrent = static function (string $href) use ($currentPath): bool {
             <li>
                 <a href="/inventory"<?= $isCurrent('/inventory') ? ' aria-current="page"' : '' ?>>inventory</a>
             </li>
+            <li>
+                <a href="/friends"<?= $isCurrent('/friends') ? ' aria-current="page"' : '' ?>>friends</a>
+            </li>
             <?php if (!empty($showPanelLink)): ?>
                 <?php /* Staff only (M2.1): the phone's way into the creator's
                          panel, since this row is what the sidebar's links

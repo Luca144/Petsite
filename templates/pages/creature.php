@@ -42,6 +42,12 @@ $this->layout('layout', ['title' => $this->e($creature->name) . ' — Felkyo Cre
     'treats' => $treats ?? [],
 ]) ?>
 
+<?php if (!empty($siteUrl) && $species !== null): ?>
+    <?= $this->insert('partials/creature-share', [
+        'creature' => $creature, 'imagePath' => $species->spriteUrlFor($stage), 'siteUrl' => $siteUrl,
+    ]) ?>
+<?php endif; ?>
+
 <?= $this->insert('partials/creature-character', [
     'creature' => $creature, 'stage' => $stage, 'character' => $character ?? null,
 ]) ?>

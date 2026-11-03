@@ -76,7 +76,9 @@ final class DemoSeedTest extends DatabaseTestCase
 
         // Three demo players, each with at least one creature.
         $this->assertSame(3, $this->countIn('users'));
-        $this->assertSame(4, $this->countIn('creatures'));
+        // Four owned creatures, plus three waiting at the pound (DemoLibrary, M3).
+        $this->assertSame(4, (int) $this->connection->query('SELECT COUNT(*) FROM creatures WHERE owner_id IS NOT NULL')->fetchColumn());
+        $this->assertSame(3, (int) $this->connection->query('SELECT COUNT(*) FROM creatures WHERE owner_id IS NULL AND pound_entered_at IS NOT NULL')->fetchColumn());
 
         // And some activity, so the demo does not look abandoned.
         $this->assertGreaterThan(0, $this->countIn('pettings'));
@@ -142,7 +144,8 @@ final class DemoSeedTest extends DatabaseTestCase
     }
 
     /**
-     * Every seeded creature must belong to a seeded user and a real species — a
+     * Every seeded creature must belong to a seeded user (or be waiting at the
+     * pound, where nobody owns it — M3) and a real species — a
      * demo world with a broken link in it would show up as an error page.
      */
     public function testEverySeededCreatureHasAnOwnerAndAKnownSpecies(): void
@@ -153,7 +156,7 @@ final class DemoSeedTest extends DatabaseTestCase
             'SELECT COUNT(*) FROM creatures
                LEFT JOIN users ON users.id = creatures.owner_id
                LEFT JOIN species ON species.id = creatures.species_id
-              WHERE users.id IS NULL OR species.id IS NULL'
+              WHERE (users.id IS NULL AND creatures.pound_entered_at IS NULL) OR species.id IS NULL'
         )->fetchColumn();
 
         $this->assertSame(0, $orphans);

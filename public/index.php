@@ -159,6 +159,14 @@ use Felkyo\Creatures\FreezeService;
 use Felkyo\Pound\PoundRepository;
 use Felkyo\Pound\PoundService;
 use Felkyo\Http\Controllers\PoundController;
+use Felkyo\Http\Controllers\CompanyController;
+use Felkyo\Http\Controllers\PostOfficeController;
+use Felkyo\Social\BottleRepository;
+use Felkyo\Social\BottleService;
+use Felkyo\Social\CompanyPanel;
+use Felkyo\Social\CompanyRepository;
+use Felkyo\Social\PostcardRepository;
+use Felkyo\Social\PostOfficeService;
 use Felkyo\Http\Controllers\ThemeController;
 use Felkyo\Http\Controllers\AdminThemesController;
 use Felkyo\Themes\ThemeRepository;
@@ -406,6 +414,12 @@ $creatureProfileBuilder = new CreatureProfileBuilder(
     $speciesRepository, $userRepository, $growthCalculator, $pettingRepository, $moodCalculator,
     $speciesFormRepository
 );
+// M6 — postcards, bottles, and company.
+$companyRepository = new CompanyRepository($pdo);
+$postcardRepository = new PostcardRepository($pdo);
+$bottleRepository = new BottleRepository($pdo);
+$companyPanel = new CompanyPanel($companyRepository, $postcardRepository);
+
 // M4 — themes.
 $themeRepository = new ThemeRepository($pdo);
 
@@ -605,6 +619,20 @@ $poundController = new PoundController(
     $templates, $session, $csrf, $poundRepository, $poundService, $freezeService,
     $creatureProfileBuilder, $rateLimiter, $config['security']['rate_limit_pound']
 );
+$companyController = new CompanyController(
+    $templates, $session, $csrf, $userRepository, $companyRepository,
+    $rateLimiter, $config['security']['rate_limit_company']
+);
+$postOfficeController = new PostOfficeController(
+    $templates, $session, $csrf, $postcardRepository,
+    new PostOfficeService(
+        $pdo, $postcardRepository, $companyRepository, $userRepository,
+        $config['gameplay']['postcards']['daily_cap'], $config['gameplay']['currency']['name']
+    ),
+    $companyRepository,
+    new BottleService($pdo, $bottleRepository, $config['gameplay']['bottles']['messages']),
+    $bottleRepository, $rateLimiter, $config['security']['rate_limit_company']
+);
 $themeController = new ThemeController(
     $templates, $session, $csrf, $themeRepository, $rateLimiter, $config['security']['rate_limit_pound']
 );
@@ -624,7 +652,8 @@ $creatureController = new CreatureController(
     $templates, $session, $creatureRepository, $creatureProfileBuilder, $guestbookPanel,
     $inventoryRepository,
     $config['gameplay']['creature_name_max_length'],
-    $characterSheet
+    $characterSheet,
+    $config['app']['url']
 );
 $guestbookController = new GuestbookController(
     $session, $csrf, $creatureRepository, $guestbookService, $guestbookRepository,
@@ -721,7 +750,8 @@ $profileController = new ProfileController(
     $creatureRepository, $creatureProfileBuilder, $avatarSet,
     new MutedVoice($moderationRepository), $rateLimiter,
     $config['profile'],
-    $config['security']['rate_limit_profile']
+    $config['security']['rate_limit_profile'],
+    $companyPanel
 );
 
 // The star on a creature, which is the other way to choose a favourite.
@@ -979,6 +1009,20 @@ $router->get('/browse', [$browseController, 'show']);
 
 // The community hub: browse creatures and find players from one place.
 $router->get('/community', [$communityController, 'show']);
+
+// M6 — friends, the post office, the shore. The four friend/block actions
+// share one handler; the closure tells it which one this route is.
+$router->get('/friends', [$companyController, 'show']);
+foreach (['friend', 'unfriend', 'block', 'unblock'] as $companyAction) {
+    $router->post('/player/{username}/' . $companyAction, static function ($request, array $parameters) use ($companyController, $companyAction) {
+        return $companyController->act($request, $parameters, $companyAction);
+    });
+}
+$router->get('/post-office', [$postOfficeController, 'postOffice']);
+$router->post('/post-office', [$postOfficeController, 'sendCard']);
+$router->get('/shore', [$postOfficeController, 'shore']);
+$router->post('/shore/send', [$postOfficeController, 'sendBottle']);
+$router->post('/shore/find', [$postOfficeController, 'findBottle']);
 
 // M4 — choosing a theme.
 $router->get('/themes', [$themeController, 'show']);

@@ -89,6 +89,11 @@ return [
         // When true, the app may show detailed errors. Turned off in production.
         'debug' => $readFlag($readEnv('APP_DEBUG'), true),
 
+        // The site's public address, for links that leave the site (the share
+        // box, M6.3). Empty = worked out from the request; set APP_URL in .env
+        // on the live server so shared links always point at the real site.
+        'url' => rtrim((string) ($readEnv('APP_URL') ?? ''), '/'),
+
         // IS PUBLIC REGISTRATION OPEN?
         //
         // The deployed site is a CLOSED DEMO: it runs on a handful of seeded demo
@@ -259,6 +264,11 @@ return [
         ],
         // The pound and freezing (M3): adopting, reclaiming, handing in,
         // freezing — per account. Generous for real use, a wall for scripts.
+        // Friends, blocks, cards and bottles (M6) — per account.
+        'rate_limit_company' => [
+            'max_attempts' => 60,
+            'window_seconds' => 3600,
+        ],
         'rate_limit_pound' => [
             'max_attempts' => 30,
             'window_seconds' => 3600,
@@ -374,6 +384,31 @@ return [
         // creature is born in one of its species' PUBLISHED alternate forms
         // instead of the default look. Kept rare so a form feels like luck.
         // 0 switches it off. Species with no published forms ignore it.
+        // Postcards (M6.4): how many cards one person may send in 24 hours,
+        // so nobody can be flooded.
+        'postcards' => [
+            'daily_cap' => 10,
+        ],
+
+        // Messages in bottles (M6.5). The ONLY words a bottle can carry.
+        // A SAFETY RULE FOR WHOEVER EDITS THIS LIST: keep every message warm
+        // and cheerful, and never confessional — nothing about loneliness,
+        // age, home, or circumstances. Even without typing, WHICH message
+        // someone picks says something; a sad one would let a stranger open
+        // bottles hunting for a vulnerable sender. Keys must never change
+        // once used (old bottles store the key); add new ones freely.
+        'bottles' => [
+            'messages' => [
+                'sunny' => 'Hello from the other side of the sea! I hope today is sunny where you are.',
+                'creatures' => 'My creatures send their warmest wiggles to yours.',
+                'treat' => 'Whoever finds this: you deserve a treat today.',
+                'tea' => 'Wishing you a cup of something warm and a good book.',
+                'stars' => 'I counted the stars tonight. There was one for you.',
+                'adventure' => 'Off on an adventure! Wishing you a good one too.',
+                'smile' => 'This bottle is carrying exactly one smile. It is yours now.',
+            ],
+        ],
+
         // The pound (M3.1). How many days a creature rests after being
         // handed in: its owner may take it back during that time, and nobody
         // can adopt it until it has passed.

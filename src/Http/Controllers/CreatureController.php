@@ -40,6 +40,9 @@ final class CreatureController
         // M3: traits, level title and friendly age. Optional so older test
         // wiring still builds; without it the page simply leaves them out.
         private ?\Felkyo\Character\CharacterSheet $character = null,
+        // The public site address for the share box (M6.3); empty = use
+        // the address this request arrived on.
+        private string $siteUrl = '',
     ) {
     }
 
@@ -83,6 +86,7 @@ final class CreatureController
         $html = $this->templates->render('pages/creature', [
             // Who it is (M3.2): traits, level title, friendly age.
             'character' => $this->character?->for($creature, $profile['level'], $profile['timesPetted']),
+            'siteUrl' => $this->siteUrl !== '' ? $this->siteUrl : $this->requestOrigin(),
             'creature' => $creature,
             'species' => $profile['species'],
             'owner' => $profile['owner'],
@@ -137,5 +141,18 @@ final class CreatureController
         ]);
 
         return Response::html($html, 404);
+    }
+
+    /**
+     * scheme://host of this request — only used for share links when no
+     * APP_URL is configured. It only affects what the requester themselves
+     * is shown to copy, so a forged Host header can only fool its sender.
+     */
+    private function requestOrigin(): string
+    {
+        $https = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+        $host = preg_replace('/[^A-Za-z0-9.\-:]/', '', (string) ($_SERVER['HTTP_HOST'] ?? 'localhost'));
+
+        return ($https ? 'https://' : 'http://') . $host;
     }
 }

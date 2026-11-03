@@ -70,6 +70,10 @@ const PAGES = [
     'pound' => '/pound',
     // M4 — themes.
     'themes' => '/themes',
+    // M6 — company.
+    'friends' => '/friends',
+    'post-office' => '/post-office',
+    'shore' => '/shore',
 ];
 
 // ---- Refuse to run anywhere but a development machine ----

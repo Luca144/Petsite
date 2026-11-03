@@ -108,4 +108,4 @@ $rulesJson = json_encode(array_map(
         </form>
     </div>
 </section>
-<script src="/js/theme-editor.js" defer></script>
+<script src="<?= \Felkyo\Http\AssetUrl::versioned('/js/theme-editor.js') ?>" defer></script>

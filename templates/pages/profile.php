@@ -156,6 +156,10 @@ $this->layout('layout', ['title' => $profile->username . ' — Felkyo Creatures'
     <?php endif; ?>
 </section>
 
+<?= $this->insert('partials/profile-company', [
+    'profile' => $profile, 'company' => $company ?? null, 'isOwner' => $isOwner,
+]) ?>
+
 <?php if ($isOwner): ?>
     <?php /* The way out lives here, at the very bottom of your own page.
              WHY HERE: on a phone the sidebar is a compact strip at the top of
