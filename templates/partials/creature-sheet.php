@@ -66,11 +66,15 @@ $createdLabel = $creature->createdAt !== null
             a <b><?= $this->e($speciesName) ?></b>
             <?php /* The owner's name links to their page, so a creature you liked
                      is a way of finding the person who looks after it. */ ?>
+            <?php if ($creature->isAtPound()): ?>
+                &middot; waiting for a home at <a href="/pound">the pound</a>
+            <?php else: ?>
             &middot; cared for by
             <?php if ($owner !== null): ?>
                 <a href="/player/<?= $this->e(rawurlencode($owner->username)) ?>"><?= $this->e($owner->username) ?></a>
             <?php else: ?>
                 someone
+            <?php endif; ?>
             <?php endif; ?>
             &middot; here since <?= $this->e($createdLabel) ?>
         </p>

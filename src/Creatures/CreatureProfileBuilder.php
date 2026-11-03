@@ -45,7 +45,7 @@ final class CreatureProfileBuilder
             ),
             'owner' => $this->users->findById($creature->ownerId),
             'level' => $this->growth->levelFor($creature->xp),
-            'stage' => $this->growth->stageFor($creature->xp),
+            'stage' => $this->growth->shownStageFor($creature),
             'timesPetted' => $this->pettings->countForCreature($creature->id),
             'mood' => $this->moodOf($creature),
         ];
@@ -102,7 +102,7 @@ final class CreatureProfileBuilder
                     $formsById[(int) $creature->formId] ?? null
                 ),
                 'level' => $this->growth->levelFor($creature->xp),
-                'stage' => $this->growth->stageFor($creature->xp),
+                'stage' => $this->growth->shownStageFor($creature),
                 // Costs nothing extra: the readings and their ages came back with
                 // the creature, so working out the mood is arithmetic, not a query.
                 'mood' => $this->moodOf($creature),

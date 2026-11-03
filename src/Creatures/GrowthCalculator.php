@@ -61,4 +61,34 @@ final class GrowthCalculator
 
         return $currentStage;
     }
+    /**
+     * The stage a creature is SHOWN at (M3.2b). Normally the stage its XP has
+     * earned; but a frozen creature, or one still catching up after being
+     * unfrozen, carries its shown stage explicitly — and that wins. XP keeps
+     * counting the whole time, so nothing is lost while frozen.
+     */
+    public function shownStageFor(Creature $creature): string
+    {
+        return $creature->shownStage ?? $this->stageFor($creature->xp);
+    }
+
+    /**
+     * The stage after this one, or null if it is the last (or unknown).
+     * Used by the catch-up after unfreezing: one stage per growth tick.
+     */
+    public function stageAfter(string $stage): ?string
+    {
+        $names = array_keys($this->stageStartLevels);
+        $position = array_search($stage, $names, true);
+
+        return $position === false ? null : ($names[$position + 1] ?? null);
+    }
+
+    /** Is stage $a earlier in life than stage $b? */
+    public function isEarlier(string $a, string $b): bool
+    {
+        $names = array_keys($this->stageStartLevels);
+
+        return (int) array_search($a, $names, true) < (int) array_search($b, $names, true);
+    }
 }

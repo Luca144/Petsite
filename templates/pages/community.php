@@ -35,7 +35,7 @@ $this->layout('layout', ['title' => 'Community — Felkyo Creatures']);
 
 <?php if ($tab === 'creatures'): ?>
 
-    <p>A few of the creatures making their home in Felkyo right now. Say hello &mdash; you can pet any of them.</p>
+    <p>A few of the creatures making their home in Felkyo right now. Say hello &mdash; you can pet any of them. Looking for one of your own? Some are waiting at <a href="/pound">the pound</a>.</p>
 
     <?php if (empty($creatureSummaries)): ?>
         <p class="empty-state">No creatures to show yet. Be the first!</p>

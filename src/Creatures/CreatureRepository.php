@@ -49,6 +49,7 @@ final class CreatureRepository
      * existed: its readings are as old as the creature itself, which is true.
      */
     private const COLUMNS = 'id, owner_id, species_id, form_id, name, xp, happiness, energy,
+             pound_entered_at, pound_previous_owner_id, is_frozen, shown_stage,
              bio, bio_hidden_at, is_public, featured_order, last_interacted_at, created_at,
              TIMESTAMPDIFF(SECOND, COALESCE(happiness_at, created_at), NOW()) AS happiness_age_seconds,
              TIMESTAMPDIFF(SECOND, COALESCE(energy_at, created_at), NOW()) AS energy_age_seconds';
@@ -142,6 +143,7 @@ final class CreatureRepository
         $statement = $this->connection->query(
             'SELECT ' . self::COLUMNS . ' FROM creatures
               WHERE is_public = 1
+                AND pound_entered_at IS NULL   -- pound creatures live on the pound page
               ORDER BY created_at DESC, id DESC
               LIMIT ' . $limit
         );

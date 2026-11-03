@@ -37,6 +37,9 @@ final class CreatureController
         // The rename field needs the same limit the server enforces, so the box
         // stops you before a submission can fail. One number, from config.
         private int $nameMaxLength,
+        // M3: traits, level title and friendly age. Optional so older test
+        // wiring still builds; without it the page simply leaves them out.
+        private ?\Felkyo\Character\CharacterSheet $character = null,
     ) {
     }
 
@@ -78,6 +81,8 @@ final class CreatureController
         );
 
         $html = $this->templates->render('pages/creature', [
+            // Who it is (M3.2): traits, level title, friendly age.
+            'character' => $this->character?->for($creature, $profile['level'], $profile['timesPetted']),
             'creature' => $creature,
             'species' => $profile['species'],
             'owner' => $profile['owner'],

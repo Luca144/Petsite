@@ -42,6 +42,10 @@ $this->layout('layout', ['title' => $this->e($creature->name) . ' — Felkyo Cre
     'treats' => $treats ?? [],
 ]) ?>
 
+<?= $this->insert('partials/creature-character', [
+    'creature' => $creature, 'stage' => $stage, 'character' => $character ?? null,
+]) ?>
+
 <hr class="rule">
 
 <h2 class="panel-label">About <?= $this->e($creature->name) ?></h2>
@@ -80,3 +84,8 @@ $this->layout('layout', ['title' => $this->e($creature->name) . ' — Felkyo Cre
     'canSign' => $canSignGuestbook,
     'isOwner' => !empty($isOwner),
 ]) ?>
+
+<?php if (!empty($isOwner)): ?>
+    <hr class="rule">
+    <?= $this->insert('partials/creature-keeping', ['creature' => $creature, 'stage' => $stage]) ?>
+<?php endif; ?>

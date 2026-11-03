@@ -1,0 +1,200 @@
+/*
+ * character.css — the pound (M3.1) and who a creature is (M3.2): traits,
+ * the "kept at this stage" chip, level titles and the friendly age.
+ *
+ * Colours from theme.css only. The pound's cold palette (--stone, --iron)
+ * is used by the gate and nowhere else, on purpose.
+ */
+
+/* ---------- The pound gate: forbidding outside ---------- */
+
+.pound-gate {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    height: 140px;
+    margin: 0 0 var(--space-4);
+    background: linear-gradient(180deg, var(--stone), var(--stone-deep));
+    border: 3px solid var(--iron);
+    border-radius: var(--radius-lg) var(--radius-lg) var(--radius-sm) var(--radius-sm);
+    overflow: hidden;
+}
+
+/* Iron bars, drawn with a repeating gradient rather than an image. */
+.pound-gate__bars {
+    position: absolute;
+    inset: 44px 0 0;
+    background: repeating-linear-gradient(90deg, transparent 0 22px, var(--iron) 22px 28px);
+    opacity: 0.85;
+}
+
+/* The sign over the gate. Parchment on dark stone passes contrast easily. */
+.pound-gate__sign {
+    position: relative;
+    z-index: 1;
+    margin-top: var(--space-3);
+    padding: var(--space-1) var(--space-4);
+    font-family: var(--font-mono);
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--parchment);
+    background: var(--iron);
+    border: 2px solid var(--stone);
+}
+
+/* A slow lamplit glow behind the bars — the warmth waiting inside. */
+.pound-gate::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -40px;
+    width: 220px;
+    height: 120px;
+    transform: translateX(-50%);
+    background: radial-gradient(closest-side, var(--gold-lit), var(--gold) 45%, transparent);
+    opacity: 0.55;
+    /* screen blending keeps the glow warm gold over the grey stone,
+       instead of mixing into a muddy green. */
+    mix-blend-mode: screen;
+    animation: pound-lamp 4s ease-in-out infinite alternate;
+}
+
+@keyframes pound-lamp {
+    from { opacity: 0.4; }
+    to { opacity: 0.7; }
+}
+
+.pound-intro {
+    font-family: var(--font-display);
+    font-style: italic;
+}
+
+/* ---------- Inside: warm ---------- */
+
+.pound-grid {
+    list-style: none;
+    margin: var(--space-3) 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: var(--space-4);
+}
+
+.pound-grid__item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.pound-grid__item .btn {
+    width: 100%;
+    min-height: 44px;
+    white-space: normal;
+}
+
+.pound-grid__note {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    text-align: center;
+}
+
+.pound-yours {
+    margin-bottom: var(--space-6);
+}
+
+/* ---------- On the creature page ---------- */
+
+.creature-character {
+    margin-top: var(--space-6);
+}
+
+/* "kept as a baby" — frost tint plus a snowflake AND the words. */
+.creature-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 2px var(--space-3);
+    margin: var(--space-1) var(--space-1) 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--plum);
+    background: var(--frost);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+}
+
+.creature-chip--title {
+    background: var(--category-badge);
+}
+
+/* The traits: small cards with the name, what it means, and how it came. */
+.trait-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-2);
+}
+
+@media (min-width: 600px) {
+    .trait-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.trait {
+    padding: var(--space-3);
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    border-left: 5px solid var(--gold);
+    border-radius: var(--radius-sm);
+}
+
+.trait--shelter {
+    border-left-color: var(--stone);
+}
+
+.trait--gift {
+    border-left-color: var(--purple);
+}
+
+.trait__name {
+    font-family: var(--font-display);
+    font-weight: 600;
+}
+
+.trait__description {
+    margin: var(--space-1) 0;
+}
+
+.trait__how {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+}
+
+/* The keeper's corner on a creature page: freeze and the pound. */
+.creature-keeping {
+    display: grid;
+    gap: var(--space-4);
+}
+
+.creature-keeping__sure {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px;
+}
+
+.creature-keeping__sure input {
+    width: 22px;
+    height: 22px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pound-gate::after {
+        animation: none;
+    }
+}

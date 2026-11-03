@@ -69,3 +69,16 @@ use Felkyo\Http\AssetUrl;
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/admin-stats.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/library.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/admin-library.css') ?>">
+    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/character.css') ?>">
+    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/themes.css') ?>">
+
+    <?php if (!empty($activeTheme)): ?>
+        <?php /* The player's chosen theme (M4.1): overrides for the colour
+                 tokens, AFTER theme.css so they win. Printed raw on purpose —
+                 Theme::css() only ever emits allow-listed token names with
+                 strict #RRGGBB values, so nothing typed can reach here. */ ?>
+        <style><?= $activeTheme->css() ?></style>
+        <?php if ($activeTheme->easyReading): ?>
+            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700&display=swap">
+        <?php endif; ?>
+    <?php endif; ?>

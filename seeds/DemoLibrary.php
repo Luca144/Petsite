@@ -63,6 +63,30 @@ final class DemoLibrary extends AbstractSeed
         }
 
         $this->seedFirstArticle($pdo);
+        $this->seedPoundResidents($pdo);
+    }
+
+    /**
+     * A few creatures waiting at the pound (M3), so the page isn't empty in a
+     * demo. They belong to nobody and nobody brought them, so anyone may
+     * adopt them. Only added while fewer than three are waiting.
+     */
+    private function seedPoundResidents(\PDO $pdo): void
+    {
+        $waiting = (int) $pdo->query('SELECT COUNT(*) FROM creatures WHERE owner_id IS NULL')->fetchColumn();
+        if ($waiting >= 3) {
+            return;
+        }
+
+        $residents = [['foxlen', 'Tumble', 30], ['mossling', 'Puddle', 90], ['pebblewing', 'Button', 150]];
+        $insert = $pdo->prepare(
+            "INSERT INTO creatures (owner_id, species_id, name, xp, is_public, pound_entered_at, bio)
+             SELECT NULL, id, :name, :xp, 1, NOW() - INTERVAL 5 DAY, 'Waiting patiently by the warm stove.'
+               FROM species WHERE slug = :slug"
+        );
+        foreach ($residents as [$slug, $name, $xp]) {
+            $insert->execute([':slug' => $slug, ':name' => $name, ':xp' => $xp]);
+        }
     }
 
     /** The Gazette's very first issue — only if it isn't there yet. */

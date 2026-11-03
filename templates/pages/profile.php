@@ -41,6 +41,7 @@ $this->layout('layout', ['title' => $profile->username . ' — Felkyo Creatures'
     <p class="profile-owner-note">
         This is how your page looks to everyone else.
         <a href="/profile/edit">Change your page</a>
+        or <a href="/themes">choose how Felkyo looks for you</a>.
     </p>
 <?php endif; ?>
 

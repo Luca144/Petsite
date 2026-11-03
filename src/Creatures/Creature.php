@@ -47,14 +47,30 @@ final class Creature
         public readonly ?string $createdAt,
         // Which alternate form the creature wears (M5.3); null = the default.
         public readonly ?int $formId = null,
+        // M3: at the pound since (null = not at the pound), and who brought it.
+        public readonly ?string $poundEnteredAt = null,
+        public readonly ?int $poundPreviousOwnerId = null,
+        // M3.2b: kept at a stage, and the stage shown while frozen or catching up.
+        public readonly bool $isFrozen = false,
+        public readonly ?string $shownStage = null,
     ) {
+    }
+
+    /**
+     * Is this creature at the pound? Its ownerId is then 0 — it belongs to
+     * nobody, so every ownership check refuses everyone (see the M3 migration).
+     */
+    public function isAtPound(): bool
+    {
+        return $this->poundEnteredAt !== null;
     }
 
     public static function fromRow(array $row): self
     {
         return new self(
             (int) $row['id'],
-            (int) $row['owner_id'],
+            // NULL while at the pound (M3) — 0 matches no account.
+            (int) ($row['owner_id'] ?? 0),
             (int) $row['species_id'],
             $row['name'],
             (int) $row['xp'],
@@ -72,6 +88,10 @@ final class Creature
             $row['last_interacted_at'] ?? null,
             $row['created_at'] ?? null,
             isset($row['form_id']) ? (int) $row['form_id'] : null,
+            $row['pound_entered_at'] ?? null,
+            isset($row['pound_previous_owner_id']) ? (int) $row['pound_previous_owner_id'] : null,
+            (bool) ($row['is_frozen'] ?? false),
+            $row['shown_stage'] ?? null,
         );
     }
 

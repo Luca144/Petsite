@@ -151,6 +151,20 @@ use Felkyo\Users\ProfileService;
 use Felkyo\Users\UserRepository;
 use Felkyo\Users\UserValidator;
 use Felkyo\Library\ArticleRepository;
+use Felkyo\Character\CharacterSheet;
+use Felkyo\Character\LadderRepository;
+use Felkyo\Character\TraitAwarder;
+use Felkyo\Character\TraitRepository;
+use Felkyo\Creatures\FreezeService;
+use Felkyo\Pound\PoundRepository;
+use Felkyo\Pound\PoundService;
+use Felkyo\Http\Controllers\PoundController;
+use Felkyo\Http\Controllers\ThemeController;
+use Felkyo\Http\Controllers\AdminThemesController;
+use Felkyo\Themes\ThemeRepository;
+use Felkyo\Themes\ThemeEditorService;
+use Felkyo\Http\Controllers\AdminCharacterController;
+use Felkyo\Character\CharacterEditorService;
 use Felkyo\Library\CreatureFormRoller;
 use Felkyo\Library\SpeciesFormRepository;
 use League\Plates\Engine;
@@ -373,7 +387,7 @@ $moodCalculator = new MoodCalculator($config['gameplay']['mood']);
 // lock, the mood, the XP, the play cooldown. One object shared by all three,
 // because every one of those methods has to run inside a transaction that
 // holds the lock — see CreatureInteractions for the whole reasoning.
-$creatureInteractions = new CreatureInteractions($pdo);
+$creatureInteractions = new CreatureInteractions($pdo, $growthCalculator);
 
 $pettingService = new PettingService(
     $pdo,
@@ -392,6 +406,17 @@ $creatureProfileBuilder = new CreatureProfileBuilder(
     $speciesRepository, $userRepository, $growthCalculator, $pettingRepository, $moodCalculator,
     $speciesFormRepository
 );
+// M4 — themes.
+$themeRepository = new ThemeRepository($pdo);
+
+// M3 — the pound, and who a creature is.
+$traitRepository = new TraitRepository($pdo);
+$ladderRepository = new LadderRepository($pdo);
+$traitAwarder = new TraitAwarder($traitRepository);
+$characterSheet = new CharacterSheet($traitRepository, $traitAwarder, $ladderRepository);
+$poundRepository = new PoundRepository($pdo, $config['gameplay']['pound']['grace_days']);
+$poundService = new PoundService($pdo, $poundRepository, $creatureRepository, $traitAwarder);
+$freezeService = new FreezeService($pdo, $creatureRepository, $growthCalculator);
 $purchaseService = new PurchaseService(
     $pdo, $shopRepository, $userRepository, $inventoryRepository,
     $config['gameplay']['currency']['name']
@@ -550,6 +575,8 @@ $templates->addData([
     'justPetted' => $justPetted,
     'sidebarOpen' => $sidebarOpen,
     'currentUser' => $currentUser,
+    // M4: the theme this player wears (null = the site's own look).
+    'activeTheme' => $currentUser !== null ? $themeRepository->forUser($currentUser->id) : null,
     'creatureMoment' => $creatureMoment,
     'favouriteSummary' => $favouriteSummary,
     'currentAvatarPath' => $currentAvatarPath,
@@ -574,6 +601,13 @@ $libraryController = new LibraryController(
     $templates, $speciesRepository, $speciesFormRepository, $articleRepository,
     array_keys($config['gameplay']['growth']['stage_start_levels'])
 );
+$poundController = new PoundController(
+    $templates, $session, $csrf, $poundRepository, $poundService, $freezeService,
+    $creatureProfileBuilder, $rateLimiter, $config['security']['rate_limit_pound']
+);
+$themeController = new ThemeController(
+    $templates, $session, $csrf, $themeRepository, $rateLimiter, $config['security']['rate_limit_pound']
+);
 $browseController = new BrowseController(
     $templates, $creatureRepository, $creatureProfileBuilder, $config['gameplay']['browse_recent_limit']
 );
@@ -589,7 +623,8 @@ $logoutController = new LogoutController($session, $csrf);
 $creatureController = new CreatureController(
     $templates, $session, $creatureRepository, $creatureProfileBuilder, $guestbookPanel,
     $inventoryRepository,
-    $config['gameplay']['creature_name_max_length']
+    $config['gameplay']['creature_name_max_length'],
+    $characterSheet
 );
 $guestbookController = new GuestbookController(
     $session, $csrf, $creatureRepository, $guestbookService, $guestbookRepository,
@@ -798,6 +833,19 @@ $adminGazetteController = new AdminGazetteController(
     $templates, $session, $csrf, $userRepository, $articleRepository, $artRepository,
     $articleEditorService, $rateLimiter, $config['security']['rate_limit_content_save']
 );
+// M4 in the panel: the theme editor.
+$adminThemesController = new AdminThemesController(
+    $templates, $session, $csrf, $userRepository, $themeRepository,
+    new ThemeEditorService($themeRepository, $auditLogRepository),
+    $rateLimiter, $config['security']['rate_limit_content_save']
+);
+
+// M3 in the panel: traits and the level-title / age ladders.
+$adminCharacterController = new AdminCharacterController(
+    $templates, $session, $csrf, $userRepository, $traitRepository, $ladderRepository,
+    new CharacterEditorService($traitRepository, $ladderRepository, $auditLogRepository),
+    $rateLimiter, $config['security']['rate_limit_content_save']
+);
 $adminCreatureEditController = new AdminCreatureEditController(
     $templates, $session, $csrf, $userRepository, $speciesRepository,
     $contentVersionRepository, $speciesEditorService, $inventoryRepository,
@@ -932,6 +980,17 @@ $router->get('/browse', [$browseController, 'show']);
 // The community hub: browse creatures and find players from one place.
 $router->get('/community', [$communityController, 'show']);
 
+// M4 — choosing a theme.
+$router->get('/themes', [$themeController, 'show']);
+$router->post('/themes', [$themeController, 'choose']);
+
+// M3 — the pound, and keeping a creature at a stage.
+$router->get('/pound', [$poundController, 'show']);
+$router->post('/pound/{id}/adopt', [$poundController, 'adopt']);
+$router->post('/pound/{id}/reclaim', [$poundController, 'reclaim']);
+$router->post('/creature/{id}/to-pound', [$poundController, 'toPound']);
+$router->post('/creature/{id}/freeze', [$poundController, 'freeze']);
+$router->post('/creature/{id}/unfreeze', [$poundController, 'unfreeze']);
 // M5 — the library and the Gazette (public, read-only).
 $router->get('/library', [$libraryController, 'index']);
 $router->get('/library/{slug}', [$libraryController, 'species']);
@@ -1033,6 +1092,20 @@ $router->post('/admin/maintenance/clear-rate-limits', $adminGate->protect(Role::
 $router->get('/admin/maintenance/art-backup', $adminGate->protect(Role::Coder, [$adminSettingsController, 'artBackup']));
 // The stats page (M2.9).
 $router->get('/admin/stats', $adminGate->protect(Role::Artist, [$adminStatsController, 'show']));
+// M4 — themes. Artist role.
+$router->get('/admin/themes', $adminGate->protect(Role::Artist, [$adminThemesController, 'index']));
+$router->post('/admin/themes/create', $adminGate->protect(Role::Artist, [$adminThemesController, 'create']));
+$router->get('/admin/themes/{id}', $adminGate->protect(Role::Artist, [$adminThemesController, 'show']));
+$router->post('/admin/themes/{id}/save', $adminGate->protect(Role::Artist, [$adminThemesController, 'save']));
+$router->post('/admin/themes/{id}/publish', $adminGate->protect(Role::Artist, [$adminThemesController, 'publish']));
+$router->post('/admin/themes/{id}/unpublish', $adminGate->protect(Role::Artist, [$adminThemesController, 'unpublish']));
+$router->post('/admin/themes/{id}/delete', $adminGate->protect(Role::Artist, [$adminThemesController, 'delete']));
+
+// M3 — traits & titles. Artist role.
+$router->get('/admin/character', $adminGate->protect(Role::Artist, [$adminCharacterController, 'show']));
+$router->post('/admin/character/traits/{id}', $adminGate->protect(Role::Artist, [$adminCharacterController, 'saveTrait']));
+$router->post('/admin/character/traits/{id}/delete', $adminGate->protect(Role::Artist, [$adminCharacterController, 'deleteTrait']));
+$router->post('/admin/character/ladder/{ladder}', $adminGate->protect(Role::Artist, [$adminCharacterController, 'saveLadder']));
 // M5 — alternate forms (on a species) and the Gazette desk. Artist role.
 $router->get('/admin/creatures/{id}/forms', $adminGate->protect(Role::Artist, [$adminFormsController, 'show']));
 $router->post('/admin/creatures/{id}/forms/create', $adminGate->protect(Role::Artist, [$adminFormsController, 'create']));

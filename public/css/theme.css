@@ -64,6 +64,17 @@
     --category-sticker: #F0C0C6;    /* rose — decoration */
     --category-badge: #E9D28C;      /* pale gold — earned markers */
 
+    /* ---- The pound's cold outside (M3.1) ----
+       The one deliberately unwelcoming place on the site: grey stone and
+       iron. Used ONLY by the pound gate, so the warmth inside reads as
+       warmth. Parchment text on --stone-deep is 10.1:1. */
+    --stone: #6E6A72;
+    --stone-deep: #34313A;
+    --iron: #1E1C22;
+    /* A frosty blue for the "kept at this stage" chip (M3.2b), as a tint
+       behind plum text: plum on it is 9.4:1. */
+    --frost: #CFE0EE;
+
     /* ---- Typography ---- */
     /* Each stack lists real fallback fonts so the site still looks intentional
        if the web fonts fail to load (e.g. offline). */

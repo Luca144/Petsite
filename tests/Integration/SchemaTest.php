@@ -77,14 +77,23 @@ final class SchemaTest extends TestCase
     }
 
     /**
-     * A creature must always have an owner and a species, so those columns must
+     * A creature must always have a species and a name, so those columns must
      * be NOT NULL. This proves the required-field rules made it into the schema.
+     *
+     * owner_id used to be in this list. Since M3 it is deliberately NULLABLE:
+     * a creature at the pound belongs to nobody (see the CreateCharacter
+     * migration) — the test below proves that change was made on purpose.
      */
     public function testRequiredCreatureColumnsAreNotNullable(): void
     {
-        $this->assertFalse($this->columnIsNullable('creatures', 'owner_id'));
         $this->assertFalse($this->columnIsNullable('creatures', 'species_id'));
         $this->assertFalse($this->columnIsNullable('creatures', 'name'));
+    }
+
+    /** A creature at the pound has no owner (M3.1), so owner_id must allow NULL. */
+    public function testCreatureOwnerMayBeEmptyWhileAtThePound(): void
+    {
+        $this->assertTrue($this->columnIsNullable('creatures', 'owner_id'));
     }
 
     /**

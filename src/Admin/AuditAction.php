@@ -93,6 +93,10 @@ enum AuditAction: string
     // M5 — the library: alternate forms and the Gazette.
     case FormSaved = 'form.saved';
     case ArticleSaved = 'article.saved';
+    // M3 — traits and the level-title / age ladders.
+    case CharacterSaved = 'character.saved';
+    // M4 — themes.
+    case ThemeSaved = 'theme.saved';
 
     /**
      * What a person reading the audit page sees, in plain words.
@@ -144,6 +148,8 @@ enum AuditAction: string
             self::ArtBackupDownloaded => 'downloaded the art backup',
             self::FormSaved => 'changed an alternate form',
             self::ArticleSaved => 'changed a Gazette article',
+            self::CharacterSaved => 'changed traits or titles',
+            self::ThemeSaved => 'changed a theme',
         };
     }
 }

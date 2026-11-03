@@ -257,6 +257,12 @@ return [
                                       // changes are rare; a burst of them is
                                       // an incident, not a workflow.
         ],
+        // The pound and freezing (M3): adopting, reclaiming, handing in,
+        // freezing — per account. Generous for real use, a wall for scripts.
+        'rate_limit_pound' => [
+            'max_attempts' => 30,
+            'window_seconds' => 3600,
+        ],
         'rate_limit_content_save' => [
             'max_attempts' => 120,    // 120 saves/publishes/reverts...
             'window_seconds' => 3600, // ...per hour, per staff member, SHARED
@@ -368,6 +374,13 @@ return [
         // creature is born in one of its species' PUBLISHED alternate forms
         // instead of the default look. Kept rare so a form feels like luck.
         // 0 switches it off. Species with no published forms ignore it.
+        // The pound (M3.1). How many days a creature rests after being
+        // handed in: its owner may take it back during that time, and nobody
+        // can adopt it until it has passed.
+        'pound' => [
+            'grace_days' => 3,
+        ],
+
         'forms' => [
             'birth_chance_percent' => 10,
         ],

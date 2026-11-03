@@ -37,7 +37,9 @@
 use Felkyo\Http\AssetUrl;
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<?php /* M4.3: easy-reading type is switched on for the whole page by one
+         attribute, which themes.css answers. */ ?>
+<html lang="en"<?= !empty($activeTheme) && $activeTheme->easyReading ? ' data-reading="easy"' : '' ?>>
 <head>
     <?= $this->insert('partials/head', ['title' => $title]) ?>
 </head>

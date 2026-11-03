@@ -66,6 +66,10 @@ const PAGES = [
     'library-species' => '/library/foxlen',
     'gazette' => '/library?tab=gazette',
     'gazette-article' => '/gazette/the-gazette-opens',
+    // M3 — the pound.
+    'pound' => '/pound',
+    // M4 — themes.
+    'themes' => '/themes',
 ];
 
 // ---- Refuse to run anywhere but a development machine ----
@@ -274,6 +278,10 @@ $save('admin-creature-edit', $fetch('/admin/creatures/' . $shotSpeciesId));
 $save('library-book-open', str_replace('<details class="book">', '<details class="book" open>', $fetch('/library/foxlen')));
 $save('admin-forms', $fetch('/admin/creatures/1/forms'));
 $save('admin-gazette', $fetch('/admin/gazette'));
+$save('admin-character', $fetch('/admin/character'));
+$save('admin-themes', $fetch('/admin/themes'));
+preg_match('~href="/admin/themes/(\d+)"~', $fetch('/admin/themes'), $themeM);
+$save('admin-theme-edit', $fetch('/admin/themes/' . ($themeM[1] ?? '0')));
 $save('admin-creature-picker', $fetch('/admin/creatures/' . $shotSpeciesId . '/picture/juvenile'));
 $save('admin-creature-preview', $fetch('/admin/creatures/' . $shotSpeciesId . '/preview'));
 

@@ -39,8 +39,14 @@ use PDO;
  */
 final class CreatureInteractions
 {
-    public function __construct(private PDO $connection)
-    {
+    /**
+     * The growth calculator is optional (older tests leave it out); without
+     * it, the after-unfreeze catch-up (M3.2b) simply does not step.
+     */
+    public function __construct(
+        private PDO $connection,
+        private ?GrowthCalculator $growth = null,
+    ) {
     }
 
     /**
@@ -120,10 +126,63 @@ final class CreatureInteractions
      */
     public function addExperience(int $creatureId, int $xpGain): void
     {
+        // The ONE mechanical effect a trait may have (M3.2): a small XP bonus,
+        // today only from "grateful". The best bonus applies; they don't stack.
+        $xpGain += intdiv($xpGain * $this->xpBonusPercent($creatureId), 100);
+
         $statement = $this->connection->prepare(
             'UPDATE creatures SET xp = xp + :xp_gain WHERE id = :id'
         );
         $statement->execute([':xp_gain' => $xpGain, ':id' => $creatureId]);
+
+        $this->stepCatchUp($creatureId);
+    }
+
+    /** The largest XP bonus among this creature's traits, in percent. */
+    private function xpBonusPercent(int $creatureId): int
+    {
+        $statement = $this->connection->prepare(
+            'SELECT COALESCE(MAX(t.xp_bonus_percent), 0)
+               FROM creature_traits ct
+               JOIN traits t ON t.id = ct.trait_id
+              WHERE ct.creature_id = :id'
+        );
+        $statement->execute([':id' => $creatureId]);
+
+        return (int) $statement->fetchColumn();
+    }
+
+    /**
+     * Growing up again after being unfrozen (M3.2b): each growth tick moves
+     * the SHOWN stage forward by exactly one, until it reaches the stage the
+     * XP has earned — then shown_stage clears and the XP decides again. So a
+     * creature frozen as a baby for months is seen growing up step by step,
+     * instead of turning into an adult overnight.
+     *
+     * A frozen creature never steps. Safe without a lock: the worst a race can
+     * do is step twice at once, which still never passes the earned stage.
+     */
+    private function stepCatchUp(int $creatureId): void
+    {
+        if ($this->growth === null) {
+            return;
+        }
+
+        $statement = $this->connection->prepare(
+            'SELECT xp, is_frozen, shown_stage FROM creatures WHERE id = :id'
+        );
+        $statement->execute([':id' => $creatureId]);
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        if (!is_array($row) || (bool) $row['is_frozen'] || $row['shown_stage'] === null) {
+            return;
+        }
+
+        $earned = $this->growth->stageFor((int) $row['xp']);
+        $next = $this->growth->stageAfter((string) $row['shown_stage']);
+        $caughtUp = $next === null || !$this->growth->isEarlier($next, $earned);
+
+        $this->connection->prepare('UPDATE creatures SET shown_stage = :stage WHERE id = :id AND is_frozen = 0')
+            ->execute([':stage' => $caughtUp ? null : $next, ':id' => $creatureId]);
     }
 
     /**

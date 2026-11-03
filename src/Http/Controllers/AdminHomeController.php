@@ -118,16 +118,22 @@ final class AdminHomeController
                 'arrives' => null,
             ];
             $sections[] = [
+                'title' => 'Traits & titles',
+                'sentence' => 'Who a creature is: its traits, the word for its level, and how its age is said.',
+                'href' => '/admin/character',
+                'arrives' => null,
+            ];
+            $sections[] = [
                 'title' => 'The Gazette',
                 'sentence' => 'Write the newspaper: stories about the people of Felkyo, read in the library.',
                 'href' => '/admin/gazette',
                 'arrives' => null,
             ];
             $sections[] = [
-                'title' => 'Postcards & themes',
-                'sentence' => 'Each editor arrives with its content: cards with M6, themes with M4.',
-                'href' => null,
-                'arrives' => 'M4/M6',
+                'title' => 'Themes',
+                'sentence' => 'Colour sets players can choose — readability checked while you pick.',
+                'href' => '/admin/themes',
+                'arrives' => null,
             ];
         }
 

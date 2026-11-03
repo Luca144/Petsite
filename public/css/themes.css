@@ -1,0 +1,200 @@
+/*
+ * themes.css — choosing a theme (M4.1), the panel's theme editor (M4.2),
+ * and the easy-reading mode (M4.3).
+ *
+ * Colours come from theme.css tokens. The swatches on the theme cards are
+ * the one place colour values arrive inline — each a cleaned #RRGGBB from
+ * ThemeTokens, shown as a picture of the theme, with its name in words.
+ */
+
+/* ---------- The player's theme picker ---------- */
+
+.theme-picker {
+    border: none;
+    margin: var(--space-4) 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: var(--space-3);
+}
+
+/* Each theme is a radio card: tap anywhere on it to choose. */
+.theme-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    background: var(--panel);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: transform 160ms ease;
+}
+
+.theme-card:hover {
+    transform: translateY(-2px);
+}
+
+/* Chosen: a thick purple outline AND the radio dot — never colour alone. */
+.theme-card:has(.theme-card__radio:checked) {
+    border-color: var(--purple);
+    box-shadow: 0 0 0 2px var(--purple);
+}
+
+.theme-card:has(.theme-card__radio:focus-visible) {
+    outline: 3px solid var(--purple);
+    outline-offset: 3px;
+}
+
+.theme-card__radio {
+    width: 22px;
+    height: 22px;
+}
+
+.theme-card__swatches {
+    display: flex;
+    height: 36px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.theme-card__swatch {
+    flex: 1;
+}
+
+.theme-card__name {
+    font-family: var(--font-display);
+    font-weight: 600;
+}
+
+.theme-card__note {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+}
+
+/* ---------- The panel's theme editor ---------- */
+
+.theme-editor__colours {
+    display: grid;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+}
+
+@media (min-width: 600px) {
+    .theme-editor__colours {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+.theme-editor__colour {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px;
+}
+
+.theme-editor__colour input {
+    width: 48px;
+    height: 44px;
+    padding: 0;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: none;
+    cursor: pointer;
+}
+
+.theme-editor__checks {
+    list-style: none;
+    padding: 0;
+}
+
+.theme-editor__ok,
+.theme-editor__bad {
+    padding: var(--space-1) 0;
+    font-weight: 700;
+}
+
+/* The preview: the theme being edited, painted from tokens set on this
+   element (see admin-theme-edit.php and theme-editor.js). */
+.theme-editor__preview-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    margin-bottom: var(--space-4);
+    color: var(--plum);
+    background: var(--parchment);
+    border: 2px solid var(--gold);
+    border-radius: var(--radius-md);
+}
+
+.theme-editor__preview-page u {
+    color: var(--purple);
+}
+
+.theme-editor__preview-page small {
+    color: var(--ink-soft);
+}
+
+.theme-editor__preview-card {
+    padding: var(--space-2);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+.theme-editor__preview-button {
+    align-self: flex-start;
+    padding: var(--space-2) var(--space-4);
+    color: var(--parchment);
+    background: var(--purple);
+    border-radius: var(--radius-pill);
+}
+
+.theme-editor__preview-dark {
+    padding: var(--space-2);
+    color: var(--gold-lit);
+    background: var(--plum);
+    border-radius: var(--radius-sm);
+}
+
+/* ---------- Easy reading (M4.3) ----------
+   The dyslexia-friendly mode: Lexend (designed to reduce visual stress
+   while reading), roomier letter, word and line spacing, no italics for
+   long text, and a shorter line length for paragraphs. It changes only the
+   type tokens and spacing, so every page follows without its own rules. */
+
+html[data-reading="easy"] {
+    --font-body: 'Lexend', 'Verdana', system-ui, sans-serif;
+    --font-display: 'Lexend', 'Verdana', system-ui, sans-serif;
+}
+
+html[data-reading="easy"] body {
+    letter-spacing: 0.03em;
+    word-spacing: 0.12em;
+    line-height: 1.8;
+}
+
+html[data-reading="easy"] p {
+    max-width: 65ch;
+}
+
+html[data-reading="easy"] em,
+html[data-reading="easy"] i,
+html[data-reading="easy"] .library-flavour,
+html[data-reading="easy"] .empty-state,
+html[data-reading="easy"] .pound-intro,
+html[data-reading="easy"] .gazette-article__standfirst {
+    font-style: normal;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .theme-card {
+        transition: none;
+    }
+
+    .theme-card:hover {
+        transform: none;
+    }
+}
