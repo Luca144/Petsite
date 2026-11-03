@@ -7,7 +7,7 @@ as a birthday present, with the usual per-increment plans, sign-offs and full
 test matrices set aside until afterwards. This note records what was built,
 what was deliberately skipped, and what must happen before any of it goes live.
 
-## Database: four new migrations
+## Database: five new migrations
 
 Run `C:\xampp\php\php.exe vendor/bin/phinx migrate` (and `-e testing`):
 
@@ -17,6 +17,7 @@ Run `C:\xampp\php\php.exe vendor/bin/phinx migrate` (and `-e testing`):
 | `20261103140001_create_character` | the pound columns, **`creatures.owner_id` becomes nullable**, traits, ladders |
 | `20261103160001_create_themes` | themes, `users.theme_id`, three starter themes |
 | `20261103180001_create_company` | friends, blocks, postcards, bottles, daily claims |
+| `20261104090001_add_article_kind` | site updates (articles of kind `update`) |
 
 Demo words, a first Gazette article and three creatures waiting at the pound:
 `C:\xampp\php\php.exe vendor/bin/phinx seed:run -s DemoLibrary` (only fills
@@ -58,4 +59,4 @@ gaps; never overwrites anything written in the panel).
 1. Write the tests: every permission boundary refused, every race (adopt, reclaim, find).
 2. Add the new admin routes to the AdminGateTest matrix.
 3. Do a security review of the pound (nullable `owner_id`!) and the post office.
-4. Run the four migrations on production, and say so in the handover.
+4. Run the five migrations on production, and say so in the handover.
