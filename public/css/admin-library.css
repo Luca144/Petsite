@@ -1,0 +1,73 @@
+/*
+ * admin-library.css — the panel's library screens (M5): alternate-form cards
+ * and the Gazette editor list.
+ *
+ * Builds on admin.css / admin-creatures.css (cards, status chips, buttons);
+ * only what is new lives here. Colours come from theme.css.
+ */
+
+/* A form's stages: a row of tappable pictures, wrapping on a phone. */
+.admin-form-card__stages {
+    list-style: none;
+    margin: var(--space-3) 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+}
+
+/* Each picture is the link to its picker — a big, obvious touch target. */
+.admin-form-card__stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    min-width: 96px;
+    min-height: 44px;
+    padding: var(--space-2);
+    border: 1.5px dashed var(--border);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    color: var(--plum);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+}
+
+.admin-form-card__stage:focus-visible {
+    outline: 3px solid var(--purple);
+    outline-offset: 3px;
+}
+
+.admin-form-card__stage img {
+    width: 72px;
+    height: 72px;
+    object-fit: contain;
+}
+
+/* A stage still using the default picture is faded — and its label also
+   says "default" in words, so the fade is never the only signal. */
+.admin-form-card__fallback {
+    opacity: 0.4;
+}
+
+/* The Gazette's article list in the panel. */
+.admin-gazette__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-2);
+}
+
+.admin-gazette__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.admin-gazette__row a {
+    font-family: var(--font-display);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}

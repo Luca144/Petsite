@@ -90,6 +90,10 @@ enum AuditAction: string
     case RateLimitsCleared = 'maintenance.rate_limits_cleared';
     case ArtBackupDownloaded = 'maintenance.art_backup_downloaded';
 
+    // M5 — the library: alternate forms and the Gazette.
+    case FormSaved = 'form.saved';
+    case ArticleSaved = 'article.saved';
+
     /**
      * What a person reading the audit page sees, in plain words.
      */
@@ -138,6 +142,8 @@ enum AuditAction: string
             self::SettingReset => 'put a site setting back to its built-in value',
             self::RateLimitsCleared => 'cleared the rate-limit slate',
             self::ArtBackupDownloaded => 'downloaded the art backup',
+            self::FormSaved => 'changed an alternate form',
+            self::ArticleSaved => 'changed a Gazette article',
         };
     }
 }

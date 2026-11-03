@@ -364,6 +364,14 @@ return [
         // How a creature grows (see GrowthCalculator). Both a creature's LEVEL and
         // its life STAGE are worked out from its XP, so XP is the single source of
         // truth. These are the knobs that decide how fast growth feels.
+        // Alternate forms (M5.3). The chance, in percent, that a newly arriving
+        // creature is born in one of its species' PUBLISHED alternate forms
+        // instead of the default look. Kept rare so a form feels like luck.
+        // 0 switches it off. Species with no published forms ignore it.
+        'forms' => [
+            'birth_chance_percent' => 10,
+        ],
+
         'growth' => [
             // XP needed for each level. level = (xp / xp_per_level) + 1, so with 20
             // here a creature gains a level for every 20 XP it earns.

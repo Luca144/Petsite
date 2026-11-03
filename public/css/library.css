@@ -1,0 +1,463 @@
+/*
+ * library.css — the library (M5): the shelf of books, a species' page with
+ * its stages, forms and story book, and the Felkyo Gazette.
+ *
+ * The tab strip reuses community.css's tabs on purpose (one idea of "tabs"
+ * across the site). Every colour comes from theme.css (CLAUDE.md §8). Gold
+ * appears as TEXT only on the dark plum book cover and masthead, where it
+ * passes contrast; on parchment it is border and glow only.
+ *
+ * Mobile first: everything stacks in one column, then spreads out from 600px.
+ */
+
+/* ---------- The shelf ---------- */
+
+/* A grid of book spines. auto-fill with a small minimum gives two books
+   across a 360px phone and as many as fit on a desktop. */
+.library-shelf {
+    list-style: none;
+    margin: var(--space-4) 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: var(--space-4);
+}
+
+/* Each book: a dark plum spine with a gold edge and the creature on it. */
+.library-shelf__book {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    padding: var(--space-4) var(--space-3);
+    background: linear-gradient(160deg, var(--plum), var(--plum-deep));
+    border: 2px solid var(--gold);
+    border-radius: var(--radius-sm) var(--radius-md) var(--radius-md) var(--radius-sm);
+    /* The thick left edge reads as the book's spine. */
+    border-left-width: 8px;
+    text-decoration: none;
+    box-shadow: var(--shadow-raised);
+    transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+/* A gentle lift, like pulling a book half off the shelf. */
+.library-shelf__book:hover {
+    transform: translateY(-4px) rotate(-1deg);
+    box-shadow: var(--shadow-raised), var(--glow-gold);
+}
+
+.library-shelf__book:focus-visible {
+    outline: 3px solid var(--gold-lit);
+    outline-offset: 3px;
+}
+
+.library-shelf__cover img {
+    width: 96px;
+    height: 96px;
+    object-fit: contain;
+}
+
+/* Gold text on plum passes AA comfortably (see the file note). */
+.library-shelf__title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: var(--gold-lit);
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+/* ---------- A species' page ---------- */
+
+.library-back {
+    margin: 0 0 var(--space-3);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+}
+
+.library-flavour {
+    font-family: var(--font-display);
+    font-style: italic;
+}
+
+.library-section {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    margin: var(--space-6) 0 var(--space-3);
+}
+
+.library-hint {
+    color: var(--ink-soft);
+}
+
+/* The stages: stacked on a phone, side by side from 600px up. */
+.library-stages {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-3);
+}
+
+.library-stage {
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    grid-template-areas:
+        "sprite name"
+        "sprite blurb";
+    align-items: start;
+    column-gap: var(--space-3);
+    padding: var(--space-3);
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.library-stage__sprite {
+    grid-area: sprite;
+    width: 96px;
+    height: 96px;
+    object-fit: contain;
+}
+
+.library-stage__name {
+    grid-area: name;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.library-stage__blurb {
+    grid-area: blurb;
+    margin: var(--space-1) 0 0;
+}
+
+@media (min-width: 600px) {
+    .library-stages {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    /* Side by side there is room to stand each stage up: picture on top. */
+    .library-stage {
+        grid-template-columns: 1fr;
+        grid-template-areas: "sprite" "name" "blurb";
+        justify-items: center;
+        text-align: center;
+    }
+}
+
+/* Alternate forms: a card each, with a small row of its stages. */
+.library-form {
+    margin-bottom: var(--space-3);
+}
+
+.library-form__name {
+    font-family: var(--font-display);
+    margin: 0 0 var(--space-2);
+}
+
+.library-form__sprites {
+    list-style: none;
+    margin: var(--space-2) 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+}
+
+.library-form__sprites li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+}
+
+.library-form__sprites img {
+    width: 72px;
+    height: 72px;
+    object-fit: contain;
+}
+
+/* ---------- The book ---------- */
+
+.book {
+    max-width: 560px;
+    margin: 0 auto;
+}
+
+/* The closed book: a plum cover with a gold frame. It is the <summary>, so
+   the browser makes it clickable and keyboard-operable by itself. */
+.book__cover {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-6) var(--space-4);
+    background: linear-gradient(160deg, var(--plum), var(--plum-deep));
+    border: 3px double var(--gold);
+    border-left-width: 12px;
+    border-radius: var(--radius-sm) var(--radius-lg) var(--radius-lg) var(--radius-sm);
+    box-shadow: var(--shadow-panel);
+    transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+/* Hide the browser's default triangle; the "tap to open" line says it. */
+.book__cover::-webkit-details-marker {
+    display: none;
+}
+
+.book__cover:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-panel), var(--glow-gold);
+}
+
+.book__cover:focus-visible {
+    outline: 3px solid var(--purple);
+    outline-offset: 4px;
+}
+
+.book__cover-art {
+    width: 128px;
+    height: 128px;
+    object-fit: contain;
+}
+
+.book__cover-title {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 1.3rem;
+    color: var(--gold-lit);
+    text-align: center;
+}
+
+.book__cover-hint {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--parchment);
+}
+
+/* The cover says what tapping it will do: open when closed, close when open.
+   Both lines are real text (not CSS content) so screen readers hear the
+   right one; the other is display:none, which hides it from them too. */
+.book__cover-hint--open,
+.book[open] .book__cover-hint--closed {
+    display: none;
+}
+
+.book[open] .book__cover-hint--open {
+    display: inline;
+}
+
+.book__pages p {
+    margin: 0 0 var(--space-4);
+}
+
+/* The pages: warm parchment, a serif hand, generous lines for reading. */
+.book__pages {
+    margin-top: calc(var(--space-2) * -1);
+    padding: var(--space-8) var(--space-6) var(--space-6);
+    background: var(--parchment);
+    border: 1.5px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    line-height: 1.7;
+    box-shadow: inset 0 12px 16px -12px rgba(61, 43, 79, 0.35);
+    transform-origin: top center;
+    animation: book-open 420ms ease-out;
+}
+
+/* The first letter of the story, set large like an old storybook. */
+.book__pages p:first-child::first-letter {
+    font-size: 2.6em;
+    float: left;
+    line-height: 0.9;
+    margin: 0.08em 0.08em 0 0;
+    color: var(--purple);
+    font-weight: 900;
+}
+
+.book__end {
+    text-align: center;
+    color: var(--purple);
+    font-size: 1.4rem;
+}
+
+/* The pages unfold downwards from the cover. */
+@keyframes book-open {
+    from {
+        opacity: 0;
+        transform: perspective(900px) rotateX(-70deg);
+    }
+
+    to {
+        opacity: 1;
+        transform: perspective(900px) rotateX(0);
+    }
+}
+
+/* ---------- The Gazette ---------- */
+
+/* The masthead: plum band, gold blackletter-ish display type. */
+.gazette-masthead {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-4);
+    margin-bottom: var(--space-4);
+    background: var(--plum);
+    border-top: 3px double var(--gold);
+    border-bottom: 3px double var(--gold);
+}
+
+.gazette-masthead__name {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 1.5rem;
+    color: var(--gold-lit);
+    text-align: center;
+}
+
+.gazette-masthead__motto {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--parchment);
+}
+
+.gazette-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-3);
+}
+
+.gazette-list__link {
+    display: flex;
+    gap: var(--space-3);
+    align-items: flex-start;
+    min-height: 44px;
+    padding: var(--space-3);
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    color: var(--plum);
+    transition: transform 160ms ease;
+}
+
+.gazette-list__link:hover {
+    transform: translateY(-2px);
+}
+
+.gazette-list__link:focus-visible {
+    outline: 3px solid var(--purple);
+    outline-offset: 3px;
+}
+
+.gazette-list__art {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+}
+
+.gazette-list__words {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+}
+
+.gazette-list__title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--purple);
+}
+
+.gazette-list__date {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+}
+
+.gazette-article__header {
+    text-align: center;
+    border-bottom: 3px double var(--border);
+    margin-bottom: var(--space-4);
+}
+
+/* The paper's name above the headline, on its own plum strip. */
+.gazette-article__paper {
+    display: block;
+    background: var(--plum);
+    padding: var(--space-2);
+    margin: 0 0 var(--space-3);
+}
+
+.gazette-article__title {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    margin: 0 0 var(--space-2);
+}
+
+.gazette-article__art {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto var(--space-4);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+.gazette-article__standfirst {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 1.1rem;
+}
+
+.gazette-article__body {
+    line-height: 1.7;
+}
+
+.gazette-article__body p {
+    margin: 0 0 var(--space-4);
+}
+
+/* Newspaper columns once there is room for two readable measures. */
+@media (min-width: 900px) {
+    .gazette-article__body {
+        column-count: 2;
+        column-gap: var(--space-8);
+        column-rule: 1px solid var(--border);
+    }
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+    .book__pages {
+        animation: none;
+    }
+
+    .library-shelf__book,
+    .book__cover,
+    .gazette-list__link {
+        transition: none;
+    }
+
+    .library-shelf__book:hover,
+    .book__cover:hover,
+    .gazette-list__link:hover {
+        transform: none;
+    }
+}

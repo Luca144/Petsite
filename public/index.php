@@ -113,6 +113,11 @@ use Felkyo\Http\Controllers\AdminRolesController;
 use Felkyo\Http\Controllers\ArtController;
 use Felkyo\Http\Controllers\BioController;
 use Felkyo\Http\Controllers\BrowseController;
+use Felkyo\Http\Controllers\LibraryController;
+use Felkyo\Http\Controllers\AdminFormsController;
+use Felkyo\Http\Controllers\AdminGazetteController;
+use Felkyo\Library\FormEditorService;
+use Felkyo\Library\ArticleEditorService;
 use Felkyo\Http\Controllers\CollectionController;
 use Felkyo\Http\Controllers\CommunityController;
 use Felkyo\Http\Controllers\CreatureRenameController;
@@ -145,6 +150,9 @@ use Felkyo\Users\ProfileRepository;
 use Felkyo\Users\ProfileService;
 use Felkyo\Users\UserRepository;
 use Felkyo\Users\UserValidator;
+use Felkyo\Library\ArticleRepository;
+use Felkyo\Library\CreatureFormRoller;
+use Felkyo\Library\SpeciesFormRepository;
 use League\Plates\Engine;
 
 // ---- Start up ----
@@ -269,7 +277,12 @@ $templates->registerFunction('csrf_field', function () use ($csrf): string {
 $userRepository = new UserRepository($pdo);
 $rateLimitRepository = new RateLimitRepository($pdo);
 $speciesRepository = new SpeciesRepository($pdo);
-$creatureRepository = new CreatureRepository($pdo);
+// M5.3: alternate forms. The roller gives a new creature its (rare) chance of
+// being born in one; the repository runs every new creature through it.
+$speciesFormRepository = new SpeciesFormRepository($pdo);
+$creatureFormRoller = new CreatureFormRoller($speciesFormRepository, $config['gameplay']['forms']['birth_chance_percent']);
+$creatureRepository = new CreatureRepository($pdo, $creatureFormRoller);
+$articleRepository = new ArticleRepository($pdo);
 $pettingRepository = new PettingRepository($pdo);
 $explorationRepository = new ExplorationRepository($pdo);
 $shopRepository = new ShopRepository($pdo);
@@ -376,7 +389,8 @@ $pettingService = new PettingService(
     $config['gameplay']['currency']['name']
 );
 $creatureProfileBuilder = new CreatureProfileBuilder(
-    $speciesRepository, $userRepository, $growthCalculator, $pettingRepository, $moodCalculator
+    $speciesRepository, $userRepository, $growthCalculator, $pettingRepository, $moodCalculator,
+    $speciesFormRepository
 );
 $purchaseService = new PurchaseService(
     $pdo, $shopRepository, $userRepository, $inventoryRepository,
@@ -555,6 +569,10 @@ $templates->addData([
 // ---- Controllers ----
 $homeController = new HomeController(
     $templates, $session, $creatureRepository, $creatureProfileBuilder, $config['app']['name']
+);
+$libraryController = new LibraryController(
+    $templates, $speciesRepository, $speciesFormRepository, $articleRepository,
+    array_keys($config['gameplay']['growth']['stage_start_levels'])
 );
 $browseController = new BrowseController(
     $templates, $creatureRepository, $creatureProfileBuilder, $config['gameplay']['browse_recent_limit']
@@ -767,6 +785,19 @@ $adminCreaturesController = new AdminCreaturesController(
     $templates, $session, $csrf, $userRepository, $speciesRepository,
     $speciesEditorService, $rateLimiter, $config['security']['rate_limit_content_save'], $stageNames
 );
+// M5 — the library in the panel: alternate forms and the Gazette desk.
+$formEditorService = new FormEditorService(
+    $speciesFormRepository, $speciesRepository, $artRepository, $auditLogRepository, $stageNames
+);
+$adminFormsController = new AdminFormsController(
+    $templates, $session, $csrf, $userRepository, $speciesRepository, $speciesFormRepository,
+    $artRepository, $formEditorService, $rateLimiter, $config['security']['rate_limit_content_save'], $stageNames
+);
+$articleEditorService = new ArticleEditorService($articleRepository, $artRepository, $auditLogRepository);
+$adminGazetteController = new AdminGazetteController(
+    $templates, $session, $csrf, $userRepository, $articleRepository, $artRepository,
+    $articleEditorService, $rateLimiter, $config['security']['rate_limit_content_save']
+);
 $adminCreatureEditController = new AdminCreatureEditController(
     $templates, $session, $csrf, $userRepository, $speciesRepository,
     $contentVersionRepository, $speciesEditorService, $inventoryRepository,
@@ -901,6 +932,11 @@ $router->get('/browse', [$browseController, 'show']);
 // The community hub: browse creatures and find players from one place.
 $router->get('/community', [$communityController, 'show']);
 
+// M5 — the library and the Gazette (public, read-only).
+$router->get('/library', [$libraryController, 'index']);
+$router->get('/library/{slug}', [$libraryController, 'species']);
+$router->get('/gazette/{slug}', [$libraryController, 'article']);
+
 // Accounts.
 $router->get('/register', [$registerController, 'show']);
 $router->post('/register', [$registerController, 'submit']);
@@ -997,6 +1033,24 @@ $router->post('/admin/maintenance/clear-rate-limits', $adminGate->protect(Role::
 $router->get('/admin/maintenance/art-backup', $adminGate->protect(Role::Coder, [$adminSettingsController, 'artBackup']));
 // The stats page (M2.9).
 $router->get('/admin/stats', $adminGate->protect(Role::Artist, [$adminStatsController, 'show']));
+// M5 — alternate forms (on a species) and the Gazette desk. Artist role.
+$router->get('/admin/creatures/{id}/forms', $adminGate->protect(Role::Artist, [$adminFormsController, 'show']));
+$router->post('/admin/creatures/{id}/forms/create', $adminGate->protect(Role::Artist, [$adminFormsController, 'create']));
+$router->post('/admin/forms/{formId}/words', $adminGate->protect(Role::Artist, [$adminFormsController, 'saveWords']));
+$router->post('/admin/forms/{formId}/publish', $adminGate->protect(Role::Artist, [$adminFormsController, 'publish']));
+$router->post('/admin/forms/{formId}/unpublish', $adminGate->protect(Role::Artist, [$adminFormsController, 'unpublish']));
+$router->post('/admin/forms/{formId}/delete', $adminGate->protect(Role::Artist, [$adminFormsController, 'delete']));
+$router->get('/admin/forms/{formId}/picture/{stage}', $adminGate->protect(Role::Artist, [$adminFormsController, 'pickPicture']));
+$router->post('/admin/forms/{formId}/picture/{stage}', $adminGate->protect(Role::Artist, [$adminFormsController, 'choosePicture']));
+$router->get('/admin/gazette', $adminGate->protect(Role::Artist, [$adminGazetteController, 'index']));
+$router->post('/admin/gazette/create', $adminGate->protect(Role::Artist, [$adminGazetteController, 'create']));
+$router->get('/admin/gazette/{id}', $adminGate->protect(Role::Artist, [$adminGazetteController, 'show']));
+$router->post('/admin/gazette/{id}/words', $adminGate->protect(Role::Artist, [$adminGazetteController, 'saveWords']));
+$router->post('/admin/gazette/{id}/publish', $adminGate->protect(Role::Artist, [$adminGazetteController, 'publish']));
+$router->post('/admin/gazette/{id}/unpublish', $adminGate->protect(Role::Artist, [$adminGazetteController, 'unpublish']));
+$router->post('/admin/gazette/{id}/delete', $adminGate->protect(Role::Artist, [$adminGazetteController, 'delete']));
+$router->get('/admin/gazette/{id}/picture', $adminGate->protect(Role::Artist, [$adminGazetteController, 'pickPicture']));
+$router->post('/admin/gazette/{id}/picture', $adminGate->protect(Role::Artist, [$adminGazetteController, 'choosePicture']));
 $router->get('/admin/areas', $adminGate->protect(Role::Artist, [$adminAreasController, 'show']));
 $router->post('/admin/areas/create', $adminGate->protect(Role::Artist, [$adminAreasController, 'create']));
 $router->get('/admin/areas/{id}', $adminGate->protect(Role::Artist, [$adminAreaEditController, 'show']));

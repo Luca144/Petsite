@@ -37,6 +37,7 @@ if (!empty($currentUser)) {
     $worldLinks = [
         ['/shop', 'shop'],
         ['/explore', 'explore'],
+        ['/library', 'library'],
         ['/community', 'community'],
     ];
 } else {
@@ -44,6 +45,7 @@ if (!empty($currentUser)) {
     // everything personal asks them to come in first.
     $worldLinks = [
         ['/explore', 'explore'],
+        ['/library', 'library'],
         ['/community', 'community'],
     ];
 }

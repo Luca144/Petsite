@@ -61,6 +61,11 @@ const PAGES = [
     'collection' => '/creatures',
     'profile' => '{profile}',
     'play' => '{creature}/play',
+    // M5 — the library.
+    'library' => '/library',
+    'library-species' => '/library/foxlen',
+    'gazette' => '/library?tab=gazette',
+    'gazette-article' => '/gazette/the-gazette-opens',
 ];
 
 // ---- Refuse to run anywhere but a development machine ----
@@ -265,6 +270,10 @@ $fetch('/admin/creatures/' . $shotSpeciesId . '/words', [
 ]);
 $save('admin-creatures', $fetch('/admin/creatures'));
 $save('admin-creature-edit', $fetch('/admin/creatures/' . $shotSpeciesId));
+// The species book, shot OPEN as well (a <details> starts closed).
+$save('library-book-open', str_replace('<details class="book">', '<details class="book" open>', $fetch('/library/foxlen')));
+$save('admin-forms', $fetch('/admin/creatures/1/forms'));
+$save('admin-gazette', $fetch('/admin/gazette'));
 $save('admin-creature-picker', $fetch('/admin/creatures/' . $shotSpeciesId . '/picture/juvenile'));
 $save('admin-creature-preview', $fetch('/admin/creatures/' . $shotSpeciesId . '/preview'));
 

@@ -114,6 +114,37 @@ final class SpeciesRepository
     }
 
     /**
+     * Every PUBLISHED species, alphabetically — the library's shelf (M5).
+     * Drafts never appear in the library: an unfinished species is the
+     * artist's secret until she publishes it.
+     *
+     * @return Species[]
+     */
+    public function findPublished(): array
+    {
+        $statement = $this->connection->query(
+            'SELECT ' . self::COLUMNS . self::FROM . "WHERE s.status = 'published' ORDER BY s.name"
+        );
+
+        return $this->rowsToSpecies($statement->fetchAll());
+    }
+
+    /**
+     * One PUBLISHED species by its slug (the library page's address), or
+     * null. Uses the UNIQUE index on species.slug.
+     */
+    public function findPublishedBySlug(string $slug): ?Species
+    {
+        $statement = $this->connection->prepare(
+            'SELECT ' . self::COLUMNS . self::FROM . "WHERE s.slug = :slug AND s.status = 'published' LIMIT 1"
+        );
+        $statement->execute([':slug' => $slug]);
+        $row = $statement->fetch();
+
+        return is_array($row) ? $this->rowsToSpecies([$row])[0] : null;
+    }
+
+    /**
      * Is this slug taken? Asked when a new species is started.
      */
     public function slugExists(string $slug): bool

@@ -45,6 +45,8 @@ final class Creature
         public readonly ?int $featuredOrder,
         public readonly ?string $lastInteractedAt,
         public readonly ?string $createdAt,
+        // Which alternate form the creature wears (M5.3); null = the default.
+        public readonly ?int $formId = null,
     ) {
     }
 
@@ -69,6 +71,7 @@ final class Creature
             isset($row['featured_order']) ? (int) $row['featured_order'] : null,
             $row['last_interacted_at'] ?? null,
             $row['created_at'] ?? null,
+            isset($row['form_id']) ? (int) $row['form_id'] : null,
         );
     }
 

@@ -25,6 +25,9 @@ final class CreatureProfileBuilder
         private GrowthCalculator $growth,
         private PettingRepository $pettings,
         private MoodCalculator $mood,
+        // Optional so older test wiring still builds; without it every
+        // creature simply shows its default form.
+        private ?\Felkyo\Library\SpeciesFormRepository $forms = null,
     ) {
     }
 
@@ -36,7 +39,10 @@ final class CreatureProfileBuilder
     public function buildFor(Creature $creature): array
     {
         return [
-            'species' => $this->species->findById($creature->speciesId),
+            'species' => $this->dressed(
+                $this->species->findById($creature->speciesId),
+                $creature->formId === null ? null : $this->forms?->findById($creature->formId)
+            ),
             'owner' => $this->users->findById($creature->ownerId),
             'level' => $this->growth->levelFor($creature->xp),
             'stage' => $this->growth->stageFor($creature->xp),
@@ -81,11 +87,20 @@ final class CreatureProfileBuilder
             $speciesById[$species->id] = $species;
         }
 
+        // Every alternate form on the page, in one query (M5.3).
+        $formsById = $this->forms?->findByIds(array_map(
+            static fn (Creature $creature): int => (int) $creature->formId,
+            $creatures
+        )) ?? [];
+
         $summaries = [];
         foreach ($creatures as $creature) {
             $summaries[] = [
                 'creature' => $creature,
-                'species' => $speciesById[$creature->speciesId] ?? null,
+                'species' => $this->dressed(
+                    $speciesById[$creature->speciesId] ?? null,
+                    $formsById[(int) $creature->formId] ?? null
+                ),
                 'level' => $this->growth->levelFor($creature->xp),
                 'stage' => $this->growth->stageFor($creature->xp),
                 // Costs nothing extra: the readings and their ages came back with
@@ -95,5 +110,18 @@ final class CreatureProfileBuilder
         }
 
         return $summaries;
+    }
+
+    /**
+     * The species as this creature wears it: dressed in its alternate form if
+     * it has one (see Species::wearing), plain otherwise.
+     */
+    private function dressed(?Species $species, ?\Felkyo\Library\SpeciesForm $form): ?Species
+    {
+        if ($species === null || $form === null || $form->speciesId !== $species->id) {
+            return $species;
+        }
+
+        return $species->wearing($form);
     }
 }

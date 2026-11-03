@@ -71,7 +71,41 @@ final class Species
         public readonly ?string $libraryArtName = null,
         public readonly ?string $updatedAt = null,
         public readonly array $stageArt = [],
+        /** The alternate form this copy is dressed in (M5.3), or null. */
+        public readonly ?string $formName = null,
     ) {
+    }
+
+    /**
+     * This species dressed in an alternate form (M5.3): the form's own
+     * sprites replace the default ones stage by stage, and any stage the form
+     * has not been drawn for keeps the default — so a half-finished form
+     * never shows a missing picture.
+     *
+     * WHY A DRESSED COPY instead of teaching every template about forms:
+     * nine templates already ask `$species->spriteUrlFor($stage)`. Handing
+     * them a species that answers with the form's picture means every one of
+     * them shows forms correctly without being touched.
+     */
+    public function wearing(\Felkyo\Library\SpeciesForm $form): self
+    {
+        $stageArt = $this->stageArt;
+        foreach ($form->stageArt as $stage => $art) {
+            if (!empty($art['art_name'])) {
+                $stageArt[$stage] = [
+                    'art_id' => $art['art_id'],
+                    'art_name' => $art['art_name'],
+                    'blurb' => $this->stageArt[$stage]['blurb'] ?? null,
+                ];
+            }
+        }
+
+        return new self(
+            $this->id, $this->slug, $this->name, $this->flavourText, $this->isStarter,
+            $this->isAdoptable, $this->gemPrice, $this->favouriteItemId, $this->dislikedItemId,
+            $this->status, $this->lore, $this->libraryArtId, $this->libraryArtName,
+            $this->updatedAt, $stageArt, $form->name,
+        );
     }
 
     /** Does this species adore that item? */

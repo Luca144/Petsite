@@ -48,13 +48,21 @@ final class CreatureRepository
      * COALESCE to created_at covers a creature made before the mood columns
      * existed: its readings are as old as the creature itself, which is true.
      */
-    private const COLUMNS = 'id, owner_id, species_id, name, xp, happiness, energy,
+    private const COLUMNS = 'id, owner_id, species_id, form_id, name, xp, happiness, energy,
              bio, bio_hidden_at, is_public, featured_order, last_interacted_at, created_at,
              TIMESTAMPDIFF(SECOND, COALESCE(happiness_at, created_at), NOW()) AS happiness_age_seconds,
              TIMESTAMPDIFF(SECOND, COALESCE(energy_at, created_at), NOW()) AS energy_age_seconds';
 
-    public function __construct(private PDO $connection)
-    {
+    /**
+     * The form roller is optional (tests and scripts can leave it out). When
+     * present, EVERY new creature passes through it in create() below — one
+     * door, so no way of arriving (starter, shop, exploring, later the
+     * pound) can forget the chance of an alternate form (M5.3).
+     */
+    public function __construct(
+        private PDO $connection,
+        private ?\Felkyo\Library\CreatureFormRoller $formRoller = null,
+    ) {
     }
 
     /**
@@ -65,12 +73,14 @@ final class CreatureRepository
     public function create(int $ownerId, int $speciesId, string $name): Creature
     {
         $statement = $this->connection->prepare(
-            'INSERT INTO creatures (owner_id, species_id, name)
-             VALUES (:owner_id, :species_id, :name)'
+            'INSERT INTO creatures (owner_id, species_id, form_id, name)
+             VALUES (:owner_id, :species_id, :form_id, :name)'
         );
         $statement->execute([
             ':owner_id' => $ownerId,
             ':species_id' => $speciesId,
+            // Usually null (the default look); now and then an alternate form.
+            ':form_id' => $this->formRoller?->rollFor($speciesId),
             ':name' => $name,
         ]);
 

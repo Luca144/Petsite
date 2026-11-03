@@ -31,6 +31,9 @@ $this->layout('layout', ['title' => $this->e($species->name) . ' â€” Creatures â
             <a class="btn btn--secondary" href="/admin/creatures/<?= $this->e((string) $species->id) ?>/preview">
                 Preview on the real page
             </a>
+            <a class="btn btn--secondary" href="/admin/creatures/<?= $this->e((string) $species->id) ?>/forms">
+                Alternate forms
+            </a>
             <?php if ($species->isPublished()): ?>
                 <form method="post" action="/admin/creatures/<?= $this->e((string) $species->id) ?>/unpublish">
                     <?= $this->csrf_field() ?>
@@ -62,7 +65,7 @@ $this->layout('layout', ['title' => $this->e($species->name) . ' â€” Creatures â
                 <textarea class="field__input" id="flavour_text" name="flavour_text" rows="2"><?= $this->e((string) $species->flavourText) ?></textarea>
             </div>
             <div class="field">
-                <label class="field__label" for="lore">Lore (for the library, when it opens)</label>
+                <label class="field__label" for="lore">Lore â€” the story in its library book (leave a blank line between paragraphs)</label>
                 <textarea class="field__input" id="lore" name="lore" rows="5"><?= $this->e((string) $species->lore) ?></textarea>
             </div>
             <button class="btn btn--primary" type="submit">Save the words</button>
