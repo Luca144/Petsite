@@ -100,6 +100,84 @@ final class PostcardRepository
         ], $statement->fetchAll(PDO::FETCH_ASSOC));
     }
 
+    // ---- The panel's card editor ----
+
+    /**
+     * Every design, drafts included, for the panel's list.
+     *
+     * @return array<int, array{id: int, name: string, message: string, gem_price: int, art_name: ?string, art_id: ?int, status: string}>
+     */
+    public function allDesigns(): array
+    {
+        $statement = $this->connection->query(
+            'SELECT d.id, d.name, d.message, d.gem_price, d.art_id, d.status, a.stored_name AS art_name
+               FROM postcard_designs d LEFT JOIN art_files a ON a.id = d.art_id
+              ORDER BY d.status DESC, d.name'
+        );
+
+        return array_map([$this, 'designRow'], $statement->fetchAll(PDO::FETCH_ASSOC));
+    }
+
+    /** Any design by id, drafts included, or null. */
+    public function findDesign(int $id): ?array
+    {
+        $statement = $this->connection->prepare(
+            'SELECT d.id, d.name, d.message, d.gem_price, d.art_id, d.status, a.stored_name AS art_name
+               FROM postcard_designs d LEFT JOIN art_files a ON a.id = d.art_id WHERE d.id = :id'
+        );
+        $statement->execute([':id' => $id]);
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+
+        return is_array($row) ? $this->designRow($row) : null;
+    }
+
+    /** A new draft design; returns its id. */
+    public function createDesign(string $name, string $message): int
+    {
+        $this->connection->prepare("INSERT INTO postcard_designs (name, message, status) VALUES (:name, :message, 'draft')")
+            ->execute([':name' => $name, ':message' => $message]);
+
+        return (int) $this->connection->lastInsertId();
+    }
+
+    public function updateDesign(int $id, string $name, string $message, int $gemPrice): void
+    {
+        $this->connection->prepare(
+            'UPDATE postcard_designs SET name = :name, message = :message, gem_price = :price WHERE id = :id'
+        )->execute([':name' => $name, ':message' => $message, ':price' => $gemPrice, ':id' => $id]);
+    }
+
+    public function setDesignArt(int $id, ?int $artId): void
+    {
+        $this->connection->prepare('UPDATE postcard_designs SET art_id = :art WHERE id = :id')
+            ->execute([':art' => $artId, ':id' => $id]);
+    }
+
+    /** The value is checked against 'draft' | 'published' by the caller. */
+    public function setDesignStatus(int $id, string $status): void
+    {
+        $this->connection->prepare('UPDATE postcard_designs SET status = :status WHERE id = :id')
+            ->execute([':status' => $status, ':id' => $id]);
+    }
+
+    /**
+     * How many cards of this design have been sent. A design that has been
+     * sent can't be deleted (its cards sit on mantelpieces), only retired
+     * to draft.
+     */
+    public function timesSent(int $designId): int
+    {
+        $statement = $this->connection->prepare('SELECT COUNT(*) FROM postcards WHERE design_id = :id');
+        $statement->execute([':id' => $designId]);
+
+        return (int) $statement->fetchColumn();
+    }
+
+    public function deleteDesign(int $id): void
+    {
+        $this->connection->prepare('DELETE FROM postcard_designs WHERE id = :id')->execute([':id' => $id]);
+    }
+
     private function designRow(array $row): array
     {
         return [
@@ -108,6 +186,8 @@ final class PostcardRepository
             'message' => (string) $row['message'],
             'gem_price' => (int) $row['gem_price'],
             'art_name' => $row['art_name'] ?? null,
+            'art_id' => isset($row['art_id']) ? (int) $row['art_id'] : null,
+            'status' => (string) ($row['status'] ?? 'published'),
         ];
     }
 }

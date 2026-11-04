@@ -147,9 +147,44 @@ final class AdminPicturesController
             return $this->back('Pick what kind of picture this is.');
         }
 
-        $upload = $request->file('picture');
-        if ($upload === null) {
+        // Several files at once (Skerro's species are 3+ sprites each). The
+        // field is "pictures[]"; an old single "picture" still works too.
+        $uploads = $request->fileList('pictures');
+        if ($uploads === []) {
+            $uploads = $request->fileList('picture');
+        }
+        $uploads = array_values(array_filter($uploads, static fn (array $file): bool => $file['error'] !== UPLOAD_ERR_NO_FILE));
+        if ($uploads === []) {
             return $this->back('Choose a picture first.');
+        }
+
+        // One sentence per file, so a refused file says which and why.
+        $lines = [];
+        foreach ($uploads as $upload) {
+            $lines[] = $this->uploadOne($request, $actor, $upload, $kind);
+        }
+
+        return $this->back(implode(' ', $lines));
+    }
+
+    /**
+     * One file: rate limit, every safety check, store. Returns one sentence
+     * naming the file. The rate limit counts FILES, not form submissions, so
+     * uploading many at once is no way round it.
+     *
+     * @param array{name: string, tmp_name: string, size: int, error: int} $upload
+     */
+    private function uploadOne(Request $request, User $actor, array $upload, ArtKind $kind): string
+    {
+        $label = '"' . mb_substr(basename($upload['name']), 0, 60) . '":';
+
+        if (!$this->rateLimiter->isAllowed(
+            'art_upload',
+            'user:' . $actor->id,
+            $this->uploadRateLimit['max_attempts'],
+            $this->uploadRateLimit['window_seconds']
+        )) {
+            return $label . ' skipped — that\'s a lot of uploads for one hour.';
         }
 
         // Every check that makes an upload safe lives in the validator; a
@@ -157,13 +192,12 @@ final class AdminPicturesController
         try {
             $image = $this->validator->validate($upload);
         } catch (ImageRefused $refusal) {
-            return $this->back($refusal->getMessage());
+            return $label . ' ' . $refusal->getMessage();
         }
 
         $this->rateLimiter->record('art_upload', 'user:' . $actor->id);
-        $result = $this->artService->upload($actor, $image, $kind, $request->clientIp());
 
-        return $this->back($result->message);
+        return $label . ' ' . $this->artService->upload($actor, $image, $kind, $request->clientIp())->message;
     }
 
     /**

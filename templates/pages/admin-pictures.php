@@ -57,15 +57,15 @@ $humanSize = static function (int $bytes): string {
     </header>
 
     <div class="card admin-pictures__upload">
-        <h3>Add a picture</h3>
+        <h3>Add pictures</h3>
         <?php /* enctype is what lets a form carry a file at all. Without it the
                  browser sends the filename as text and no bytes. */ ?>
         <form method="post" action="/admin/pictures/upload" enctype="multipart/form-data">
             <?= $this->csrf_field() ?>
 
             <div class="field">
-                <label class="field__label" for="picture">The file</label>
-                <input class="field__input admin-pictures__file" type="file" id="picture" name="picture"
+                <label class="field__label" for="picture">The files (choose several at once — all of one kind)</label>
+                <input class="field__input admin-pictures__file" type="file" id="picture" name="pictures[]" multiple
                        accept=".gif,.png,.webp,image/gif,image/png,image/webp" required>
                 <p class="field__hint">
                     GIF, PNG or WebP, up to <?= $this->e((string) $maxMegabytes) ?> MB and
@@ -86,7 +86,7 @@ $humanSize = static function (int $bytes): string {
                 <?php endforeach; ?>
             </fieldset>
 
-            <button class="btn btn--primary" type="submit">Upload it</button>
+            <button class="btn btn--primary" type="submit">Upload them</button>
         </form>
     </div>
 

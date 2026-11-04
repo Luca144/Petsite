@@ -100,6 +100,9 @@ enum AuditAction: string
     // Deleting content for good (draft only, typed confirmation).
     case SpeciesDeleted = 'species.deleted';
     case ItemDeleted = 'item.deleted';
+    // Postcard designs, and gifts from the owner.
+    case PostcardSaved = 'postcard.saved';
+    case GiftGiven = 'gift.given';
 
     /**
      * What a person reading the audit page sees, in plain words.
@@ -155,6 +158,8 @@ enum AuditAction: string
             self::ThemeSaved => 'changed a theme',
             self::SpeciesDeleted => 'deleted a species',
             self::ItemDeleted => 'deleted an item',
+            self::PostcardSaved => 'changed a postcard design',
+            self::GiftGiven => 'gave a player a gift',
         };
     }
 }

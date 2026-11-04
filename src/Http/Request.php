@@ -85,6 +85,40 @@ final class Request
         ];
     }
 
+    /**
+     * Several uploaded files from one <input type="file" multiple
+     * name="key[]">, each in the same shape file() returns.
+     *
+     * WHY THIS EXISTS: PHP hands a multiple-file field over "sideways" —
+     * $_FILES['key']['name'] is a list of names, ['tmp_name'] a list of
+     * paths, and so on — rather than as a list of files. This turns it the
+     * right way round, so the caller can loop over files. Nothing is trusted
+     * here either; every file still goes through ImageValidator.
+     *
+     * @return array<int, array{name: string, tmp_name: string, size: int, error: int}>
+     */
+    public function fileList(string $key): array
+    {
+        $upload = $this->files[$key] ?? null;
+        if (!is_array($upload) || !is_array($upload['tmp_name'] ?? null)) {
+            $single = $this->file($key);
+
+            return $single === null ? [] : [$single];
+        }
+
+        $files = [];
+        foreach ($upload['tmp_name'] as $index => $tmpName) {
+            $files[] = [
+                'name' => is_string($upload['name'][$index] ?? null) ? $upload['name'][$index] : '',
+                'tmp_name' => (string) $tmpName,
+                'size' => (int) ($upload['size'][$index] ?? 0),
+                'error' => (int) ($upload['error'][$index] ?? UPLOAD_ERR_NO_FILE),
+            ];
+        }
+
+        return $files;
+    }
+
     public function method(): string
     {
         return $this->method;

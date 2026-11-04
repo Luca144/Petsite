@@ -67,6 +67,12 @@ final class AdminHomeController
                 'arrives' => null,
             ];
             $sections[] = [
+                'title' => 'Gifts',
+                'sentence' => 'Give a player gems, items or a creature — to make things right, or just because.',
+                'href' => '/admin/gifts',
+                'arrives' => null,
+            ];
+            $sections[] = [
                 'title' => 'Audit log',
                 'sentence' => 'Everything staff have done here, newest first.',
                 'href' => '/admin/audit',
@@ -127,6 +133,12 @@ final class AdminHomeController
                 'title' => 'Gazette & updates',
                 'sentence' => 'Write the newspaper, and post site updates for the home page.',
                 'href' => '/admin/gazette',
+                'arrives' => null,
+            ];
+            $sections[] = [
+                'title' => 'Postcards',
+                'sentence' => 'The cards on the post office rack: picture, words and price.',
+                'href' => '/admin/postcards',
                 'arrives' => null,
             ];
             $sections[] = [

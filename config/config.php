@@ -269,6 +269,12 @@ return [
             'max_attempts' => 60,
             'window_seconds' => 3600,
         ],
+        // The owner's gift desk: how many gifts per hour (a brake on mistakes
+        // more than on attackers — only the owner role can reach it).
+        'rate_limit_gift' => [
+            'max_attempts' => 30,
+            'window_seconds' => 3600,
+        ],
         'rate_limit_pound' => [
             'max_attempts' => 30,
             'window_seconds' => 3600,
@@ -407,6 +413,13 @@ return [
                 'adventure' => 'Off on an adventure! Wishing you a good one too.',
                 'smile' => 'This bottle is carrying exactly one smile. It is yours now.',
             ],
+        ],
+
+        // The owner's gift desk: the most one gift can be, so a typo can't
+        // hand out a fortune.
+        'gifts' => [
+            'max_gems' => 1000,
+            'max_items' => 20,
         ],
 
         // The pound (M3.1). How many days a creature rests after being

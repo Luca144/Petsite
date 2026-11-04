@@ -159,6 +159,10 @@ use Felkyo\Creatures\FreezeService;
 use Felkyo\Pound\PoundRepository;
 use Felkyo\Pound\PoundService;
 use Felkyo\Http\Controllers\PoundController;
+use Felkyo\Http\Controllers\AdminGiftsController;
+use Felkyo\Admin\GiftService;
+use Felkyo\Http\Controllers\AdminPostcardsController;
+use Felkyo\Social\PostcardEditorService;
 use Felkyo\Http\Controllers\AdminRemovalController;
 use Felkyo\Admin\ContentRemovalService;
 use Felkyo\Http\Controllers\CompanyController;
@@ -885,6 +889,23 @@ $adminRemovalController = new AdminRemovalController(
     $rateLimiter, $config['security']['rate_limit_content_save']
 );
 
+// The postcard editor (the designs on the post office rack).
+$adminPostcardsController = new AdminPostcardsController(
+    $templates, $session, $csrf, $userRepository, $postcardRepository, $artRepository,
+    new PostcardEditorService($postcardRepository, $artRepository, $auditLogRepository),
+    $rateLimiter, $config['security']['rate_limit_content_save']
+);
+
+// The owner's gift desk (gems, items, a creature — capped and audit-logged).
+$adminGiftsController = new AdminGiftsController(
+    $templates, $session, $csrf, $userRepository, $speciesRepository, new ItemRepository($pdo),
+    new GiftService(
+        $pdo, $userRepository, $speciesRepository, new ItemRepository($pdo), $creatureRepository,
+        $inventoryRepository, $auditLogRepository, $config['gameplay']['gifts']
+    ),
+    $rateLimiter, $config['security']['rate_limit_gift'], $config['gameplay']['gifts']
+);
+
 // M4 in the panel: the theme editor.
 $adminThemesController = new AdminThemesController(
     $templates, $session, $csrf, $userRepository, $themeRepository,
@@ -1165,6 +1186,21 @@ $router->get('/admin/creatures/{id}/delete', $adminGate->protect(Role::Artist, [
 $router->post('/admin/creatures/{id}/delete', $adminGate->protect(Role::Artist, [$adminRemovalController, 'deleteSpecies']));
 $router->get('/admin/items/{id}/delete', $adminGate->protect(Role::Artist, [$adminRemovalController, 'confirmItem']));
 $router->post('/admin/items/{id}/delete', $adminGate->protect(Role::Artist, [$adminRemovalController, 'deleteItem']));
+
+// Postcards. Artist role.
+$router->get('/admin/postcards', $adminGate->protect(Role::Artist, [$adminPostcardsController, 'index']));
+$router->post('/admin/postcards/create', $adminGate->protect(Role::Artist, [$adminPostcardsController, 'create']));
+$router->get('/admin/postcards/{id}', $adminGate->protect(Role::Artist, [$adminPostcardsController, 'show']));
+$router->post('/admin/postcards/{id}/save', $adminGate->protect(Role::Artist, [$adminPostcardsController, 'save']));
+$router->post('/admin/postcards/{id}/publish', $adminGate->protect(Role::Artist, [$adminPostcardsController, 'publish']));
+$router->post('/admin/postcards/{id}/unpublish', $adminGate->protect(Role::Artist, [$adminPostcardsController, 'unpublish']));
+$router->post('/admin/postcards/{id}/delete', $adminGate->protect(Role::Artist, [$adminPostcardsController, 'delete']));
+$router->get('/admin/postcards/{id}/picture', $adminGate->protect(Role::Artist, [$adminPostcardsController, 'pickPicture']));
+$router->post('/admin/postcards/{id}/picture', $adminGate->protect(Role::Artist, [$adminPostcardsController, 'choosePicture']));
+
+// Gifts. OWNER role only — this makes value out of nothing.
+$router->get('/admin/gifts', $adminGate->protect(Role::Owner, [$adminGiftsController, 'show']));
+$router->post('/admin/gifts', $adminGate->protect(Role::Owner, [$adminGiftsController, 'give']));
 
 // M4 — themes. Artist role.
 $router->get('/admin/themes', $adminGate->protect(Role::Artist, [$adminThemesController, 'index']));
