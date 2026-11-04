@@ -32,6 +32,10 @@ final class HomeController
         private string $appName,
         // The latest site updates for the home page (optional for old wiring).
         private ?\Felkyo\Library\ArticleRepository $articles = null,
+        // The first-run welcome (M7) and the shop whose keeper gives it.
+        private ?\Felkyo\Users\WelcomeRepository $welcome = null,
+        private ?\Felkyo\Economy\ShopRepository $shops = null,
+        private string $keeperShopSlug = 'general-store',
     ) {
     }
 
@@ -52,8 +56,29 @@ final class HomeController
             // The two newest site updates, between the welcome and the
             // creatures (Skerro, 2026-08-30) — for guests too.
             'updates' => $this->articles?->published(2, \Felkyo\Library\Article::KIND_UPDATE) ?? [],
+            'welcome' => is_int($userId) ? $this->welcomeFor($userId, (int) $request->query('welcome', '0')) : null,
         ]);
 
         return Response::html($html);
+    }
+
+    /**
+     * Ruinily's welcome for this player, or null once they've dismissed it.
+     * Her name and portrait come from the shop she keeps, so changing the
+     * keeper in the panel changes who welcomes people too.
+     */
+    private function welcomeFor(int $userId, int $step): ?array
+    {
+        if ($this->welcome === null || $this->welcome->isDismissed($userId)) {
+            return null;
+        }
+        $shop = $this->shops?->findBySlug($this->keeperShopSlug);
+
+        return [
+            'steps' => $this->welcome->steps(),
+            'step' => $step,
+            'keeperName' => $shop?->keeperName ?? 'Ruinily',
+            'portraitUrl' => $shop?->portraitUrl(),
+        ];
     }
 }

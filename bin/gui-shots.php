@@ -286,6 +286,10 @@ $save('library-book-open', str_replace('<details class="book">', '<details class
 $save('admin-forms', $fetch('/admin/creatures/1/forms'));
 $save('admin-gazette', $fetch('/admin/gazette'));
 $save('admin-character', $fetch('/admin/character'));
+$save('admin-badges', $fetch('/admin/badges'));
+$save('admin-postcards', $fetch('/admin/postcards'));
+$save('admin-gifts', $fetch('/admin/gifts'));
+$save('admin-welcome', $fetch('/admin/welcome'));
 $save('admin-themes', $fetch('/admin/themes'));
 preg_match('~href="/admin/themes/(\d+)"~', $fetch('/admin/themes'), $themeM);
 $save('admin-theme-edit', $fetch('/admin/themes/' . ($themeM[1] ?? '0')));

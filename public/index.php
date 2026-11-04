@@ -159,6 +159,7 @@ use Felkyo\Creatures\FreezeService;
 use Felkyo\Pound\PoundRepository;
 use Felkyo\Pound\PoundService;
 use Felkyo\Http\Controllers\PoundController;
+use Felkyo\Http\Controllers\WelcomeController;
 use Felkyo\Http\Controllers\AdminBadgesController;
 use Felkyo\Http\Controllers\AdminGiftsController;
 use Felkyo\Admin\GiftService;
@@ -437,6 +438,9 @@ $postcardRepository = new PostcardRepository($pdo);
 $bottleRepository = new BottleRepository($pdo);
 $companyPanel = new CompanyPanel($companyRepository, $postcardRepository, new \Felkyo\Character\BadgeRepository($pdo));
 
+// M7 — the first-run welcome.
+$welcomeRepository = new \Felkyo\Users\WelcomeRepository($pdo);
+
 // M4 — themes.
 $themeRepository = new ThemeRepository($pdo);
 
@@ -628,7 +632,10 @@ $templates->addData([
 // ---- Controllers ----
 $homeController = new HomeController(
     $templates, $session, $creatureRepository, $creatureProfileBuilder, $config['app']['name'],
-    $articleRepository
+    $articleRepository, $welcomeRepository, $shopRepository
+);
+$welcomeController = new WelcomeController(
+    $templates, $session, $csrf, $userRepository, $welcomeRepository, $auditLogRepository
 );
 $libraryController = new LibraryController(
     $templates, $speciesRepository, $speciesFormRepository, $articleRepository,
@@ -1076,6 +1083,9 @@ $router->get('/shore', [$postOfficeController, 'shore']);
 $router->post('/shore/send', [$postOfficeController, 'sendBottle']);
 $router->post('/shore/find', [$postOfficeController, 'findBottle']);
 
+// M7 — dismissing the welcome.
+$router->post('/welcome/dismiss', [$welcomeController, 'dismiss']);
+
 // M4 — choosing a theme.
 $router->get('/themes', [$themeController, 'show']);
 $router->post('/themes', [$themeController, 'choose']);
@@ -1217,6 +1227,10 @@ $router->post('/admin/badges/{id}', $adminGate->protect(Role::Artist, [$adminBad
 $router->post('/admin/badges/{id}/delete', $adminGate->protect(Role::Artist, [$adminBadgesController, 'delete']));
 $router->get('/admin/badges/{id}/picture', $adminGate->protect(Role::Artist, [$adminBadgesController, 'pickPicture']));
 $router->post('/admin/badges/{id}/picture', $adminGate->protect(Role::Artist, [$adminBadgesController, 'choosePicture']));
+
+// The welcome's words. Artist role.
+$router->get('/admin/welcome', $adminGate->protect(Role::Artist, [$welcomeController, 'edit']));
+$router->post('/admin/welcome', $adminGate->protect(Role::Artist, [$welcomeController, 'save']));
 
 // M4 — themes. Artist role.
 $router->get('/admin/themes', $adminGate->protect(Role::Artist, [$adminThemesController, 'index']));

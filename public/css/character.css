@@ -273,3 +273,98 @@
     font-size: 0.85rem;
     color: var(--ink-soft);
 }
+
+/* ---------- Ruinily's welcome (M7) ---------- */
+
+/* Portrait on the left, speech bubble beside it; on a narrow phone the
+   portrait sits above the bubble's tail instead. */
+.welcome {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    margin: var(--space-5) 0;
+    animation: welcome-pop 380ms ease-out;
+}
+
+.welcome__portrait img,
+.welcome__initial {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: 3px solid var(--gold);
+    background: var(--panel);
+    object-fit: cover;
+    box-shadow: var(--glow-gold);
+}
+
+.welcome__initial {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--plum);
+}
+
+.welcome__bubble {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    padding: var(--space-3) var(--space-4);
+    background: var(--parchment);
+    border: 2px solid var(--gold);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-raised);
+}
+
+/* The bubble's little tail, pointing at the portrait. Decoration only. */
+.welcome__bubble::before {
+    content: "";
+    position: absolute;
+    left: -11px;
+    top: 24px;
+    width: 18px;
+    height: 18px;
+    background: var(--parchment);
+    border-left: 2px solid var(--gold);
+    border-bottom: 2px solid var(--gold);
+    transform: rotate(45deg);
+}
+
+.welcome__who {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 600;
+}
+
+.welcome__who span {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--ink-soft);
+}
+
+.welcome__words {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 1.05rem;
+}
+
+.welcome__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+@keyframes welcome-pop {
+    from { opacity: 0; transform: translateY(8px) scale(0.98); }
+    to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .welcome {
+        animation: none;
+    }
+}

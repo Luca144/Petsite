@@ -136,6 +136,12 @@ final class AdminHomeController
                 'arrives' => null,
             ];
             $sections[] = [
+                'title' => 'The welcome',
+                'sentence' => 'What the shopkeeper says to show a new player around.',
+                'href' => '/admin/welcome',
+                'arrives' => null,
+            ];
+            $sections[] = [
                 'title' => 'Badges',
                 'sentence' => 'Keepsakes creatures earn by being kept a long time, and special ones for players.',
                 'href' => '/admin/badges',

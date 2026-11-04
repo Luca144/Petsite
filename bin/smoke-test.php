@@ -815,7 +815,7 @@ check('the audit log shows the role changes', str_contains($auditPage, 'granted 
 echo "\nThe art store:\n";
 
 $picturesPage = request('/admin/pictures');
-check('the Pictures screen renders for an owner', str_contains($picturesPage['body'], 'Add a picture'));
+check('the Pictures screen renders for an owner', str_contains($picturesPage['body'], 'Add pictures'));
 
 // A frame delay unique to this run makes the bytes — and so the content
 // hash — unique to this run. Otherwise a picture left behind by an earlier
@@ -847,7 +847,10 @@ $refused = request('/admin/pictures/upload', [
 ]);
 // The page escapes the apostrophe (&#039;), so compare against the decoded text.
 check('a script called .gif is refused with a reason', str_contains(html_entity_decode($refused['body'], ENT_QUOTES), 'isn\'t a GIF, PNG or WebP'));
-check('and does not appear in the grid', !str_contains($refused['body'], 'sneaky.gif'));
+// Only the GRID is checked: the refusal message itself now names the file
+// (several can be uploaded at once, so each sentence says which one it means).
+$gridStart = strpos($refused['body'], 'admin-pictures__grid');
+check('and does not appear in the grid', $gridStart === false || !str_contains(substr($refused['body'], $gridStart), 'sneaky.gif'));
 
 // The delete form INSIDE OUR picture's card — not the first delete form on the
 // page, which may belong to a picture an earlier run or gui-shots left behind.
