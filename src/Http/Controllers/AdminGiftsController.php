@@ -41,6 +41,7 @@ final class AdminGiftsController
         private RateLimiter $rateLimiter,
         private array $rateLimit,
         private array $caps,
+        private ?\Felkyo\Character\BadgeRepository $badges = null,
     ) {
     }
 
@@ -49,6 +50,7 @@ final class AdminGiftsController
         return Response::html($this->templates->render('pages/admin-gifts', [
             'species' => $this->species->findPublished(),
             'items' => $this->items->allPublished(),
+            'badges' => $this->badges?->forAudience('player') ?? [],
             'caps' => $this->caps,
             // Coming from a player's account page fills the name in.
             'to' => mb_substr($request->query('to'), 0, 40),
@@ -79,6 +81,7 @@ final class AdminGiftsController
             'amount' => (int) $request->input('amount', '1'),
             'item_id' => (int) $request->input('item_id', '0'),
             'species_id' => (int) $request->input('species_id', '0'),
+            'badge_id' => (int) $request->input('badge_id', '0'),
             'creature_name' => $request->input('creature_name'),
             'reason' => $request->input('reason'),
         ], $request->clientIp());

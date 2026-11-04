@@ -32,6 +32,8 @@ $name = rawurlencode($profile->username);
     </div>
 <?php endif; ?>
 
+<?= $this->insert('partials/badge-shelf', ['badges' => $company['badges'] ?? [], 'heading' => 'Badges']) ?>
+
 <section class="mantelpiece" aria-labelledby="mantelpiece">
     <h2 id="mantelpiece" class="panel-label">On the mantelpiece</h2>
     <?php if ($company['cards'] === []): ?>

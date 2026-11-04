@@ -40,6 +40,8 @@ if (empty($character)) {
         </p>
     <?php endif; ?>
 
+    <?= $this->insert('partials/badge-shelf', ['badges' => $character['badges'] ?? [], 'heading' => 'Keepsakes']) ?>
+
     <?php if ($character['traits'] === []): ?>
         <p class="empty-state">No traits yet &mdash; they come with time and care.</p>
     <?php else: ?>

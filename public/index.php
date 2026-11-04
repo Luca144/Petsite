@@ -159,6 +159,7 @@ use Felkyo\Creatures\FreezeService;
 use Felkyo\Pound\PoundRepository;
 use Felkyo\Pound\PoundService;
 use Felkyo\Http\Controllers\PoundController;
+use Felkyo\Http\Controllers\AdminBadgesController;
 use Felkyo\Http\Controllers\AdminGiftsController;
 use Felkyo\Admin\GiftService;
 use Felkyo\Http\Controllers\AdminPostcardsController;
@@ -434,7 +435,7 @@ $creatureProfileBuilder = new CreatureProfileBuilder(
 $companyRepository = new CompanyRepository($pdo);
 $postcardRepository = new PostcardRepository($pdo);
 $bottleRepository = new BottleRepository($pdo);
-$companyPanel = new CompanyPanel($companyRepository, $postcardRepository);
+$companyPanel = new CompanyPanel($companyRepository, $postcardRepository, new \Felkyo\Character\BadgeRepository($pdo));
 
 // M4 — themes.
 $themeRepository = new ThemeRepository($pdo);
@@ -443,7 +444,8 @@ $themeRepository = new ThemeRepository($pdo);
 $traitRepository = new TraitRepository($pdo);
 $ladderRepository = new LadderRepository($pdo);
 $traitAwarder = new TraitAwarder($traitRepository);
-$characterSheet = new CharacterSheet($traitRepository, $traitAwarder, $ladderRepository);
+$badgeRepository = new \Felkyo\Character\BadgeRepository($pdo);
+$characterSheet = new CharacterSheet($traitRepository, $traitAwarder, $ladderRepository, $badgeRepository);
 $poundRepository = new PoundRepository($pdo, $config['gameplay']['pound']['grace_days']);
 $poundService = new PoundService($pdo, $poundRepository, $creatureRepository, $traitAwarder);
 $freezeService = new FreezeService($pdo, $creatureRepository, $growthCalculator);
@@ -901,9 +903,16 @@ $adminGiftsController = new AdminGiftsController(
     $templates, $session, $csrf, $userRepository, $speciesRepository, new ItemRepository($pdo),
     new GiftService(
         $pdo, $userRepository, $speciesRepository, new ItemRepository($pdo), $creatureRepository,
-        $inventoryRepository, $auditLogRepository, $config['gameplay']['gifts']
+        $inventoryRepository, $auditLogRepository, $config['gameplay']['gifts'], $badgeRepository
     ),
-    $rateLimiter, $config['security']['rate_limit_gift'], $config['gameplay']['gifts']
+    $rateLimiter, $config['security']['rate_limit_gift'], $config['gameplay']['gifts'], $badgeRepository
+);
+
+// Keepsake badges in the panel.
+$adminBadgesController = new AdminBadgesController(
+    $templates, $session, $csrf, $userRepository, $badgeRepository, $artRepository,
+    new \Felkyo\Character\BadgeEditorService($badgeRepository, $artRepository, $auditLogRepository),
+    $rateLimiter, $config['security']['rate_limit_content_save']
 );
 
 // M4 in the panel: the theme editor.
@@ -1201,6 +1210,13 @@ $router->post('/admin/postcards/{id}/picture', $adminGate->protect(Role::Artist,
 // Gifts. OWNER role only — this makes value out of nothing.
 $router->get('/admin/gifts', $adminGate->protect(Role::Owner, [$adminGiftsController, 'show']));
 $router->post('/admin/gifts', $adminGate->protect(Role::Owner, [$adminGiftsController, 'give']));
+
+// Badges. Artist role.
+$router->get('/admin/badges', $adminGate->protect(Role::Artist, [$adminBadgesController, 'index']));
+$router->post('/admin/badges/{id}', $adminGate->protect(Role::Artist, [$adminBadgesController, 'save']));
+$router->post('/admin/badges/{id}/delete', $adminGate->protect(Role::Artist, [$adminBadgesController, 'delete']));
+$router->get('/admin/badges/{id}/picture', $adminGate->protect(Role::Artist, [$adminBadgesController, 'pickPicture']));
+$router->post('/admin/badges/{id}/picture', $adminGate->protect(Role::Artist, [$adminBadgesController, 'choosePicture']));
 
 // M4 — themes. Artist role.
 $router->get('/admin/themes', $adminGate->protect(Role::Artist, [$adminThemesController, 'index']));

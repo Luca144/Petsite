@@ -33,7 +33,7 @@ use PDO;
  */
 final class GiftService
 {
-    public const KINDS = ['gems', 'item', 'creature'];
+    public const KINDS = ['gems', 'item', 'creature', 'badge'];
 
     /** @param array{max_gems: int, max_items: int} $caps */
     public function __construct(
@@ -45,6 +45,7 @@ final class GiftService
         private InventoryRepository $inventory,
         private AuditLogRepository $auditLog,
         private array $caps,
+        private ?\Felkyo\Character\BadgeRepository $badges = null,
     ) {
     }
 
@@ -70,6 +71,7 @@ final class GiftService
             'gems' => $this->giveGems($recipient, $gift['amount']),
             'item' => $this->giveItems($recipient, $gift['item_id'], $gift['amount']),
             'creature' => $this->giveCreature($recipient, $gift['species_id'], $gift['creature_name']),
+            'badge' => $this->giveBadge($recipient, (int) ($gift['badge_id'] ?? 0), $reason),
             default => ContentEditResult::refused('Pick what to give.'),
         };
 
@@ -120,6 +122,20 @@ final class GiftService
         }
 
         return ContentEditResult::ok(sprintf('%s received %d × %s.', $recipient->username, $amount, $item->name));
+    }
+
+    /** A special PLAYER badge (creature badges are earned, never given). */
+    private function giveBadge(User $recipient, int $badgeId, string $reason): ContentEditResult
+    {
+        $badge = $this->badges?->findById($badgeId);
+        if ($badge === null || $badge['awarded_to'] !== 'player') {
+            return ContentEditResult::refused('Pick one of the special player badges.');
+        }
+        if (!$this->badges->giveToPlayer($recipient->id, $badge['id'], $reason)) {
+            return ContentEditResult::refused(sprintf('%s already has "%s".', $recipient->username, $badge['name']));
+        }
+
+        return ContentEditResult::ok(sprintf('%s received the "%s" badge.', $recipient->username, $badge['name']));
     }
 
     private function giveCreature(User $recipient, int $speciesId, string $name): ContentEditResult

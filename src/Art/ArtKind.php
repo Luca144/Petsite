@@ -28,6 +28,8 @@ enum ArtKind: string
     case Library = 'library';
     // A picture players may choose as their avatar (Skerro, 2026-10-14).
     case Avatar = 'avatar';
+    // A keepsake badge's little picture.
+    case Badge = 'badge';
 
     /** What a person sees it called. */
     public function label(): string
@@ -40,6 +42,7 @@ enum ArtKind: string
             self::Background => 'Area background',
             self::Library => 'Library art',
             self::Avatar => 'Player avatar',
+            self::Badge => 'Badge',
         };
     }
 
@@ -57,6 +60,7 @@ enum ArtKind: string
             self::Background => 'The scene behind an exploration area.',
             self::Library => 'A larger illustration for the library page.',
             self::Avatar => 'A face players can choose for their own page — appears in their choices at once.',
+            self::Badge => 'The small picture of a keepsake badge (about 48×48).',
         };
     }
 

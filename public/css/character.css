@@ -198,3 +198,78 @@
         animation: none;
     }
 }
+
+/* ---------- Keepsake badges ---------- */
+
+.badge-shelf {
+    margin: var(--space-4) 0;
+}
+
+.badge-shelf__heading {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    margin: 0 0 var(--space-2);
+}
+
+.badge-shelf__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-2);
+}
+
+@media (min-width: 600px) {
+    .badge-shelf__list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* Each badge: its picture (or a gold medallion), then its name and words —
+   the words are always there, the picture never stands alone. */
+.badge {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    background: var(--parchment);
+    border: 1.5px solid var(--gold);
+    border-radius: var(--radius-md);
+}
+
+.badge__art {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+}
+
+.badge__medal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    font-size: 1.4rem;
+    color: var(--gold-lit);
+    background: radial-gradient(circle at 35% 30%, var(--plum), var(--plum-deep));
+    border: 2px solid var(--gold);
+    border-radius: 50%;
+    box-shadow: var(--glow-gold);
+}
+
+.badge__words {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.badge__name {
+    font-family: var(--font-display);
+    font-weight: 600;
+}
+
+.badge__description {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+}

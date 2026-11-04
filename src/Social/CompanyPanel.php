@@ -20,6 +20,8 @@ final class CompanyPanel
     public function __construct(
         private CompanyRepository $company,
         private PostcardRepository $postcards,
+        // Special player badges ("Founder") shown on the profile.
+        private ?\Felkyo\Character\BadgeRepository $badges = null,
     ) {
     }
 
@@ -35,6 +37,7 @@ final class CompanyPanel
             'isFriend' => $looking && $this->company->isFriend($viewerId, $profileUserId),
             'isBlocked' => $looking && $this->company->hasBlocked($viewerId, $profileUserId),
             'cards' => $this->postcards->mantelpieceOf($profileUserId, self::MANTELPIECE_SIZE),
+            'badges' => $this->badges?->ofPlayer($profileUserId) ?? [],
         ];
     }
 }

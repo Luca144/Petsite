@@ -8,7 +8,8 @@
  * all chosen with radio tiles (never dropdowns). Fields for the kinds you
  * didn't pick are simply ignored — nothing depends on scripting.
  *
- * Variables: $species (Species[]), $items (Item[]), $caps (array), $to (string).
+ * Variables: $species (Species[]), $items (Item[]), $badges (special player
+ * badges), $caps (array), $to (string).
  */
 $this->layout('layout', ['title' => 'Gifts — Felkyo Creatures']);
 ?>
@@ -35,6 +36,7 @@ $this->layout('layout', ['title' => 'Gifts — Felkyo Creatures']);
             <label class="admin-trait__pill"><input type="radio" name="kind" value="gems" checked> gems</label>
             <label class="admin-trait__pill"><input type="radio" name="kind" value="item"> items</label>
             <label class="admin-trait__pill"><input type="radio" name="kind" value="creature"> a creature</label>
+            <label class="admin-trait__pill"><input type="radio" name="kind" value="badge"> a special badge</label>
         </fieldset>
 
         <div class="field">
@@ -63,6 +65,17 @@ $this->layout('layout', ['title' => 'Gifts — Felkyo Creatures']);
             <label class="field__label" for="creature_name">For a creature: its name (optional)</label>
             <input class="field__input" type="text" id="creature_name" name="creature_name" maxlength="30">
         </div>
+
+        <?php if (!empty($badges)): ?>
+            <fieldset class="admin-trait__choice">
+                <legend class="field__label">For a badge: which one</legend>
+                <?php foreach ($badges as $badge): ?>
+                    <label class="admin-trait__pill">
+                        <input type="radio" name="badge_id" value="<?= $this->e((string) $badge['id']) ?>"> <?= $this->e($badge['name']) ?>
+                    </label>
+                <?php endforeach; ?>
+            </fieldset>
+        <?php endif; ?>
 
         <div class="field">
             <label class="field__label" for="reason">2. Why (for the audit log)</label>

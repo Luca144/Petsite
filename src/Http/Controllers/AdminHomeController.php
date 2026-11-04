@@ -136,6 +136,12 @@ final class AdminHomeController
                 'arrives' => null,
             ];
             $sections[] = [
+                'title' => 'Badges',
+                'sentence' => 'Keepsakes creatures earn by being kept a long time, and special ones for players.',
+                'href' => '/admin/badges',
+                'arrives' => null,
+            ];
+            $sections[] = [
                 'title' => 'Postcards',
                 'sentence' => 'The cards on the post office rack: picture, words and price.',
                 'href' => '/admin/postcards',
