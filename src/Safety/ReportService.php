@@ -65,7 +65,7 @@ final class ReportService
      */
     public function report(int $reporterUserId, ReportSubject $subject, int $subjectId, ReportReason $reason): ReportResult
     {
-        $aboutUserId = $this->whoIsThisAbout($subject, $subjectId);
+        $aboutUserId = $this->whoIsThisAbout($subject, $subjectId, $reporterUserId);
 
         if ($aboutUserId === null) {
             return ReportResult::refused('That doesn’t seem to be here any more.');
@@ -98,7 +98,7 @@ final class ReportService
      * be pinned to an account, because judging reports one at a time is exactly
      * how a repeat offender stays under the line.
      */
-    private function whoIsThisAbout(ReportSubject $subject, int $subjectId): ?int
+    private function whoIsThisAbout(ReportSubject $subject, int $subjectId, int $reporterUserId): ?int
     {
         return match ($subject) {
             ReportSubject::CreatureName, ReportSubject::CreatureBio =>
@@ -109,6 +109,11 @@ final class ReportService
             // person who signed it. That lookup arrives with the guestbook
             // reporting in M6.6, so for now this kind is not offered anywhere.
             ReportSubject::GuestbookEntry => null,
+            // Only the person a card was sent TO, or who FOUND a bottle, can
+            // report it — so card and bottle ids can't be guessed to report
+            // strangers. Anyone else gets "not here any more".
+            ReportSubject::Postcard => $this->reports->postcardSenderFor($subjectId, $reporterUserId),
+            ReportSubject::Bottle => $this->reports->bottleSenderFor($subjectId, $reporterUserId),
         };
     }
 

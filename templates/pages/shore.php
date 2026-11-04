@@ -72,6 +72,7 @@ $this->layout('layout', ['title' => 'The shore — Felkyo Creatures']);
                             <?= $this->csrf_field() ?>
                             <button class="btn btn--secondary" type="submit">Add to friends</button>
                         </form>
+                        <?= $this->insert('partials/report-link', ['subject' => 'bottle', 'id' => $bottle['id']]) ?>
                         <form method="post" action="/player/<?= $this->e(rawurlencode($bottle['sender'])) ?>/block">
                             <?= $this->csrf_field() ?>
                             <button class="btn--quiet" type="submit">block <?= $this->e($bottle['sender']) ?></button>

@@ -416,6 +416,8 @@ final class ModerationService
             ReportSubject::CreatureBio => $this->creatures->findById($subjectId)?->bio,
             ReportSubject::Username => $this->profiles->findById($subjectId)?->username,
             ReportSubject::ProfileAbout => $this->profiles->findById($subjectId)?->about,
+            ReportSubject::Postcard => '(a postcard — the words are ours; look at who sent it, and how often)',
+            ReportSubject::Bottle => '(a message in a bottle — the words are ours; look at who sent it)',
             default => null,
         };
 

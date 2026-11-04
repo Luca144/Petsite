@@ -64,6 +64,30 @@ final class ReportRepository
      * restart the clock — the queue shows how long something has been waiting,
      * and that number should be measured from the FIRST report.
      */
+    /** Who sent this postcard — but only if it was sent to $recipientId. */
+    public function postcardSenderFor(int $postcardId, int $recipientId): ?int
+    {
+        $statement = $this->connection->prepare(
+            'SELECT sender_user_id FROM postcards WHERE id = :id AND recipient_user_id = :me'
+        );
+        $statement->execute([':id' => $postcardId, ':me' => $recipientId]);
+        $sender = $statement->fetchColumn();
+
+        return $sender === false ? null : (int) $sender;
+    }
+
+    /** Who sent this bottle — but only if $finderId is the one who found it. */
+    public function bottleSenderFor(int $bottleId, int $finderId): ?int
+    {
+        $statement = $this->connection->prepare(
+            'SELECT sender_user_id FROM bottles WHERE id = :id AND finder_user_id = :me'
+        );
+        $statement->execute([':id' => $bottleId, ':me' => $finderId]);
+        $sender = $statement->fetchColumn();
+
+        return $sender === false ? null : (int) $sender;
+    }
+
     public function hideCreatureBio(int $creatureId): void
     {
         $statement = $this->connection->prepare(

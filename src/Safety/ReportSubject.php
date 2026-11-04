@@ -27,6 +27,11 @@ enum ReportSubject: string
     case CreatureBio = 'creature_bio';
     case ProfileAbout = 'profile_about';
     case GuestbookEntry = 'guestbook_entry';
+    // M6.6: a postcard you received, a bottle you found. The words are ours;
+    // what's reportable is the SENDER and the pattern (one person sending you
+    // card after card). Only the recipient / finder may report them.
+    case Postcard = 'postcard';
+    case Bottle = 'bottle';
 
     /**
      * Does reporting this hide it until a human has looked?
@@ -48,7 +53,7 @@ enum ReportSubject: string
     {
         return match ($this) {
             self::CreatureBio, self::ProfileAbout => true,
-            self::Username, self::CreatureName, self::GuestbookEntry => false,
+            self::Username, self::CreatureName, self::GuestbookEntry, self::Postcard, self::Bottle => false,
         };
     }
 
@@ -63,6 +68,8 @@ enum ReportSubject: string
             self::CreatureBio => 'this creature’s description',
             self::ProfileAbout => 'this player’s about text',
             self::GuestbookEntry => 'this guestbook entry',
+            self::Postcard => 'this card and who sent it',
+            self::Bottle => 'this bottle and who sent it',
         };
     }
 

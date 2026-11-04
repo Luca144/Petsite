@@ -44,6 +44,9 @@ $name = rawurlencode($profile->username);
                 <li class="mantelpiece__card">
                     <?= $this->insert('partials/postcard', ['card' => $card]) ?>
                     <span class="mantelpiece__from">from <a href="/player/<?= $this->e(rawurlencode($card['sender'])) ?>"><?= $this->e($card['sender']) ?></a></span>
+                    <?php if ($isOwner): ?>
+                        <?= $this->insert('partials/report-link', ['subject' => 'postcard', 'id' => $card['id']]) ?>
+                    <?php endif; ?>
                 </li>
             <?php endforeach; ?>
         </ul>

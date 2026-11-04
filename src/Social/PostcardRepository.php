@@ -78,7 +78,7 @@ final class PostcardRepository
     public function mantelpieceOf(int $recipientId, int $limit): array
     {
         $statement = $this->connection->prepare(
-            'SELECT p.sender_user_id, s.username AS sender, d.name, d.message, a.stored_name AS art_name, p.sent_at
+            'SELECT p.id, p.sender_user_id, s.username AS sender, d.name, d.message, a.stored_name AS art_name, p.sent_at
                FROM postcards p
                JOIN users s ON s.id = p.sender_user_id
                JOIN postcard_designs d ON d.id = p.design_id
@@ -91,6 +91,7 @@ final class PostcardRepository
         $statement->execute([':r' => $recipientId, ':r2' => $recipientId]);
 
         return array_map(static fn (array $row): array => [
+            'id' => (int) $row['id'],
             'sender_id' => (int) $row['sender_user_id'],
             'sender' => (string) $row['sender'],
             'name' => (string) $row['name'],

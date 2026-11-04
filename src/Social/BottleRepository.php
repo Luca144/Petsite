@@ -98,7 +98,7 @@ final class BottleRepository
     public function foundBy(int $finderId, int $limit): array
     {
         $statement = $this->connection->prepare(
-            'SELECT b.sender_user_id, u.username, b.message_key, b.found_at
+            'SELECT b.id, b.sender_user_id, u.username, b.message_key, b.found_at
                FROM bottles b JOIN users u ON u.id = b.sender_user_id
               WHERE b.finder_user_id = :me
               ORDER BY b.found_at DESC, b.id DESC LIMIT ' . max(1, $limit)
@@ -106,6 +106,7 @@ final class BottleRepository
         $statement->execute([':me' => $finderId]);
 
         return array_map(static fn (array $row): array => [
+            'id' => (int) $row['id'],
             'sender_id' => (int) $row['sender_user_id'],
             'sender' => (string) $row['username'],
             'message_key' => (string) $row['message_key'],

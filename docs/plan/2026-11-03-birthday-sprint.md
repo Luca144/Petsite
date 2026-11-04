@@ -7,7 +7,7 @@ as a birthday present, with the usual per-increment plans, sign-offs and full
 test matrices set aside until afterwards. This note records what was built,
 what was deliberately skipped, and what must happen before any of it goes live.
 
-## Database: five new migrations
+## Database: seven new migrations
 
 Run `C:\xampp\php\php.exe vendor/bin/phinx migrate` (and `-e testing`):
 
@@ -18,6 +18,8 @@ Run `C:\xampp\php\php.exe vendor/bin/phinx migrate` (and `-e testing`):
 | `20261103160001_create_themes` | themes, `users.theme_id`, three starter themes |
 | `20261103180001_create_company` | friends, blocks, postcards, bottles, daily claims |
 | `20261104090001_add_article_kind` | site updates (articles of kind `update`) |
+| `20261104120001_create_badges` | keepsake badges (creature: by days kept; player: given by the owner) |
+| `20261104140001_create_welcome` | Ruinily's first-run welcome, `users.welcome_dismissed_at` |
 
 Demo words, a first Gazette article and three creatures waiting at the pound:
 `C:\xampp\php\php.exe vendor/bin/phinx seed:run -s DemoLibrary` (only fills
@@ -49,8 +51,6 @@ gaps; never overwrites anything written in the panel).
 ## Deliberately NOT done (yet)
 
 - **M3.3 reputation.** The plan says to agree on how harsh it should be first.
-- **M6.6 reporting for cards and bottles.** Blocking works from both, but neither feeds the moderation queue yet.
-- **A panel editor for postcard designs.** The designs are rows in `postcard_designs`; for now, art gets linked by hand.
 - **Tests for all of the above.** Only the existing suite was kept green; one pre-existing art-upload test (`ArtStoreTest`) fails on this machine and is unrelated. Every controller still has its CSRF, rate-limit and ownership checks, and every query is prepared.
 - **The security review, Skerro's front-end pass, the AdminGateTest route matrix** for the new admin routes, and the `docs/` guides.
 
@@ -59,4 +59,11 @@ gaps; never overwrites anything written in the panel).
 1. Write the tests: every permission boundary refused, every race (adopt, reclaim, find).
 2. Add the new admin routes to the AdminGateTest matrix.
 3. Do a security review of the pound (nullable `owner_id`!) and the post office.
-4. Run the five migrations on production, and say so in the handover.
+4. Run the seven migrations on production, and say so in the handover.
+
+## Added on day two (2026-11-04)
+
+- Skerro's fix list: stars instead of the leaf, site updates on the home page (`/updates`), red petting hearts, favourite treats ×4, visible secondary-button borders, centred log-in button on phones, species and item names linking to the library (new item pages: where to find it), shop description above the keeper's greeting, deleting species/items for good (draft only, typed name, nobody loses out), avatar uploads.
+- Panel: postcard editor, uploading many pictures at once, the owner-only gift desk (gems, items, a creature, special badges; capped, reason required, audit-logged), badge editor, editing Ruinily's welcome.
+- Keepsake badges, Ruinily's first-run welcome (M7), reporting cards and bottles (M6.6: only the recipient / finder can report).
+- Still waiting on Skerro's screenshots for: the About Me "one line", "centre the petted text".
