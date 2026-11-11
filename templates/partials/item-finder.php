@@ -54,12 +54,12 @@ $showPills = count($categories) > 1;
                 <?php if ($activeSlug !== ''): ?>
                     <input type="hidden" name="category" value="<?= $this->e($activeSlug) ?>">
                 <?php endif; ?>
-                <label class="finder__label" for="finder-q">Find by name</label>
+                <label class="finder__label" for="finder-q"><?= $this->t('item-finder.find-by-name', 'Find by name') ?></label>
                 <div class="finder__row">
                     <input class="finder__input" type="search" id="finder-q" name="q"
                            value="<?= $this->e($searchText) ?>"
                            maxlength="40" autocomplete="off">
-                    <button class="btn btn--secondary finder__button" type="submit">Find</button>
+                    <button class="btn btn--secondary finder__button" type="submit"><?= $this->t('item-finder.find', 'Find') ?></button>
                 </div>
             </form>
         <?php endif; ?>
@@ -75,7 +75,7 @@ $showPills = count($categories) > 1;
                     <a class="finder__pill" data-category=""
                        href="<?= $this->e($finder['action'] . ($searchPart !== '' ? $searchPart : '')) ?>"
                        <?= $activeSlug === '' ? 'aria-current="true"' : '' ?>>
-                        everything &middot; <?= $this->e((string) $finder['totalCount']) ?>
+                        <?= $this->t('item-finder.everything', 'everything · {total_count}', ['total_count' => (string) $finder['totalCount']]) ?>
                     </a>
                 </li>
                 <?php foreach ($categories as $category): ?>
@@ -104,7 +104,7 @@ $showPills = count($categories) > 1;
                  the words without touching the link beside them. */ ?>
         <p class="finder__count" role="status" <?= $isFiltered ? '' : 'hidden' ?>>
             <span class="finder__count-text"><?= $this->e('Showing ' . $finder['shownCount'] . ' of ' . $finder['totalCount'] . ' ' . $finder['thingsWord'] . '.') ?></span>
-            <a class="finder__reset" href="<?= $this->e($finder['action']) ?>">Show everything</a>
+            <a class="finder__reset" href="<?= $this->e($finder['action']) ?>"><?= $this->t('item-finder.show-everything', 'Show everything') ?></a>
         </p>
     </div>
 <?php endif; ?>

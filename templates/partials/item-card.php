@@ -73,6 +73,6 @@ $hasArtwork = $iconSrc !== null;
              hidden. Both come from the same number, so they cannot disagree. */ ?>
     <span class="item-card__qty">
         <span aria-hidden="true">&times;<?= $this->e((string) $stack->quantity) ?></span>
-        <span class="visually-hidden"><?= $this->e((string) $stack->quantity) ?> owned</span>
+        <span class="visually-hidden"><?= $this->t('item-card.owned', '{quantity} owned', ['quantity' => (string) $stack->quantity]) ?></span>
     </span>
 </a>

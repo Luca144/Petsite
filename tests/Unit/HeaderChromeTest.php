@@ -27,6 +27,7 @@ final class HeaderChromeTest extends TestCase
     private function render(?array $moment = null): string
     {
         $templates = new Engine(dirname(__DIR__, 2) . '/templates');
+        \Felkyo\Texts\TextTemplateFunctions::register($templates, new \Felkyo\Texts\TextCatalogue());
         // The logged-in footer contains the log-out form, which calls this helper.
         $templates->registerFunction('csrf_field', static fn (): string => '');
 

@@ -35,7 +35,7 @@ $image = $species?->spriteUrlFor($summary['stage']) ?? '';
                  the star, because an icon on its own has to be learnt. */ ?>
         <span class="creature-card__favourite">
             <span aria-hidden="true">&#9733;</span>
-            <span class="creature-card__favourite-word">favourite</span>
+            <span class="creature-card__favourite-word"><?= $this->t('creature-card.favourite', 'favourite') ?></span>
         </span>
     <?php endif; ?>
 
@@ -55,5 +55,5 @@ $image = $species?->spriteUrlFor($summary['stage']) ?? '';
              always. On one shared line, long names wrapped and short ones did not,
              and the grid read as jitter. (The Product Owner asked for this.) */ ?>
     <span class="creature-card__meta"><?= $this->e($species?->name ?? 'Unknown') ?></span>
-    <span class="creature-card__meta">level <?= $this->e((string) $summary['level']) ?></span>
+    <span class="creature-card__meta"><?= $this->t('creature-card.level', 'level {level}', ['level' => (string) $summary['level']]) ?></span>
 </a>

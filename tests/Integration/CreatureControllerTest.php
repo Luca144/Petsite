@@ -44,6 +44,8 @@ final class CreatureControllerTest extends DatabaseTestCase
         $config = require dirname(__DIR__, 2) . '/config/config.php';
 
         $templates = new Engine(dirname(__DIR__, 2) . '/templates');
+
+        \Felkyo\Texts\TextTemplateFunctions::register($templates, new \Felkyo\Texts\TextCatalogue());
         // Kept on the test as well, so a test can share data with the layout the
         // way public/index.php does — which is how the celebration flag arrives.
         $this->templates = $templates;

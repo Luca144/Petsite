@@ -23,7 +23,7 @@ $justPetted = $justPetted ?? false;
 ?>
 <div class="mood-bars">
     <div class="mood-bar">
-        <span class="mood-bar__label">happiness</span>
+        <span class="mood-bar__label"><?= $this->t('mood-bars.happiness', 'happiness') ?></span>
         <span class="mood-bar__track" role="img"
               aria-label="Happiness: <?= $this->e((string) $mood->happiness) ?> out of 100, <?= $this->e($mood->word) ?>">
             <?php /* The width is the only inline style on the site, and it has to
@@ -38,7 +38,7 @@ $justPetted = $justPetted ?? false;
     </div>
 
     <div class="mood-bar">
-        <span class="mood-bar__label">energy</span>
+        <span class="mood-bar__label"><?= $this->t('mood-bars.energy', 'energy') ?></span>
         <span class="mood-bar__track" role="img"
               aria-label="Energy: <?= $this->e((string) $mood->energy) ?> out of 100<?= $mood->isResting ? ', resting' : '' ?>">
             <span class="mood-bar__fill mood-bar__fill--energy"

@@ -69,16 +69,16 @@ $createdLabel = $creature->createdAt !== null
             <?php /* The owner's name links to their page, so a creature you liked
                      is a way of finding the person who looks after it. */ ?>
             <?php if ($creature->isAtPound()): ?>
-                &middot; waiting for a home at <a href="/pound">the pound</a>
+                <?= $this->t('creature-sheet.waiting-for-a-home-at', '· waiting for a home at') ?> <a href="/pound"><?= $this->t('creature-sheet.the-pound', 'the pound') ?></a>
             <?php else: ?>
-            &middot; cared for by
+            <?= $this->t('creature-sheet.cared-for-by', '· cared for by') ?>
             <?php if ($owner !== null): ?>
                 <a href="/player/<?= $this->e(rawurlencode($owner->username)) ?>"><?= $this->e($owner->username) ?></a>
             <?php else: ?>
-                someone
+                <?= $this->t('creature-sheet.someone', 'someone') ?>
             <?php endif; ?>
             <?php endif; ?>
-            &middot; here since <?= $this->e($createdLabel) ?>
+            <?= $this->t('creature-sheet.here-since', '· here since {created_label}', ['created_label' => $createdLabel]) ?>
         </p>
         <?php
         // The stage's own words if the artist wrote some (M2.3), else the
@@ -105,18 +105,18 @@ $createdLabel = $creature->createdAt !== null
         <div class="card card--dark creature-stats">
             <div class="creature-stat">
                 <span class="creature-stat__value"><?= $this->e((string) $level) ?></span>
-                <span class="creature-stat__label">level</span>
+                <span class="creature-stat__label"><?= $this->t('creature-sheet.level', 'level') ?></span>
             </div>
             <div class="creature-stat">
                 <?php /* --word: the stage is a word between two numbers, and at
                          the numbers' display size "juvenile" is wider than a
                          phone-width cell (see creature.css). */ ?>
                 <span class="creature-stat__value creature-stat__value--word"><?= $this->e($stage) ?></span>
-                <span class="creature-stat__label">stage</span>
+                <span class="creature-stat__label"><?= $this->t('creature-sheet.stage', 'stage') ?></span>
             </div>
             <div class="creature-stat">
                 <span class="creature-stat__value"><?= $this->e((string) $timesPetted) ?></span>
-                <span class="creature-stat__label">times petted</span>
+                <span class="creature-stat__label"><?= $this->t('creature-sheet.times-petted', 'times petted') ?></span>
             </div>
         </div>
 
@@ -125,7 +125,7 @@ $createdLabel = $creature->createdAt !== null
                 <form method="post" action="/creature/<?= $this->e((string) $creature->id) ?>/pet" class="creature__pet">
                     <?= $this->csrf_field() ?>
                     <button class="btn btn--primary" type="submit">
-                        <span aria-hidden="true">&hearts;</span> Pet <?= $this->e($creature->name) ?>
+                        <span aria-hidden="true">&hearts;</span> <?= $this->t('creature-sheet.pet', 'Pet {name}', ['name' => $creature->name]) ?>
                     </button>
                 </form>
 
@@ -135,12 +135,12 @@ $createdLabel = $creature->createdAt !== null
                              on, and the answer stays on the server. */ ?>
                     <a class="btn btn--secondary"
                        href="/creature/<?= $this->e((string) $creature->id) ?>/play">
-                        <span aria-hidden="true">&#9670;</span> Play a game
+                        <span aria-hidden="true">&#9670;</span> <?= $this->t('creature-sheet.play-a-game', 'Play a game') ?>
                     </a>
                 <?php endif; ?>
             </div>
         <?php elseif (empty($previewMode)): ?>
-            <p class="auth-alt"><a href="/login">Log in</a> to pet <?= $this->e($creature->name) ?>.</p>
+            <p class="auth-alt"><a href="/login"><?= $this->t('creature-sheet.log-in', 'Log in') ?></a> <?= $this->t('creature-sheet.to-pet', 'to pet {name}.', ['name' => $creature->name]) ?></p>
         <?php endif; ?>
 
         <?php if (!empty($isOwner)): ?>

@@ -162,6 +162,7 @@ use Felkyo\Http\Controllers\PoundController;
 use Felkyo\Http\Controllers\WelcomeController;
 use Felkyo\Http\Controllers\BugReportController;
 use Felkyo\Http\Controllers\AdminLookController;
+use Felkyo\Http\Controllers\AdminTextsController;
 use Felkyo\Http\Controllers\AdminBadgesController;
 use Felkyo\Http\Controllers\AdminGiftsController;
 use Felkyo\Admin\GiftService;
@@ -308,6 +309,23 @@ $templates = new Engine(dirname(__DIR__) . '/templates');
 $templates->registerFunction('csrf_field', function () use ($csrf): string {
     $token = htmlspecialchars($csrf->token(), ENT_QUOTES, 'UTF-8');
     return '<input type="hidden" name="_csrf_token" value="' . $token . '">';
+});
+
+// ---- The site's words ----
+//
+// Every sentence in a template is written $this->t('key', 'The original
+// words'), so the artist can change it in the panel (or by clicking it in
+// editing mode) — see Felkyo\Texts\TextCatalogue. Three functions:
+//   t()       a sentence, as safe HTML (in editing mode, wrapped so it can be clicked)
+//   ta()      the same for INSIDE an attribute (alt, placeholder): never wrapped
+//   message() a message the code sent (the flash, form errors)
+// $textEditMode is decided further down, once we know who is looking; the
+// functions read it by reference.
+$textCatalogue = new \Felkyo\Texts\TextCatalogue(new \Felkyo\Texts\SiteTextRepository($pdo));
+$textScanner = new \Felkyo\Texts\TextScanner(dirname(__DIR__) . '/templates', dirname(__DIR__) . '/src');
+$textEditMode = false;
+\Felkyo\Texts\TextTemplateFunctions::register($templates, $textCatalogue, $textScanner, static function () use (&$textEditMode): bool {
+    return $textEditMode;
 });
 
 // ---- Repositories (own the database queries) ----
@@ -525,7 +543,14 @@ $unreadNotices = $currentUser !== null ? $noticeRepository->unreadFor($currentUs
 // is CONVENIENCE, not security — the AdminGate re-checks roles on every
 // admin request; hiding the link just keeps players' screens honest about
 // what is theirs. One indexed lookup, only for logged-in users.
-$showPanelLink = $currentUser !== null && $roleRepository->rolesFor($currentUser->id) !== [];
+$currentRoles = $currentUser !== null ? $roleRepository->rolesFor($currentUser->id) : [];
+$showPanelLink = $currentRoles !== [];
+
+// May this person change the site's words, and have they switched editing
+// mode on? Artist or owner only. Showing the dotted lines is convenience —
+// every SAVE goes through the panel's AdminGate (and its door) regardless.
+$canEditTexts = in_array(Role::Artist, $currentRoles, true) || in_array(Role::Owner, $currentRoles, true);
+$textEditMode = $canEditTexts && $session->get(\Felkyo\Http\Controllers\AdminTextsController::MODE_KEY) === true;
 
 // A creature moment: every few clicks, one of the player's creatures pops up in
 // a speech bubble at the top of the page. Most requests this stays null — the
@@ -649,6 +674,9 @@ $templates->addData([
     'currentPath' => $request->path(),
     // Whether to show the panel link (staff only — see above).
     'showPanelLink' => $showPanelLink,
+    // The site's words: may this person edit them, and is editing mode on?
+    'canEditTexts' => $canEditTexts,
+    'textEditMode' => $textEditMode,
     // The label for the currency (e.g. "coins"), shown next to the balance.
     'currencyName' => $config['gameplay']['currency']['name'],
     // Whether to offer the "sign up" link, and whether to show the demo banner.
@@ -963,6 +991,13 @@ $adminThemesController = new AdminThemesController(
     $templates, $session, $csrf, $userRepository, $themeRepository,
     new ThemeEditorService($themeRepository, $auditLogRepository, $artRepository),
     $rateLimiter, $config['security']['rate_limit_content_save'], $artRepository
+);
+
+// The site's words: the panel's list, saving one, editing mode.
+$adminTextsController = new AdminTextsController(
+    $templates, $session, $csrf, $userRepository,
+    new \Felkyo\Texts\TextEditorService(new \Felkyo\Texts\SiteTextRepository($pdo), $textCatalogue, $textScanner, $auditLogRepository),
+    $textCatalogue, $textScanner, $rateLimiter, $config['security']['rate_limit_content_save']
 );
 
 // The panel's site look: default theme, section order, announcement, and
@@ -1284,6 +1319,11 @@ $router->post('/admin/badges/{id}/picture', $adminGate->protect(Role::Artist, [$
 // The welcome's words. Artist role.
 $router->get('/admin/welcome', $adminGate->protect(Role::Artist, [$welcomeController, 'edit']));
 $router->post('/admin/welcome', $adminGate->protect(Role::Artist, [$welcomeController, 'save']));
+
+// The site's words. Artist role (owner passes).
+$router->get('/admin/texts', $adminGate->protect(Role::Artist, [$adminTextsController, 'index']));
+$router->post('/admin/texts/save', $adminGate->protect(Role::Artist, [$adminTextsController, 'save']));
+$router->post('/admin/texts/mode', $adminGate->protect(Role::Artist, [$adminTextsController, 'mode']));
 
 // The site look and the fine-tuning CSS. Artist role.
 $router->get('/admin/look', $adminGate->protect(Role::Artist, [$adminLookController, 'show']));

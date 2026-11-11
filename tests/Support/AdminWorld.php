@@ -125,6 +125,8 @@ final class AdminWorld
         $security = $config['security'];
 
         $templates = new Engine(dirname(__DIR__, 2) . '/templates');
+
+        \Felkyo\Texts\TextTemplateFunctions::register($templates, new \Felkyo\Texts\TextCatalogue());
         $world->session = new Session(cookieSecure: false);
         $world->csrf = new Csrf($world->session);
         $templates->registerFunction('csrf_field', function () use ($world): string {

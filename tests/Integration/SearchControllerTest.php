@@ -42,6 +42,8 @@ final class SearchControllerTest extends DatabaseTestCase
         $_SESSION = [];
 
         $templates = new Engine(dirname(__DIR__, 2) . '/templates');
+
+        \Felkyo\Texts\TextTemplateFunctions::register($templates, new \Felkyo\Texts\TextCatalogue());
         $templates->registerFunction('csrf_field', static fn (): string => '');
 
         $users = new UserRepository($this->connection);
@@ -244,8 +246,10 @@ final class SearchControllerTest extends DatabaseTestCase
     {
         $_SESSION['user_id'] = $this->searcherId;
 
+        $limitedTemplates = new Engine(dirname(__DIR__, 2) . '/templates');
+        \Felkyo\Texts\TextTemplateFunctions::register($limitedTemplates, new \Felkyo\Texts\TextCatalogue());
         $limited = new SearchController(
-            new Engine(dirname(__DIR__, 2) . '/templates'),
+            $limitedTemplates,
             new Session(cookieSecure: false),
             new PlayerFinder(
                 new ProfileRepository($this->connection),

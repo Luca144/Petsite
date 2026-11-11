@@ -160,6 +160,12 @@ final class AdminHomeController
                 'arrives' => null,
             ];
             $sections[] = [
+                'title' => 'The site\'s words',
+                'sentence' => 'Change any sentence on the site — here, or by clicking it in editing mode.',
+                'href' => '/admin/texts',
+                'arrives' => null,
+            ];
+            $sections[] = [
                 'title' => 'Site look',
                 'sentence' => 'The look everyone sees, the order of things on a page, and an announcement.',
                 'href' => '/admin/look',

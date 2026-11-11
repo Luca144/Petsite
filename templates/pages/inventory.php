@@ -29,7 +29,7 @@ $this->layout('layout', ['title' => 'Your things — Felkyo Creatures']);
 <?php /* The category drawings, defined once for every card on the page. */ ?>
 <?= $this->insert('partials/item-icons') ?>
 
-<h2 class="panel-label">Your things</h2>
+<h2 class="panel-label"><?= $this->t('inventory.your-things', 'Your things') ?></h2>
 
 <?php if (empty($groups) && !$isFiltered): ?>
     <?php /* The shop is a link inside the sentence, not a button underneath it.
@@ -37,8 +37,8 @@ $this->layout('layout', ['title' => 'Your things — Felkyo Creatures']);
              was the "floating at the bottom" furniture the Product Owner asked to
              have taken away. Golden rule 3 only needs the door to EXIST. */ ?>
     <p class="empty-state">
-        You don&rsquo;t own anything yet &mdash; but
-        <a href="/shop">the village store</a> is warm and Ruinily is in.
+        <?= $this->t('inventory.you-don-t-own-anything', 'You don’t own anything yet — but') ?>
+        <a href="/shop"><?= $this->t('inventory.the-village-store', 'the village store') ?></a> <?= $this->t('inventory.is-warm-and-ruinily-is', 'is warm and Ruinily is in.') ?>
     </p>
 <?php else: ?>
 

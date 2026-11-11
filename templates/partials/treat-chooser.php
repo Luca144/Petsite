@@ -36,7 +36,7 @@ $favouriteItemId = $favouriteItemId ?? null;
           action="/creature/<?= $this->e((string) $creature->id) ?>/feed">
         <?= $this->csrf_field() ?>
         <fieldset class="creature__treats">
-            <legend class="field__label">Give <?= $this->e($creature->name) ?> a treat</legend>
+            <legend class="field__label"><?= $this->t('treat-chooser.give-a-treat', 'Give {name} a treat', ['name' => $creature->name]) ?></legend>
 
             <?php foreach ($treats as $index => $stack): ?>
                 <label class="creature__treat">
@@ -54,14 +54,14 @@ $favouriteItemId = $favouriteItemId ?? null;
                                      carried alongside and the symbol is hidden.
                                      Both come from the same number. */ ?>
                             <span aria-hidden="true">&times;<?= $this->e((string) $stack->quantity) ?></span>
-                            <span class="visually-hidden">, <?= $this->e((string) $stack->quantity) ?> owned</span>
+                            <span class="visually-hidden"><?= $this->t('treat-chooser.owned', ', {quantity} owned', ['quantity' => (string) $stack->quantity]) ?></span>
 
                             <?php if ($favouriteItemId === $stack->item->id): ?>
                                 <?php /* A star AND the word, never the star alone —
                                          an icon has to be learnt before it means
                                          anything (CLAUDE.md section 8). */ ?>
                                 <span class="creature__treat-loved">
-                                    <span aria-hidden="true">&#9733;</span> favourite
+                                    <span aria-hidden="true">&#9733;</span> <?= $this->t('treat-chooser.favourite', 'favourite') ?>
                                 </span>
                             <?php endif; ?>
                         </span>
@@ -71,13 +71,13 @@ $favouriteItemId = $favouriteItemId ?? null;
                                  different KIND of thing from a cheering one. */ ?>
                         <span class="creature__treat-effect">
                             <?php if ($stack->item->happinessBonus > 0): ?>
-                                +<?= $this->e((string) $stack->item->happinessBonus) ?> happiness
+                                <?= $this->t('treat-chooser.happiness', '+{happiness_bonus} happiness', ['happiness_bonus' => (string) $stack->item->happinessBonus]) ?>
                             <?php endif; ?>
                             <?php if ($stack->item->happinessBonus > 0 && $stack->item->energyBonus > 0): ?>
                                 &middot;
                             <?php endif; ?>
                             <?php if ($stack->item->energyBonus > 0): ?>
-                                +<?= $this->e((string) $stack->item->energyBonus) ?> energy
+                                <?= $this->t('treat-chooser.energy', '+{energy_bonus} energy', ['energy_bonus' => (string) $stack->item->energyBonus]) ?>
                             <?php endif; ?>
                         </span>
                     </span>
@@ -85,15 +85,14 @@ $favouriteItemId = $favouriteItemId ?? null;
             <?php endforeach; ?>
         </fieldset>
 
-        <button class="btn btn--secondary" type="submit">Feed</button>
+        <button class="btn btn--secondary" type="submit"><?= $this->t('treat-chooser.feed', 'Feed') ?></button>
     </form>
 <?php else: ?>
     <?php /* Never a dead end (golden rule 3): an empty satchel says where treats
              come from and links there, rather than the section simply not being
              here and leaving somebody to wonder whether feeding exists. */ ?>
     <p class="empty-state">
-        You have no treats for <?= $this->e($creature->name) ?> just now.
-        <a href="/shop">The village store</a> sells them, and they turn up
-        while <a href="/explore">exploring</a>.
+        <?= $this->t('treat-chooser.you-have-no-treats-for', 'You have no treats for {name} just now.', ['name' => $creature->name]) ?>
+        <a href="/shop"><?= $this->t('treat-chooser.the-village-store', 'The village store') ?></a> <?= $this->t('treat-chooser.sells-them-and-they-turn', 'sells them, and they turn up while') ?> <a href="/explore"><?= $this->t('treat-chooser.exploring', 'exploring') ?></a>.
     </p>
 <?php endif; ?>

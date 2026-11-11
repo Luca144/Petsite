@@ -2262,3 +2262,40 @@ where looking at one person is the declared job.
 
 **Screen**: `GET /admin/stats`, Role::Artist (it is the artist's
 marketing information), in the gate matrix; styles in `admin-stats.css`.
+
+## 2026-11-11 — Bug reports, the site's look, and the site's words
+
+**Bug reports** (`src/Feedback/`, `BugReportController`): a footer link on every
+page for logged-in players, carrying the page's path. Text only. Panel list at
+`/admin/bugs` (coder role).
+
+**The site's look** (`src/Look/`, `ThemeStyle`, `AdminLookController`): themes
+carry a style as well as colours — every option is a constant in
+`ThemeStyle`; add one there and it appears in the editor. Site-wide choices live
+in `site_settings` under `look.*` keys (read once per request with the other
+settings). The fine-tuning CSS is checked by `CustomCssRules` on save AND on
+print; its history is `custom_css_versions` (append-only). Box borders use
+`var(--frame-style)` so a theme can re-frame the site — keep using it in new CSS:
+`border: 1.5px var(--frame-style) var(--border);`.
+
+**The site's words** (`src/Texts/`): every sentence in a player-facing template
+is written
+
+```php
+<?= $this->t('page.short-key', 'The original words', ['name' => $creature->name]) ?>
+```
+
+- The original stays in the template; `site_texts` stores only changes.
+- `{name}` gaps are filled with escaped values; `**bold**`/`*slanted*` is the
+  only markup. Inside an attribute use `$this->ta(...)` (never wrapped).
+- **Adding a sentence:** just write a new `$this->t(...)` with a new key — the
+  panel finds it by reading the templates (`TextScanner`). Changing the original
+  words in a template keeps any panel change for that key.
+- **Messages from code** (`flash('...')`, `ContentEditResult::refused('...')`
+  and friends) are found the same way and recognised by their sprintf pattern;
+  write them as one literal string so they stay editable. They reach the page
+  through `$this->message()` (the flash and `form-errors`).
+- Tests that build their own Plates engine must call
+  `TextTemplateFunctions::register($engine, new TextCatalogue())`.
+- Sentences still inside PHP (ternaries like `'is' : 'are'`, page titles) are
+  not editable yet.

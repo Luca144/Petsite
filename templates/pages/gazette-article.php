@@ -15,9 +15,9 @@ $this->layout('layout', ['title' => $article->title . ' — The Felkyo Gazette']
 ?>
 
 <?php if ($article->isUpdate()): ?>
-    <p class="library-back"><a href="/updates">&larr; all updates</a></p>
+    <p class="library-back"><a href="/updates"><?= $this->t('gazette-article.all-updates', '← all updates') ?></a></p>
 <?php else: ?>
-    <p class="library-back"><a href="/library?tab=gazette">&larr; back to the Gazette</a></p>
+    <p class="library-back"><a href="/library?tab=gazette"><?= $this->t('gazette-article.back-to-the-gazette', '← back to the Gazette') ?></a></p>
 <?php endif; ?>
 
 <article class="gazette-article">

@@ -28,7 +28,7 @@ $sceneClass = $area->backgroundUrl() !== null ? ' explore-scene--painted' : '';
 <?php if ($area->description !== null): ?>
     <p><?= $this->e($area->description) ?></p>
 <?php endif; ?>
-<p class="explore-clicks">Searches left this visit: <b><?= $this->e((string) $remaining) ?></b></p>
+<p class="explore-clicks"><?= $this->t('explore-area.searches-left-this-visit', 'Searches left this visit: **{remaining}**', ['remaining' => (string) $remaining]) ?></p>
 
 <?php if ($remaining > 0): ?>
     <form method="post" action="/explore/<?= $this->e($area->slug) ?>" class="explore-scene<?= $sceneClass ?>"<?= $sceneStyle ?>>
@@ -46,10 +46,10 @@ $sceneClass = $area->backgroundUrl() !== null ? ' explore-scene--painted' : '';
     </form>
 <?php else: ?>
     <div class="explore-scene explore-scene--spent<?= $sceneClass ?>"<?= $sceneStyle ?>>
-        <p class="empty-state">You&rsquo;ve searched all you can here for now. Come back a little later.</p>
+        <p class="empty-state"><?= $this->t('explore-area.you-ve-searched-all-you', 'You’ve searched all you can here for now. Come back a little later.') ?></p>
     </div>
 <?php endif; ?>
 
 <p class="auth-alt">
-    <a href="/explore">Back to areas</a> &middot; <a href="/creatures">Your creatures</a>
+    <a href="/explore"><?= $this->t('explore-area.back-to-areas', 'Back to areas') ?></a> &middot; <a href="/creatures"><?= $this->t('explore-area.your-creatures', 'Your creatures') ?></a>
 </p>

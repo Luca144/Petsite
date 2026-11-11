@@ -16,11 +16,10 @@
 $this->layout('layout', ['title' => 'Report something — Felkyo Creatures']);
 ?>
 
-<h2 class="panel-label">Report <?= $this->e($subject->label()) ?></h2>
+<h2 class="panel-label"><?= $this->t('report.report', 'Report {subject}', ['subject' => $subject->label()]) ?></h2>
 
 <p class="report-intro">
-    Thank you for telling us. Choose whichever is closest — you don&rsquo;t have to
-    get it exactly right, and nobody will be told that it was you.
+    <?= $this->t('report.thank-you-for-telling-us', 'Thank you for telling us. Choose whichever is closest — you don’t have to get it exactly right, and nobody will be told that it was you.') ?>
 </p>
 
 <form method="post" action="/report" class="report-form">
@@ -29,7 +28,7 @@ $this->layout('layout', ['title' => 'Report something — Felkyo Creatures']);
     <input type="hidden" name="subject_id" value="<?= $this->e((string) $subjectId) ?>">
 
     <fieldset class="report-reasons">
-        <legend class="visually-hidden">What is wrong?</legend>
+        <legend class="visually-hidden"><?= $this->t('report.what-is-wrong', 'What is wrong?') ?></legend>
 
         <?php foreach ($reasons as $reason): ?>
             <?php /* Each reason is its own submit button. One tap sends the report
@@ -44,10 +43,9 @@ $this->layout('layout', ['title' => 'Report something — Felkyo Creatures']);
 </form>
 
 <p class="report-footnote">
-    If someone is making you uncomfortable, please also tell a grown-up you trust.
-    You can always email us at <b>hello@felkyo.example</b>.
+    <?= $this->t('report.if-someone-is-making-you', 'If someone is making you uncomfortable, please also tell a grown-up you trust. You can always email us at **hello@felkyo.example**.') ?>
 </p>
 
 <div class="button-row">
-    <a class="btn btn--secondary" href="/">Never mind, take me back</a>
+    <a class="btn btn--secondary" href="/"><?= $this->t('report.never-mind-take-me-back', 'Never mind, take me back') ?></a>
 </div>

@@ -13,14 +13,13 @@
 $this->layout('layout', ['title' => 'Your creatures — Felkyo Creatures']);
 ?>
 
-<h2 class="panel-label">Your creatures</h2>
+<h2 class="panel-label"><?= $this->t('collection.your-creatures', 'Your creatures') ?></h2>
 
 <?php if (empty($summaries)): ?>
     <?php /* Never a dead end: say where creatures come from and link there. */ ?>
     <p class="empty-state">
-        You don&rsquo;t have any creatures yet.
-        <a href="/shop">The village store</a> has some looking for a home,
-        and one may follow you back from <a href="/explore">exploring</a>.
+        <?= $this->t('collection.you-don-t-have-any', 'You don’t have any creatures yet.') ?>
+        <a href="/shop"><?= $this->t('collection.the-village-store', 'The village store') ?></a> <?= $this->t('collection.has-some-looking-for-a', 'has some looking for a home, and one may follow you back from') ?> <a href="/explore"><?= $this->t('collection.exploring', 'exploring') ?></a>.
     </p>
 <?php else: ?>
     <?php /* The way to MORE creatures lives in this sentence, not as a button at
@@ -29,8 +28,8 @@ $this->layout('layout', ['title' => 'Your creatures — Felkyo Creatures']);
              a link inside the line about your creatures is where somebody
              wondering about another one is actually looking. */ ?>
     <p class="collection-hint">
-        Star one to keep it beside you on every page &mdash; and
-        <a href="/shop">the village store</a> has more looking for a home.
+        <?= $this->t('collection.star-one-to-keep-it', 'Star one to keep it beside you on every page — and') ?>
+        <a href="/shop"><?= $this->t('collection.the-village-store-2', 'the village store') ?></a> <?= $this->t('collection.has-more-looking-for-a', 'has more looking for a home.') ?>
     </p>
 
     <div class="creature-collection">

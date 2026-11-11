@@ -17,23 +17,23 @@
 $this->layout('layout', ['title' => 'The library — Felkyo Creatures']);
 ?>
 
-<h2 class="panel-label">The library</h2>
+<h2 class="panel-label"><?= $this->t('library.the-library', 'The library') ?></h2>
 
 <nav class="community__tabs" aria-label="Library sections">
     <a class="community__tab" href="/library?tab=creatures"<?= $tab === 'creatures' ? ' aria-current="page"' : '' ?>>
-        creatures
+        <?= $this->t('library.creatures', 'creatures') ?>
     </a>
     <a class="community__tab" href="/library?tab=gazette"<?= $tab === 'gazette' ? ' aria-current="page"' : '' ?>>
-        the gazette
+        <?= $this->t('library.the-gazette', 'the gazette') ?>
     </a>
 </nav>
 
 <?php if ($tab === 'creatures'): ?>
 
-    <p>Every creature known to live in Felkyo has a book here. Open one to see how it grows up &mdash; and what else it might turn out to be.</p>
+    <p><?= $this->t('library.every-creature-known-to-live', 'Every creature known to live in Felkyo has a book here. Open one to see how it grows up — and what else it might turn out to be.') ?></p>
 
     <?php if ($shelf === []): ?>
-        <p class="empty-state">The shelves are still empty. The first books are being written.</p>
+        <p class="empty-state"><?= $this->t('library.the-shelves-are-still-empty', 'The shelves are still empty. The first books are being written.') ?></p>
     <?php else: ?>
         <ul class="library-shelf">
             <?php foreach ($shelf as $species): ?>
@@ -54,12 +54,12 @@ $this->layout('layout', ['title' => 'The library — Felkyo Creatures']);
 <?php else: ?>
 
     <header class="gazette-masthead" aria-hidden="true">
-        <span class="gazette-masthead__name">The Felkyo Gazette</span>
-        <span class="gazette-masthead__motto">news, gossip &amp; small wonders</span>
+        <span class="gazette-masthead__name"><?= $this->t('library.the-felkyo-gazette', 'The Felkyo Gazette') ?></span>
+        <span class="gazette-masthead__motto"><?= $this->t('library.news-gossip-small-wonders', 'news, gossip & small wonders') ?></span>
     </header>
 
     <?php if ($articles === []): ?>
-        <p class="empty-state">No news yet &mdash; the presses are warming up.</p>
+        <p class="empty-state"><?= $this->t('library.no-news-yet-the-presses', 'No news yet — the presses are warming up.') ?></p>
     <?php else: ?>
         <ul class="gazette-list">
             <?php foreach ($articles as $article): ?>

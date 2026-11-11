@@ -296,6 +296,14 @@ $save('admin-bugs', $fetch('/admin/bugs?status=fixed'));
 $save('admin-themes', $fetch('/admin/themes'));
 preg_match('~href="/admin/themes/(\d+)"~', $fetch('/admin/themes'), $themeM);
 $save('admin-theme-edit', $fetch('/admin/themes/' . ($themeM[1] ?? '0')));
+// The site's words: the panel list, and a page in editing mode with its
+// popup shown open (the "open" attribute stands in for the click).
+$save('admin-texts', $fetch('/admin/texts?where=shore'));
+$fetch('/admin/texts/mode', ['_csrf_token' => $token($fetch('/shore')), 'back' => '/shore']);
+$editingShore = $fetch('/shore');
+$save('editing-mode', $editingShore);
+$save('editing-popup', str_replace('<dialog class="text-editor" id="text-editor"', '<dialog open class="text-editor" id="text-editor"', $editingShore));
+$fetch('/admin/texts/mode', ['_csrf_token' => $token($fetch('/shore')), 'back' => '/shore']);
 $save('admin-look', $fetch('/admin/look'));
 $save('admin-look-css', $fetch('/admin/look/css'));
 // One page wearing a styled theme (pixel headings, round corners, stitched

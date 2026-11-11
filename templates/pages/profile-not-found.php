@@ -14,14 +14,13 @@
 $this->layout('layout', ['title' => 'No one by that name — Felkyo Creatures']);
 ?>
 
-<h2 class="panel-label">No one by that name</h2>
+<h2 class="panel-label"><?= $this->t('profile-not-found.no-one-by-that-name', 'No one by that name') ?></h2>
 
 <p class="empty-state">
-    There&rsquo;s nobody here with that name — the spelling might be a little off,
-    or they may have wandered on.
+    <?= $this->t('profile-not-found.there-s-nobody-here-with', 'There’s nobody here with that name — the spelling might be a little off, or they may have wandered on.') ?>
 </p>
 
 <div class="button-row">
-    <a class="btn btn--secondary" href="/browse">Browse recent creatures</a>
-    <a class="btn btn--secondary" href="/">Back to the village</a>
+    <a class="btn btn--secondary" href="/browse"><?= $this->t('profile-not-found.browse-recent-creatures', 'Browse recent creatures') ?></a>
+    <a class="btn btn--secondary" href="/"><?= $this->t('profile-not-found.back-to-the-village', 'Back to the village') ?></a>
 </div>

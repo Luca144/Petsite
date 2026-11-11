@@ -19,9 +19,9 @@ $this->layout('layout', ['title' => 'Not found — Felkyo Creatures']);
     <img class="not-found__art" src="/assets/art/not-found.gif"
          alt="A startled little creature tumbling through a torn hole marked 404"
          width="300" height="300">
-    <h2>Nothing here but moonlight</h2>
+    <h2><?= $this->t('not-found.nothing-here-but-moonlight', 'Nothing here but moonlight') ?></h2>
     <p><?= $this->e($message) ?></p>
     <p class="auth-alt">
-        <a href="/">Back to the home page</a> &middot; <a href="/browse">Browse creatures</a>
+        <a href="/"><?= $this->t('not-found.back-to-the-home-page', 'Back to the home page') ?></a> &middot; <a href="/browse"><?= $this->t('not-found.browse-creatures', 'Browse creatures') ?></a>
     </p>
 </section>

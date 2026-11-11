@@ -34,8 +34,7 @@ $this->layout('layout', ['title' => $shop->name . ' — Felkyo Creatures']);
              not live a full page-scroll away from the question. */ ?>
     <p class="shop-purse">
         <span aria-hidden="true">&#9670;</span>
-        You&rsquo;re carrying <?= $this->e((string) $currentUser->currencyBalance) ?>
-        <?= $this->e($currencyName ?? 'coins') ?>.
+        <?= $this->t('shop.you-re-carrying', 'You’re carrying {currency_balance} {coins}.', ['currency_balance' => (string) $currentUser->currencyBalance, 'coins' => $currencyName ?? 'coins']) ?>
     </p>
 <?php endif; ?>
 
@@ -46,9 +45,9 @@ $this->layout('layout', ['title' => $shop->name . ' — Felkyo Creatures']);
          It is what most people come here for; the shelves can wait a screen. */ ?>
 <?php if (!empty($creaturesForSale)): ?>
     <section class="creature-shop" aria-labelledby="creature-shop-heading">
-        <h3 class="panel-label" id="creature-shop-heading">Creatures looking for a home</h3>
+        <h3 class="panel-label" id="creature-shop-heading"><?= $this->t('shop.creatures-looking-for-a-home', 'Creatures looking for a home') ?></h3>
         <p class="creature-shop__intro">
-            Each one comes with a name you can change straight away.
+            <?= $this->t('shop.each-one-comes-with-a', 'Each one comes with a name you can change straight away.') ?>
         </p>
 
         <div class="creature-shop__grid">
@@ -95,7 +94,7 @@ $this->layout('layout', ['title' => $shop->name . ' — Felkyo Creatures']);
                                  short you are and where they come from, which is
                                  golden rule 3. The server refuses either way. */ ?>
                         <button class="btn <?= $canAfford ? 'btn--primary' : 'btn--secondary' ?>" type="submit">
-                            Take home
+                            <?= $this->t('shop.take-home', 'Take home') ?>
                         </button>
                     </form>
                 </div>
@@ -106,7 +105,7 @@ $this->layout('layout', ['title' => $shop->name . ' — Felkyo Creatures']);
     <hr class="rule">
 <?php endif; ?>
 
-<h3 class="panel-label">On the shelves</h3>
+<h3 class="panel-label"><?= $this->t('shop.on-the-shelves', 'On the shelves') ?></h3>
 
 <?= $this->insert('partials/item-finder', ['finder' => $finder]) ?>
 
@@ -172,7 +171,7 @@ $this->layout('layout', ['title' => $shop->name . ' — Felkyo Creatures']);
                 <?= $this->csrf_field() ?>
                 <input type="hidden" name="item_id" value="<?= $this->e((string) $item->id) ?>">
                 <button class="btn btn--secondary" type="submit">
-                    Buy
+                    <?= $this->t('shop.buy', 'Buy') ?>
                     <span class="visually-hidden"><?= $this->e($item->name) ?></span>
                 </button>
             </form>

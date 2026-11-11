@@ -17,27 +17,27 @@
 $this->layout('layout', ['title' => 'The post office — Felkyo Creatures']);
 ?>
 
-<h2 class="panel-label">The post office</h2>
-<p>Send a card to anyone in Felkyo. It goes up on their mantelpiece for everyone to see. The words are already written &mdash; just pick the one that fits.</p>
+<h2 class="panel-label"><?= $this->t('post-office.the-post-office', 'The post office') ?></h2>
+<p><?= $this->t('post-office.send-a-card-to-anyone', 'Send a card to anyone in Felkyo. It goes up on their mantelpiece for everyone to see. The words are already written — just pick the one that fits.') ?></p>
 
 <?php if ($designs === []): ?>
-    <p class="empty-state">The card rack is empty today.</p>
+    <p class="empty-state"><?= $this->t('post-office.the-card-rack-is-empty', 'The card rack is empty today.') ?></p>
 <?php else: ?>
     <form method="post" action="/post-office">
         <?= $this->csrf_field() ?>
         <fieldset class="postcard-rack">
-            <legend class="field__label">1. Choose a card</legend>
+            <legend class="field__label"><?= $this->t('post-office.1-choose-a-card', '1. Choose a card') ?></legend>
             <?php foreach ($designs as $index => $design): ?>
                 <label class="postcard-tile">
                     <input type="radio" name="design_id" value="<?= $this->e((string) $design['id']) ?>" <?= $index === 0 ? 'checked' : '' ?>>
                     <?= $this->insert('partials/postcard', ['card' => $design]) ?>
-                    <span class="postcard-tile__price"><?= $this->e($design['name']) ?> &middot; <?= $this->e((string) $design['gem_price']) ?> gems</span>
+                    <span class="postcard-tile__price"><?= $this->t('post-office.gems', '{design_name} · {gem_price} gems', ['design_name' => $design['name'], 'gem_price' => (string) $design['gem_price']]) ?></span>
                 </label>
             <?php endforeach; ?>
         </fieldset>
 
         <div class="field">
-            <label class="field__label" for="recipient">2. Who is it for? (their name)</label>
+            <label class="field__label" for="recipient"><?= $this->t('post-office.2-who-is-it-for', '2. Who is it for? (their name)') ?></label>
             <input class="field__input" type="text" id="recipient" name="recipient" maxlength="40" required
                    value="<?= $this->e($to) ?>" autocomplete="off">
         </div>
@@ -45,13 +45,13 @@ $this->layout('layout', ['title' => 'The post office — Felkyo Creatures']);
         <?php if ($friends !== []): ?>
             <?php /* Tapping a friend fills the name in. Plain links that work
                      without scripting: they reload this page with ?to=. */ ?>
-            <p class="field__hint">Or tap a friend:
+            <p class="field__hint"><?= $this->t('post-office.or-tap-a-friend', 'Or tap a friend:') ?>
                 <?php foreach ($friends as $friend): ?>
                     <a class="postcard-friend" href="/post-office?to=<?= $this->e(rawurlencode($friend['username'])) ?>"><?= $this->e($friend['username']) ?></a>
                 <?php endforeach; ?>
             </p>
         <?php endif; ?>
 
-        <button class="btn btn--primary" type="submit">3. Send it</button>
+        <button class="btn btn--primary" type="submit"><?= $this->t('post-office.3-send-it', '3. Send it') ?></button>
     </form>
 <?php endif; ?>

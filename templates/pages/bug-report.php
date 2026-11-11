@@ -17,11 +17,10 @@
 $this->layout('layout', ['title' => 'Something broken? — Felkyo Creatures']);
 ?>
 
-<h2 class="panel-label">Something broken?</h2>
+<h2 class="panel-label"><?= $this->t('bug-report.something-broken', 'Something broken?') ?></h2>
 
 <p>
-    Thank you for telling us! Say what you did and what went wrong &mdash; for example
-    &ldquo;I pressed Feed and nothing happened&rdquo; or &ldquo;the button is cut off on my phone&rdquo;.
+    <?= $this->t('bug-report.thank-you-for-telling-us', 'Thank you for telling us! Say what you did and what went wrong — for example “I pressed Feed and nothing happened” or “the button is cut off on my phone”.') ?>
 </p>
 
 <form method="post" action="/bug-report" class="card bug-report">
@@ -34,20 +33,19 @@ $this->layout('layout', ['title' => 'Something broken? — Felkyo Creatures']);
     <?= $this->insert('partials/form-errors', ['errors' => $errors ?? []]) ?>
 
     <p class="bug-report__page">
-        About the page: <code><?= $this->e($from) ?></code>
+        <?= $this->t('bug-report.about-the-page', 'About the page:') ?> <code><?= $this->e($from) ?></code>
     </p>
 
-    <label class="profile-form__label" for="bug-description">What happened?</label>
+    <label class="profile-form__label" for="bug-description"><?= $this->t('bug-report.what-happened', 'What happened?') ?></label>
     <textarea class="profile-form__textarea" id="bug-description" name="description"
               rows="6" maxlength="2000" required aria-describedby="bug-help"><?= $this->e($description) ?></textarea>
     <p class="profile-form__help" id="bug-help">
-        Up to 2,000 characters. Please don&rsquo;t write passwords or anything private &mdash;
-        your browser&rsquo;s name and window size are sent along automatically.
+        <?= $this->t('bug-report.up-to-2-000-characters', 'Up to 2,000 characters. Please don’t write passwords or anything private — your browser’s name and window size are sent along automatically.') ?>
     </p>
 
     <div class="button-row">
-        <button class="btn btn--primary" type="submit">Send bug report</button>
-        <a class="btn btn--secondary" href="<?= $this->e($from) ?>">Never mind, go back</a>
+        <button class="btn btn--primary" type="submit"><?= $this->t('bug-report.send-bug-report', 'Send bug report') ?></button>
+        <a class="btn btn--secondary" href="<?= $this->e($from) ?>"><?= $this->t('bug-report.never-mind-go-back', 'Never mind, go back') ?></a>
     </div>
 </form>
 

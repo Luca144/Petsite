@@ -16,18 +16,16 @@ $this->layout('layout', ['title' => 'Sign-ups are closed — Felkyo Creatures'])
 ?>
 
 <section class="card auth-card">
-    <h2>The door is closed for now</h2>
+    <h2><?= $this->t('registration-closed.the-door-is-closed-for', 'The door is closed for now') ?></h2>
     <p>
-        Felkyo is running as a small demo at the moment, so new accounts
-        aren&rsquo;t being made. Nothing has gone wrong &mdash; there just
-        isn&rsquo;t a way in from here today.
+        <?= $this->t('registration-closed.felkyo-is-running-as-a', 'Felkyo is running as a small demo at the moment, so new accounts aren’t being made. Nothing has gone wrong — there just isn’t a way in from here today.') ?>
     </p>
     <p>
-        You can still wander around and meet the creatures who already live here.
+        <?= $this->t('registration-closed.you-can-still-wander-around', 'You can still wander around and meet the creatures who already live here.') ?>
     </p>
     <p class="auth-alt">
-        <a href="/browse">Browse the creatures</a> &middot;
-        <a href="/login">Log in</a> &middot;
-        <a href="/">Back to the home page</a>
+        <a href="/browse"><?= $this->t('registration-closed.browse-the-creatures', 'Browse the creatures') ?></a> &middot;
+        <a href="/login"><?= $this->t('registration-closed.log-in', 'Log in') ?></a> &middot;
+        <a href="/"><?= $this->t('registration-closed.back-to-the-home-page', 'Back to the home page') ?></a>
     </p>
 </section>

@@ -19,5 +19,5 @@ $this->layout('layout', ['title' => 'Thank you — Felkyo Creatures']);
 <p class="report-thanks" role="status"><?= $this->e($message) ?></p>
 
 <div class="button-row">
-    <a class="btn btn--secondary" href="/">Back to the village</a>
+    <a class="btn btn--secondary" href="/"><?= $this->t('report-received.back-to-the-village', 'Back to the village') ?></a>
 </div>

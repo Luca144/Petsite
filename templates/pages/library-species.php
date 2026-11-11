@@ -31,7 +31,7 @@ $loreParagraphs = $lore === '' ? [] : array_values(array_filter(
 $coverUrl = $species->libraryArtUrl() ?? $species->spriteUrlFor($stages[count($stages) - 1] ?? 'adult');
 ?>
 
-<p class="library-back"><a href="/library">&larr; back to the shelves</a></p>
+<p class="library-back"><a href="/library"><?= $this->t('library-species.back-to-the-shelves', '← back to the shelves') ?></a></p>
 
 <h2 class="panel-label"><?= $this->e($species->name) ?></h2>
 <?php if ($species->flavourText !== null && $species->flavourText !== ''): ?>
@@ -39,7 +39,7 @@ $coverUrl = $species->libraryArtUrl() ?? $species->spriteUrlFor($stages[count($s
 <?php endif; ?>
 
 <section aria-labelledby="growing-up">
-    <h3 id="growing-up" class="library-section">Growing up</h3>
+    <h3 id="growing-up" class="library-section"><?= $this->t('library-species.growing-up', 'Growing up') ?></h3>
     <ol class="library-stages">
         <?php foreach ($stages as $stage): ?>
             <li class="library-stage">
@@ -56,8 +56,8 @@ $coverUrl = $species->libraryArtUrl() ?? $species->spriteUrlFor($stages[count($s
 
 <?php if ($forms !== []): ?>
     <section aria-labelledby="other-forms">
-        <h3 id="other-forms" class="library-section">Rarer forms</h3>
-        <p class="library-hint">Now and then a <?= $this->e($species->name) ?> arrives looking a little different. Keep an eye out.</p>
+        <h3 id="other-forms" class="library-section"><?= $this->t('library-species.rarer-forms', 'Rarer forms') ?></h3>
+        <p class="library-hint"><?= $this->t('library-species.now-and-then-a-arrives', 'Now and then a {specie_name} arrives looking a little different. Keep an eye out.', ['specie_name' => $species->name]) ?></p>
         <?php foreach ($forms as $form): ?>
             <?php $dressed = $species->wearing($form); ?>
             <div class="library-form card">
@@ -80,16 +80,16 @@ $coverUrl = $species->libraryArtUrl() ?? $species->spriteUrlFor($stages[count($s
 <?php endif; ?>
 
 <section aria-labelledby="the-book">
-    <h3 id="the-book" class="library-section">The book</h3>
+    <h3 id="the-book" class="library-section"><?= $this->t('library-species.the-book', 'The book') ?></h3>
     <?php if ($loreParagraphs === []): ?>
-        <p class="empty-state">This book hasn't been written yet. Its pages are waiting.</p>
+        <p class="empty-state"><?= $this->t('library-species.this-book-hasn-t-been', 'This book hasn\'t been written yet. Its pages are waiting.') ?></p>
     <?php else: ?>
         <details class="book">
             <summary class="book__cover">
                 <img class="book__cover-art pixelated" src="<?= $this->e($coverUrl) ?>" alt="" aria-hidden="true">
-                <span class="book__cover-title">The Story of the <?= $this->e($species->name) ?></span>
-                <span class="book__cover-hint book__cover-hint--closed">tap to open the book</span>
-                <span class="book__cover-hint book__cover-hint--open">tap to close the book</span>
+                <span class="book__cover-title"><?= $this->t('library-species.the-story-of-the', 'The Story of the {specie_name}', ['specie_name' => $species->name]) ?></span>
+                <span class="book__cover-hint book__cover-hint--closed"><?= $this->t('library-species.tap-to-open-the-book', 'tap to open the book') ?></span>
+                <span class="book__cover-hint book__cover-hint--open"><?= $this->t('library-species.tap-to-close-the-book', 'tap to close the book') ?></span>
             </summary>
             <div class="book__pages">
                 <?php foreach ($loreParagraphs as $paragraph): ?>

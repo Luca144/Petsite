@@ -31,6 +31,7 @@ final class LayoutRenderTest extends TestCase
     protected function setUp(): void
     {
         $templates = new Engine(dirname(__DIR__, 2) . '/templates');
+        \Felkyo\Texts\TextTemplateFunctions::register($templates, new \Felkyo\Texts\TextCatalogue());
         $this->html = $templates->render('pages/hello', ['appName' => 'Felkyo Creatures']);
     }
 
@@ -76,6 +77,7 @@ final class LayoutRenderTest extends TestCase
     private function renderWith(bool $registrationOpen, bool $showDemoNotice): string
     {
         $templates = new Engine(dirname(__DIR__, 2) . '/templates');
+        \Felkyo\Texts\TextTemplateFunctions::register($templates, new \Felkyo\Texts\TextCatalogue());
 
         // These two are shared with EVERY template via addData(), exactly as the
         // front controller does it, because the shared layout needs them — the

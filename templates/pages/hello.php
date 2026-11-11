@@ -23,8 +23,8 @@ $summaries = $summaries ?? [];
 <?php if (!empty($currentUser)): ?>
 
     <section class="card">
-        <h2>Welcome back, <?= $this->e($currentUser->username) ?></h2>
-        <p>Here are the creatures in your care.</p>
+        <h2><?= $this->t('hello.welcome-back', 'Welcome back, {username}', ['username' => $currentUser->username]) ?></h2>
+        <p><?= $this->t('hello.here-are-the-creatures-in', 'Here are the creatures in your care.') ?></p>
     </section>
 
     <?= $this->insert('partials/welcome-bubble', ['welcome' => $welcome ?? null]) ?>
@@ -33,9 +33,9 @@ $summaries = $summaries ?? [];
 
     <hr class="rule">
 
-    <h2 class="panel-label">Your creatures</h2>
+    <h2 class="panel-label"><?= $this->t('hello.your-creatures', 'Your creatures') ?></h2>
     <?php if ($summaries === []): ?>
-        <p class="empty-state">You don&rsquo;t have a creature yet.</p>
+        <p class="empty-state"><?= $this->t('hello.you-don-t-have-a', 'You don’t have a creature yet.') ?></p>
     <?php else: ?>
         <?php /* The same portrait cards as the collection page, on purpose. An
                  earlier version drew a bare name-tile with a seedling glyph here,
@@ -60,26 +60,24 @@ $summaries = $summaries ?? [];
              bottom of the page", and he was right). An invitation and its door
              belong in the same breath. */ ?>
     <section class="card">
-        <h2>Welcome to <?= $this->e($appName) ?></h2>
+        <h2><?= $this->t('hello.welcome-to', 'Welcome to {app_name}', ['app_name' => $appName]) ?></h2>
         <?php if (!empty($registrationOpen)): ?>
             <p>
-                A cosy world of creatures to collect, grow and pet. Make an account to
-                meet your first one &mdash; the kettle&rsquo;s on.
+                <?= $this->t('hello.a-cosy-world-of-creatures', 'A cosy world of creatures to collect, grow and pet. Make an account to meet your first one — the kettle’s on.') ?>
             </p>
         <?php else: ?>
             <p>
-                A cosy world of creatures to collect, grow and pet. Have a wander and
-                meet the ones who already live here &mdash; the kettle&rsquo;s on.
+                <?= $this->t('hello.a-cosy-world-of-creatures-2', 'A cosy world of creatures to collect, grow and pet. Have a wander and meet the ones who already live here — the kettle’s on.') ?>
             </p>
         <?php endif; ?>
 
         <div class="button-row hello__doors">
             <?php if (!empty($registrationOpen)): ?>
-                <a class="btn btn--primary" href="/register">Create an account</a>
+                <a class="btn btn--primary" href="/register"><?= $this->t('hello.create-an-account', 'Create an account') ?></a>
             <?php else: ?>
-                <a class="btn btn--primary" href="/browse">Browse the creatures</a>
+                <a class="btn btn--primary" href="/browse"><?= $this->t('hello.browse-the-creatures', 'Browse the creatures') ?></a>
             <?php endif; ?>
-            <a class="btn btn--secondary" href="/login">Log in</a>
+            <a class="btn btn--secondary" href="/login"><?= $this->t('hello.log-in', 'Log in') ?></a>
         </div>
     </section>
 

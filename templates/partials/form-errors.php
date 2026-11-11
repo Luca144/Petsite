@@ -19,7 +19,7 @@
         <p class="form-errors__title">Please fix the following:</p>
         <ul>
             <?php foreach ($errors as $error): ?>
-                <li><?= $this->e($error) ?></li>
+                <li><?= $this->message($error) ?></li>
             <?php endforeach; ?>
         </ul>
     </div>

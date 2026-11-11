@@ -20,25 +20,25 @@
 $this->layout('layout', ['title' => 'Community — Felkyo Creatures']);
 ?>
 
-<h2 class="panel-label">Community</h2>
+<h2 class="panel-label"><?= $this->t('community.community', 'Community') ?></h2>
 
 <nav class="community__tabs" aria-label="Community sections">
     <a class="community__tab" href="/community?tab=creatures"
        <?= $tab === 'creatures' ? 'aria-current="page"' : '' ?>>
-        creatures
+        <?= $this->t('community.creatures', 'creatures') ?>
     </a>
     <a class="community__tab" href="/community?tab=users"
        <?= $tab === 'users' ? 'aria-current="page"' : '' ?>>
-        people
+        <?= $this->t('community.people', 'people') ?>
     </a>
 </nav>
 
 <?php if ($tab === 'creatures'): ?>
 
-    <p>A few of the creatures making their home in Felkyo right now. Say hello &mdash; you can pet any of them. Looking for one of your own? Some are waiting at <a href="/pound">the pound</a>.</p>
+    <p><?= $this->t('community.a-few-of-the-creatures', 'A few of the creatures making their home in Felkyo right now. Say hello — you can pet any of them. Looking for one of your own? Some are waiting at') ?> <a href="/pound"><?= $this->t('community.the-pound', 'the pound') ?></a>.</p>
 
     <?php if (empty($creatureSummaries)): ?>
-        <p class="empty-state">No creatures to show yet. Be the first!</p>
+        <p class="empty-state"><?= $this->t('community.no-creatures-to-show-yet', 'No creatures to show yet. Be the first!') ?></p>
     <?php else: ?>
         <div class="creature-collection">
             <?php foreach ($creatureSummaries as $summary): ?>
@@ -54,7 +54,7 @@ $this->layout('layout', ['title' => 'Community — Felkyo Creatures']);
              this tab when the form submits. */ ?>
     <form class="search-form" method="get" action="/community">
         <input type="hidden" name="tab" value="users">
-        <label class="profile-form__label" for="q">Who are you looking for?</label>
+        <label class="profile-form__label" for="q"><?= $this->t('community.who-are-you-looking-for', 'Who are you looking for?') ?></label>
         <div class="search-form__row">
             <input class="search-form__input"
                    type="search"
@@ -64,11 +64,10 @@ $this->layout('layout', ['title' => 'Community — Felkyo Creatures']);
                    maxlength="30"
                    autocomplete="off"
                    aria-describedby="search-help">
-            <button class="btn btn--primary" type="submit">Search</button>
+            <button class="btn btn--primary" type="submit"><?= $this->t('community.search', 'Search') ?></button>
         </div>
         <p class="profile-form__help" id="search-help">
-            Type the start of their name &mdash; at least
-            <?= $this->e((string) $minimumSearchLength) ?> letters.
+            <?= $this->t('community.type-the-start-of-their', 'Type the start of their name — at least {minimum_search_length} letters.', ['minimum_search_length' => (string) $minimumSearchLength]) ?>
         </p>
     </form>
 
@@ -82,8 +81,7 @@ $this->layout('layout', ['title' => 'Community — Felkyo Creatures']);
                      mention that some players choose not to be findable — which is
                      true, and saves somebody thinking the site is broken. */ ?>
             <p class="empty-state">
-                Nobody here starts with &ldquo;<?= $this->e($search->query) ?>&rdquo;.
-                Check the spelling &mdash; and note that some players choose not to be findable.
+                <?= $this->t('community.nobody-here-starts-with-check', 'Nobody here starts with “{query}”. Check the spelling — and note that some players choose not to be findable.', ['query' => $search->query]) ?>
             </p>
         <?php else: ?>
             <ul class="search-results">

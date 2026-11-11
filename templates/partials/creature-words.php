@@ -23,7 +23,7 @@
 ?>
 <form method="post" action="/creature/<?= $this->e((string) $creature->id) ?>/rename" class="bio-form">
     <?= $this->csrf_field() ?>
-    <label class="field__label" for="creature-name">Rename <?= $this->e($creature->name) ?></label>
+    <label class="field__label" for="creature-name"><?= $this->t('creature-words.rename', 'Rename {name}', ['name' => $creature->name]) ?></label>
     <?php /* Pre-filled with the current name, so the common case — a small
              change, or fixing a typo — is a small edit rather than a retype from
              nothing. */ ?>
@@ -33,16 +33,15 @@
            required
            aria-describedby="creature-name-hint">
     <span class="field__hint" id="creature-name-hint">
-        Up to <?= $this->e((string) $nameMaxLength) ?> characters.
-        You can change this whenever you like.
+        <?= $this->t('creature-words.up-to-characters-you-can', 'Up to {name_max_length} characters. You can change this whenever you like.', ['name_max_length' => (string) $nameMaxLength]) ?>
     </span>
-    <button class="btn btn--secondary" type="submit">Save name</button>
+    <button class="btn btn--secondary" type="submit"><?= $this->t('creature-words.save-name', 'Save name') ?></button>
 </form>
 
 <form method="post" action="/creature/<?= $this->e((string) $creature->id) ?>/bio" class="bio-form">
     <?= $this->csrf_field() ?>
-    <label class="field__label" for="bio">Edit bio</label>
+    <label class="field__label" for="bio"><?= $this->t('creature-words.edit-bio', 'Edit bio') ?></label>
     <textarea class="field__textarea" id="bio" name="bio" maxlength="500"
               placeholder="Tell everyone a little about <?= $this->e($creature->name) ?>&hellip;"><?= $this->e($creature->bio ?? '') ?></textarea>
-    <button class="btn btn--secondary" type="submit">Save bio</button>
+    <button class="btn btn--secondary" type="submit"><?= $this->t('creature-words.save-bio', 'Save bio') ?></button>
 </form>

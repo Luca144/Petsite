@@ -17,7 +17,7 @@ $conventionFile = dirname(__DIR__, 2) . '/public' . $item->conventionPath();
 $iconSrc = $item->hasStoredIcon() ? $item->iconUrl() : (is_file($conventionFile) ? $item->conventionPath() : null);
 ?>
 
-<p class="library-back"><a href="/library">&larr; the library</a></p>
+<p class="library-back"><a href="/library"><?= $this->t('library-item.the-library', '← the library') ?></a></p>
 
 <div class="library-item card" style="--card-tint: <?= $this->e($category->colourVariable()) ?>">
     <span class="library-item__art">
@@ -38,16 +38,16 @@ $iconSrc = $item->hasStoredIcon() ? $item->iconUrl() : (is_file($conventionFile)
     </div>
 </div>
 
-<h3 class="library-section">Where to find it</h3>
+<h3 class="library-section"><?= $this->t('library-item.where-to-find-it', 'Where to find it') ?></h3>
 <?php if ($shops === [] && $areas === []): ?>
-    <p class="empty-state">Nobody quite knows yet. Keep your eyes open.</p>
+    <p class="empty-state"><?= $this->t('library-item.nobody-quite-knows-yet-keep', 'Nobody quite knows yet. Keep your eyes open.') ?></p>
 <?php else: ?>
     <ul class="library-sources">
         <?php foreach ($shops as $shopName): ?>
-            <li>Sold at <a href="/shop"><?= $this->e($shopName) ?></a></li>
+            <li><?= $this->t('library-item.sold-at', 'Sold at') ?> <a href="/shop"><?= $this->e($shopName) ?></a></li>
         <?php endforeach; ?>
         <?php foreach ($areas as $area): ?>
-            <li>Found while exploring <a href="/explore/<?= $this->e(rawurlencode($area['slug'])) ?>"><?= $this->e($area['name']) ?></a></li>
+            <li><?= $this->t('library-item.found-while-exploring', 'Found while exploring') ?> <a href="/explore/<?= $this->e(rawurlencode($area['slug'])) ?>"><?= $this->e($area['name']) ?></a></li>
         <?php endforeach; ?>
     </ul>
 <?php endif; ?>

@@ -16,12 +16,12 @@
     <h2 class="notice-card__heading"><?= $this->e($notice->heading()) ?></h2>
     <p class="notice-card__body"><?= $this->e($notice->body()) ?></p>
     <p class="notice-card__appeal">
-        If you think this was a mistake, write to us at
+        <?= $this->t('notice-card.if-you-think-this-was', 'If you think this was a mistake, write to us at') ?>
         <a href="mailto:<?= $this->e($appealEmail) ?>"><?= $this->e($appealEmail) ?></a>
-        &mdash; a person will read it.
+        <?= $this->t('notice-card.a-person-will-read-it', '— a person will read it.') ?>
     </p>
     <form method="post" action="/notices/<?= $this->e((string) $notice->id) ?>/read">
         <?= $this->csrf_field() ?>
-        <button class="btn btn--secondary" type="submit">I&rsquo;ve read this</button>
+        <button class="btn btn--secondary" type="submit"><?= $this->t('notice-card.i-ve-read-this', 'I’ve read this') ?></button>
     </form>
 </aside>

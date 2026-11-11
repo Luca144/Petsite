@@ -14,8 +14,8 @@
 $this->layout('layout', ['title' => 'Explore — Felkyo Creatures']);
 ?>
 
-<h2 class="panel-label">Where will you wander?</h2>
-<p>Search the quiet places of Felkyo. You might come home with a new friend.</p>
+<h2 class="panel-label"><?= $this->t('explore-index.where-will-you-wander', 'Where will you wander?') ?></h2>
+<p><?= $this->t('explore-index.search-the-quiet-places-of', 'Search the quiet places of Felkyo. You might come home with a new friend.') ?></p>
 
 <div class="tile-grid">
     <?php foreach ($areas as $area): ?>

@@ -45,7 +45,7 @@ use Felkyo\Http\AssetUrl;
 </head>
 <body>
     <!-- Keyboard users can jump straight to the content with this link. -->
-    <a class="skip-link" href="#main">Skip to content</a>
+    <a class="skip-link" href="#main"><?= $this->t('layout.skip-to-content', 'Skip to content') ?></a>
 
     <!-- Decorative drifting stars (four-pointed ✦ and ✧ — Skerro asked for stars,
          not the old floral glyphs, which read as leaves); hidden from screen readers and from anyone
@@ -67,8 +67,7 @@ use Felkyo\Http\AssetUrl;
              should not interrupt anyone. -->
         <p class="demo-notice" role="note">
             <span aria-hidden="true">&#9788;</span>
-            This is a <b>development demo</b> of Felkyo Creatures &mdash; not a live
-            service. Accounts and creatures here are made up for demonstration.
+            <?= $this->t('layout.this-is-a-development-demo', 'This is a **development demo** of Felkyo Creatures — not a live service. Accounts and creatures here are made up for demonstration.') ?>
         </p>
     <?php endif; ?>
 
@@ -140,7 +139,7 @@ use Felkyo\Http\AssetUrl;
                     <?php /* The welcome is for somebody who has not arrived yet. Once
                              you are in, this space stays quiet — the creatures speak
                              for themselves now and then (see CreatureMoments). */ ?>
-                    <p class="site-header__tagline">come in &mdash; the kettle&rsquo;s on</p>
+                    <p class="site-header__tagline"><?= $this->t('layout.come-in-the-kettle-s', 'come in — the kettle’s on') ?></p>
                 <?php endif; ?>
 
                 <?= $this->insert('partials/site-nav', [
@@ -158,8 +157,8 @@ use Felkyo\Http\AssetUrl;
                              a reminder on every page, so a draft is never
                              forgotten (and never mistaken for what everyone sees). */ ?>
                     <p class="look-preview-bar" role="status">
-                        You&rsquo;re previewing fine-tuning CSS &mdash; only you see it.
-                        <a href="/admin/look/css">Publish or stop</a>
+                        <?= $this->t('layout.you-re-previewing-fine-tuning', 'You’re previewing fine-tuning CSS — only you see it.') ?>
+                        <a href="/admin/look/css"><?= $this->t('layout.publish-or-stop', 'Publish or stop') ?></a>
                     </p>
                 <?php endif; ?>
                 <?php if (!empty($announcement)): ?>
@@ -194,7 +193,7 @@ use Felkyo\Http\AssetUrl;
 
                              role="status" announces it politely to a screen reader
                              rather than interrupting. */ ?>
-                    <p class="flash" role="status"><?= $this->e($flash) ?></p>
+                    <p class="flash" role="status"><?= $this->message($flash) ?></p>
                 <?php endif; ?>
 
                 <?= $this->section('content') ?>
@@ -204,19 +203,18 @@ use Felkyo\Http\AssetUrl;
                 <?php /* "Back to top" — honest and old-web. Scrolls to the shell's
                          id="top"; smooth only for people who allow motion. */ ?>
                 <a class="site-footer__top" href="#top">
-                    <span aria-hidden="true">&#9650;</span> Back to top
+                    <span aria-hidden="true">&#9650;</span> <?= $this->t('layout.back-to-top', 'Back to top') ?>
                 </a>
                 <span class="site-footer__line">
-                    &copy; Felkyo Creatures <?= $this->e(date('Y')) ?> &middot; made with
-                    <span class="heart" aria-hidden="true">&hearts;</span> &middot;
-                    a warm little corner of the web
+                    <?= $this->t('layout.felkyo-creatures-made-with', '© Felkyo Creatures {y} · made with', ['y' => date('Y')]) ?>
+                    <span class="heart" aria-hidden="true">&hearts;</span> <?= $this->t('layout.a-warm-little-corner-of', '· a warm little corner of the web') ?>
                 </span>
                 <?php if (!empty($currentUser)): ?>
                     <?php /* Bug reports, from every page: the link carries this
                              page's address so the player only has to say what
                              happened. Logged-in players only (see BugReportController). */ ?>
                     <a class="site-footer__bug" href="/bug-report?from=<?= $this->e(rawurlencode($currentPath ?? '/')) ?>">
-                        <span aria-hidden="true">&#128027;&nbsp;</span>Something broken? Tell us
+                        <span aria-hidden="true">&#128027;&nbsp;</span><?= $this->t('layout.something-broken-tell-us', 'Something broken? Tell us') ?>
                     </a>
                 <?php endif; ?>
             </footer>
@@ -243,6 +241,31 @@ use Felkyo\Http\AssetUrl;
              works fully without it. Page-specific scripts (item-finder.js) are
              included by the pages that need them, NOT here — loading one both
              here and there ran it twice and bound every handler twice over. */ ?>
+    <?php if (!empty($textEditMode)): ?>
+        <?php /* Editing mode (artist and owner only): the one popup every
+                 dotted sentence opens. A real form — Save posts it and comes
+                 back to this same page, showing the new words. text-editor.js
+                 only fills it in and opens it. */ ?>
+        <dialog class="text-editor" id="text-editor" aria-labelledby="text-editor-title">
+            <form method="post" action="/admin/texts/save">
+                <?= $this->csrf_field() ?>
+                <input type="hidden" name="key" value="" data-text-editor-key>
+                <input type="hidden" name="back" value="<?= $this->e($currentPath ?? '/') ?>">
+                <h2 id="text-editor-title" class="text-editor__title"><?= $this->t('layout.change-these-words', 'Change these words') ?></h2>
+                <label class="field__label" for="text-editor-words"><?= $this->t('layout.the-words', 'The words') ?></label>
+                <textarea class="field__input text-editor__words" id="text-editor-words" name="words" rows="4" maxlength="1000"></textarea>
+                <p class="text-editor__hint">**two stars** for <b>bold</b>, *one star* for <em>slanted</em>.
+                   Keep gaps like {name} or {1} &mdash; they&rsquo;re filled in on the day.</p>
+                <p class="text-editor__original"><?= $this->t('layout.originally', 'Originally: “') ?><span data-text-editor-original></span>&rdquo;</p>
+                <div class="button-row">
+                    <button class="btn btn--primary" type="submit"><?= $this->t('layout.save', 'Save') ?></button>
+                    <button class="btn btn--secondary" type="submit" name="reset" value="1"><?= $this->t('layout.back-to-the-original', 'Back to the original') ?></button>
+                    <button class="btn--quiet" type="button" data-text-editor-close><?= $this->t('layout.cancel', 'cancel') ?></button>
+                </div>
+            </form>
+        </dialog>
+        <script src="<?= AssetUrl::versioned('/js/text-editor.js') ?>" defer></script>
+    <?php endif; ?>
     <script src="<?= AssetUrl::versioned('/js/password-toggle.js') ?>" defer></script>
     <script src="<?= AssetUrl::versioned('/js/sidebar-fold.js') ?>" defer></script>
 </body>

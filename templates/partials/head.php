@@ -74,6 +74,7 @@ use Felkyo\Http\AssetUrl;
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/company.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/feedback.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/look.css') ?>">
+    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/texts.css') ?>">
 
     <?php if (!empty($activeTheme)): ?>
         <?php /* The player's chosen theme (M4.1): overrides for the colour

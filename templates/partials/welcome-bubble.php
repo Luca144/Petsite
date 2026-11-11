@@ -30,7 +30,7 @@ $isLast = $index === count($steps) - 1;
         <?php endif; ?>
     </span>
     <div class="welcome__bubble">
-        <p class="welcome__who"><?= $this->e($welcome['keeperName']) ?> <span>(<?= $this->e((string) ($index + 1)) ?> of <?= $this->e((string) count($steps)) ?>)</span></p>
+        <p class="welcome__who"><?= $this->e($welcome['keeperName']) ?> <span><?= $this->t('welcome-bubble.of', '({index} of {steps})', ['index' => (string) ($index + 1), 'steps' => (string) count($steps)]) ?></span></p>
         <p class="welcome__words"><?= $this->e($step['words']) ?></p>
         <div class="welcome__actions">
             <?php if (!empty($step['link_href'])): ?>
@@ -38,7 +38,7 @@ $isLast = $index === count($steps) - 1;
                 <a class="btn btn--secondary" href="<?= $this->e($step['link_href']) ?>"><?= $this->e((string) $step['link_label']) ?></a>
             <?php endif; ?>
             <?php if (!$isLast): ?>
-                <a class="btn btn--primary" href="/?welcome=<?= $this->e((string) ($index + 1)) ?>">Next</a>
+                <a class="btn btn--primary" href="/?welcome=<?= $this->e((string) ($index + 1)) ?>"><?= $this->t('welcome-bubble.next', 'Next') ?></a>
             <?php endif; ?>
             <form method="post" action="/welcome/dismiss">
                 <?= $this->csrf_field() ?>

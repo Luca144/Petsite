@@ -15,7 +15,7 @@ if ($updates === []) {
 }
 ?>
 <section class="latest-updates" aria-labelledby="latest-updates">
-    <h2 id="latest-updates" class="panel-label">What's new</h2>
+    <h2 id="latest-updates" class="panel-label"><?= $this->t('latest-updates.what-s-new', 'What\'s new') ?></h2>
     <?= $this->insert('partials/update-list', ['updates' => $updates]) ?>
-    <p class="latest-updates__all"><a href="/updates">All updates &rarr;</a></p>
+    <p class="latest-updates__all"><a href="/updates"><?= $this->t('latest-updates.all-updates', 'All updates →') ?></a></p>
 </section>

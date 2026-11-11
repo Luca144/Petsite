@@ -25,12 +25,12 @@ $entries = $guestbook['entries'];
 $chosenKey = $guestbook['chosenKey'];
 ?>
 
-<h2 class="panel-label">Guestbook</h2>
+<h2 class="panel-label"><?= $this->t('guestbook.guestbook', 'Guestbook') ?></h2>
 
 <div class="card">
     <?php if (empty($entries)): ?>
         <p class="empty-state">
-            Nobody has signed <?= $this->e($creature->name) ?>&rsquo;s guestbook yet.
+            <?= $this->t('guestbook.nobody-has-signed-s-guestbook', 'Nobody has signed {name}’s guestbook yet.', ['name' => $creature->name]) ?>
         </p>
     <?php else: ?>
         <ul class="guestbook-entries">
@@ -60,7 +60,7 @@ $chosenKey = $guestbook['chosenKey'];
                             <?= $this->csrf_field() ?>
                             <button type="submit"
                                     aria-label="Remove the message from <?= $this->e($entry->authorUsername) ?>">
-                                Remove
+                                <?= $this->t('guestbook.remove', 'Remove') ?>
                             </button>
                         </form>
                     <?php endif; ?>
@@ -80,9 +80,9 @@ $chosenKey = $guestbook['chosenKey'];
             <fieldset class="guestbook-choices">
                 <legend class="guestbook-choices__legend">
                     <?php if ($chosenKey === null): ?>
-                        Leave a message
+                        <?= $this->t('guestbook.leave-a-message', 'Leave a message') ?>
                     <?php else: ?>
-                        Your message (you can change it once a day)
+                        <?= $this->t('guestbook.your-message-you-can-change', 'Your message (you can change it once a day)') ?>
                     <?php endif; ?>
                 </legend>
 
@@ -108,7 +108,7 @@ $chosenKey = $guestbook['chosenKey'];
         </form>
     <?php else: ?>
         <p class="auth-alt">
-            <a href="/login">Log in</a> to sign <?= $this->e($creature->name) ?>&rsquo;s guestbook.
+            <a href="/login"><?= $this->t('guestbook.log-in', 'Log in') ?></a> <?= $this->t('guestbook.to-sign-s-guestbook', 'to sign {name}’s guestbook.', ['name' => $creature->name]) ?>
         </p>
     <?php endif; ?>
 </div>

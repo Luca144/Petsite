@@ -42,6 +42,7 @@ final class ArtAssetsTest extends TestCase
     private function render(string $template): string
     {
         $templates = new Engine(dirname(__DIR__, 2) . '/templates');
+        \Felkyo\Texts\TextTemplateFunctions::register($templates, new \Felkyo\Texts\TextCatalogue());
 
         return $templates->render($template, [
             'appName' => 'Felkyo Creatures',

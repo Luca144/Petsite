@@ -23,7 +23,7 @@ $this->layout('layout', ['title' => $item->name . ' — Felkyo Creatures']);
 
 <?= $this->insert('partials/item-icons') ?>
 
-<p class="item-detail__back"><a href="/inventory">&larr; Back to your things</a></p>
+<p class="item-detail__back"><a href="/inventory"><?= $this->t('item.back-to-your-things', '← Back to your things') ?></a></p>
 
 <article class="item-detail" style="--card-tint: <?= $this->e($category->colourVariable()) ?>">
 
@@ -39,15 +39,13 @@ $this->layout('layout', ['title' => $item->name . ' — Felkyo Creatures']);
     </div>
 
     <h2 class="item-detail__name"><?= $this->e($item->name) ?></h2>
-    <p class="library-back"><a href="/library/item/<?= $this->e((string) $item->id) ?>">where does this come from?</a></p>
+    <p class="library-back"><a href="/library/item/<?= $this->e((string) $item->id) ?>"><?= $this->t('item.where-does-this-come-from', 'where does this come from?') ?></a></p>
 
     <p class="item-detail__category">
         <svg class="category-icon" aria-hidden="true" focusable="false">
             <use href="#icon-<?= $this->e($category->iconKey) ?>"></use>
         </svg>
-        <?= $this->e($category->name) ?>
-        &middot;
-        <?= $this->e((string) $stack->quantity) ?> in your things
+        <?= $this->t('item.in-your-things', '{category_name} · {quantity} in your things', ['category_name' => $category->name, 'quantity' => (string) $stack->quantity]) ?>
     </p>
 
     <?php if ($item->description !== null && $item->description !== ''): ?>
@@ -60,7 +58,7 @@ $this->layout('layout', ['title' => $item->name . ' — Felkyo Creatures']);
         <form method="post" action="/inventory/<?= $this->e((string) $item->id) ?>/sell">
             <?= $this->csrf_field() ?>
             <button class="btn btn--primary" type="submit">
-                Sell one for <?= $this->e((string) $item->sellValue) ?> <?= $this->e($currencyName ?? 'coins') ?>
+                <?= $this->t('item.sell-one-for', 'Sell one for {sell_value} {coins}', ['sell_value' => (string) $item->sellValue, 'coins' => $currencyName ?? 'coins']) ?>
             </button>
         </form>
     <?php else: ?>
@@ -68,8 +66,7 @@ $this->layout('layout', ['title' => $item->name . ' — Felkyo Creatures']);
                  and what can be done instead, rather than quietly showing nothing
                  and leaving somebody wondering whether the page is broken. */ ?>
         <p class="item-actions__note">
-            No shop around here would buy a <?= $this->e($item->name) ?>.
-            You can keep it, or throw it away.
+            <?= $this->t('item.no-shop-around-here-would', 'No shop around here would buy a {item_name}. You can keep it, or throw it away.', ['item_name' => $item->name]) ?>
         </p>
     <?php endif; ?>
 
@@ -79,16 +76,15 @@ $this->layout('layout', ['title' => $item->name . ' — Felkyo Creatures']);
              announces it as an expandable section. Nothing is destroyed by one
              stray tap. */ ?>
     <details class="item-discard">
-        <summary class="item-discard__summary">Throw one away</summary>
+        <summary class="item-discard__summary"><?= $this->t('item.throw-one-away', 'Throw one away') ?></summary>
         <div class="item-discard__panel">
             <p>
-                This gets rid of one <?= $this->e($item->name) ?> for nothing,
-                and it can&rsquo;t be undone.
+                <?= $this->t('item.this-gets-rid-of-one', 'This gets rid of one {item_name} for nothing, and it can’t be undone.', ['item_name' => $item->name]) ?>
             </p>
             <form method="post" action="/inventory/<?= $this->e((string) $item->id) ?>/discard">
                 <?= $this->csrf_field() ?>
                 <button class="btn btn--secondary" type="submit">
-                    Yes, throw one away
+                    <?= $this->t('item.yes-throw-one-away', 'Yes, throw one away') ?>
                 </button>
             </form>
         </div>

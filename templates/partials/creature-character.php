@@ -15,7 +15,7 @@ if (empty($character)) {
 }
 ?>
 <section class="creature-character" aria-labelledby="creature-character">
-    <h2 id="creature-character" class="panel-label">Who <?= $this->e($creature->name) ?> is</h2>
+    <h2 id="creature-character" class="panel-label"><?= $this->t('creature-character.who-is', 'Who {name} is', ['name' => $creature->name]) ?></h2>
 
     <p>
         <?php if ($character['levelTitle'] !== null): ?>
@@ -25,25 +25,25 @@ if (empty($character)) {
             <span class="creature-chip creature-chip--title"><?= $this->e($character['ageLabel']) ?></span>
         <?php endif; ?>
         <?php if ($creature->isFrozen): ?>
-            <span class="creature-chip"><span aria-hidden="true">&#10052;</span> kept as a <?= $this->e($stage) ?></span>
+            <span class="creature-chip"><span aria-hidden="true">&#10052;</span> <?= $this->t('creature-character.kept-as-a', 'kept as a {stage}', ['stage' => $stage]) ?></span>
         <?php elseif ($creature->shownStage !== null): ?>
-            <span class="creature-chip"><span aria-hidden="true">&#8599;</span> catching up on growing</span>
+            <span class="creature-chip"><span aria-hidden="true">&#8599;</span> <?= $this->t('creature-character.catching-up-on-growing', 'catching up on growing') ?></span>
         <?php endif; ?>
         <?php if ($creature->isAtPound()): ?>
-            <span class="creature-chip">waiting at <a href="/pound">the pound</a></span>
+            <span class="creature-chip"><?= $this->t('creature-character.waiting-at', 'waiting at') ?> <a href="/pound"><?= $this->t('creature-character.the-pound', 'the pound') ?></a></span>
         <?php endif; ?>
     </p>
 
     <?php if ($character['newTraits'] !== []): ?>
         <p class="flash" role="status">
-            Something new about <?= $this->e($creature->name) ?>: <?= $this->e(strtolower(implode(', ', $character['newTraits']))) ?>!
+            <?= $this->t('creature-character.something-new-about', 'Something new about {name}: {new_traits}!', ['name' => $creature->name, 'new_traits' => strtolower(implode(', ', $character['newTraits']))]) ?>
         </p>
     <?php endif; ?>
 
     <?= $this->insert('partials/badge-shelf', ['badges' => $character['badges'] ?? [], 'heading' => 'Keepsakes']) ?>
 
     <?php if ($character['traits'] === []): ?>
-        <p class="empty-state">No traits yet &mdash; they come with time and care.</p>
+        <p class="empty-state"><?= $this->t('creature-character.no-traits-yet-they-come', 'No traits yet — they come with time and care.') ?></p>
     <?php else: ?>
         <ul class="trait-list">
             <?php foreach ($character['traits'] as $trait): ?>

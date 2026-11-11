@@ -55,6 +55,7 @@ final class AuthControllerTest extends DatabaseTestCase
 
         // Templating, with the same csrf_field() helper the website registers.
         $templates = new Engine(dirname(__DIR__, 2) . '/templates');
+        \Felkyo\Texts\TextTemplateFunctions::register($templates, new \Felkyo\Texts\TextCatalogue());
         $this->session = new Session(cookieSecure: false);
         $this->csrf = new Csrf($this->session);
         $templates->registerFunction('csrf_field', function (): string {

@@ -17,31 +17,31 @@ $this->layout('layout', ['title' => 'The shore — Felkyo Creatures']);
 
 <div class="shore-sea" aria-hidden="true"><span class="shore-sea__bottle">&#127870;</span></div>
 
-<h2 class="panel-label">The shore</h2>
-<p>Bottles drift in from all over Felkyo. Once a day you can send one out, and once a day you can look for one.</p>
+<h2 class="panel-label"><?= $this->t('shore.the-shore', 'The shore') ?></h2>
+<p><?= $this->t('shore.bottles-drift-in-from-all', 'Bottles drift in from all over Felkyo. Once a day you can send one out, and once a day you can look for one.') ?></p>
 
 <section class="card" aria-labelledby="shore-find">
-    <h3 id="shore-find">Walk the tideline</h3>
+    <h3 id="shore-find"><?= $this->t('shore.walk-the-tideline', 'Walk the tideline') ?></h3>
     <?php if ($canFind): ?>
         <form method="post" action="/shore/find">
             <?= $this->csrf_field() ?>
-            <button class="btn btn--primary" type="submit">Look for a bottle</button>
+            <button class="btn btn--primary" type="submit"><?= $this->t('shore.look-for-a-bottle', 'Look for a bottle') ?></button>
         </form>
     <?php else: ?>
-        <p>You've walked the shore today. The tide turns at midnight.</p>
+        <p><?= $this->t('shore.you-ve-walked-the-shore', 'You\'ve walked the shore today. The tide turns at midnight.') ?></p>
     <?php endif; ?>
 </section>
 
 <section class="card" aria-labelledby="shore-send">
-    <h3 id="shore-send">Send a bottle</h3>
+    <h3 id="shore-send"><?= $this->t('shore.send-a-bottle', 'Send a bottle') ?></h3>
     <?php if ($adrift > 0): ?>
-        <p class="library-hint"><?= $this->e((string) $adrift) ?> of your bottles <?= $adrift === 1 ? 'is' : 'are' ?> still out on the water.</p>
+        <p class="library-hint"><?= $this->t('shore.of-your-bottles', '{adrift} of your bottles', ['adrift' => (string) $adrift]) ?> <?= $adrift === 1 ? 'is' : 'are' ?> <?= $this->t('shore.still-out-on-the-water', 'still out on the water.') ?></p>
     <?php endif; ?>
     <?php if ($canSend): ?>
         <form method="post" action="/shore/send">
             <?= $this->csrf_field() ?>
             <fieldset class="shore-messages">
-                <legend class="field__label">Choose your message</legend>
+                <legend class="field__label"><?= $this->t('shore.choose-your-message', 'Choose your message') ?></legend>
                 <?php $first = true; foreach ($messages as $key => $words): ?>
                     <label class="shore-message">
                         <input type="radio" name="message" value="<?= $this->e($key) ?>" <?= $first ? 'checked' : '' ?>>
@@ -49,33 +49,33 @@ $this->layout('layout', ['title' => 'The shore — Felkyo Creatures']);
                     </label>
                 <?php $first = false; endforeach; ?>
             </fieldset>
-            <button class="btn btn--primary" type="submit">Seal it and set it adrift</button>
+            <button class="btn btn--primary" type="submit"><?= $this->t('shore.seal-it-and-set-it', 'Seal it and set it adrift') ?></button>
         </form>
     <?php else: ?>
-        <p>You've sent today's bottle. Another tomorrow!</p>
+        <p><?= $this->t('shore.you-ve-sent-today-s', 'You\'ve sent today\'s bottle. Another tomorrow!') ?></p>
     <?php endif; ?>
 </section>
 
 <?php if ($found !== []): ?>
     <section aria-labelledby="shore-found">
-        <h3 id="shore-found" class="library-section">Bottles you've found</h3>
+        <h3 id="shore-found" class="library-section"><?= $this->t('shore.bottles-you-ve-found', 'Bottles you\'ve found') ?></h3>
         <ul class="shore-found">
             <?php foreach ($found as $bottle): ?>
                 <li class="shore-found__note card">
                     <p class="shore-found__words">&ldquo;<?= $this->e($bottle['words']) ?>&rdquo;</p>
                     <p class="shore-found__from">
-                        from <a href="/player/<?= $this->e(rawurlencode($bottle['sender'])) ?>"><?= $this->e($bottle['sender']) ?></a>
+                        <?= $this->t('shore.from', 'from') ?> <a href="/player/<?= $this->e(rawurlencode($bottle['sender'])) ?>"><?= $this->e($bottle['sender']) ?></a>
                     </p>
                     <div class="shore-found__actions">
-                        <a class="btn btn--secondary" href="/post-office?to=<?= $this->e(rawurlencode($bottle['sender'])) ?>">Send a card back</a>
+                        <a class="btn btn--secondary" href="/post-office?to=<?= $this->e(rawurlencode($bottle['sender'])) ?>"><?= $this->t('shore.send-a-card-back', 'Send a card back') ?></a>
                         <form method="post" action="/player/<?= $this->e(rawurlencode($bottle['sender'])) ?>/friend">
                             <?= $this->csrf_field() ?>
-                            <button class="btn btn--secondary" type="submit">Add to friends</button>
+                            <button class="btn btn--secondary" type="submit"><?= $this->t('shore.add-to-friends', 'Add to friends') ?></button>
                         </form>
                         <?= $this->insert('partials/report-link', ['subject' => 'bottle', 'id' => $bottle['id']]) ?>
                         <form method="post" action="/player/<?= $this->e(rawurlencode($bottle['sender'])) ?>/block">
                             <?= $this->csrf_field() ?>
-                            <button class="btn--quiet" type="submit">block <?= $this->e($bottle['sender']) ?></button>
+                            <button class="btn--quiet" type="submit"><?= $this->t('shore.block', 'block {sender}', ['sender' => $bottle['sender']]) ?></button>
                         </form>
                     </div>
                 </li>

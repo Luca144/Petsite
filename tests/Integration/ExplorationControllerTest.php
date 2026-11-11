@@ -51,6 +51,8 @@ final class ExplorationControllerTest extends DatabaseTestCase
         $config = require dirname(__DIR__, 2) . '/config/config.php';
 
         $templates = new Engine(dirname(__DIR__, 2) . '/templates');
+
+        \Felkyo\Texts\TextTemplateFunctions::register($templates, new \Felkyo\Texts\TextCatalogue());
         $session = new Session(cookieSecure: false);
         $this->csrf = new Csrf($session);
         $templates->registerFunction('csrf_field', function (): string {

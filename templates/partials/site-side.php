@@ -63,7 +63,7 @@ if (empty($currentUser)) {
             <span class="site-side__name"><?= $this->e($currentUser->username) ?></span>
             <span class="site-purse">
                 <span aria-hidden="true">&#9670;</span>
-                <span class="visually-hidden">You&rsquo;re carrying</span>
+                <span class="visually-hidden"><?= $this->t('site-side.you-re-carrying', 'You’re carrying') ?></span>
                 <?= $this->e((string) $currentUser->currencyBalance) ?>
                 <?= $this->e($currencyName ?? 'gems') ?>
             </span>
@@ -84,7 +84,7 @@ if (empty($currentUser)) {
                     <img class="site-side__portrait-img"
                          src="<?= $this->e($currentAvatarPath) ?>"
                          alt="" width="96" height="96">
-                    <span class="site-side__portrait-word">my page</span>
+                    <span class="site-side__portrait-word"><?= $this->t('site-side.my-page', 'my page') ?></span>
                 </a>
             <?php endif; ?>
 
@@ -94,19 +94,33 @@ if (empty($currentUser)) {
                      mockup always drew them there. */ ?>
             <nav class="site-side__nav" aria-label="Your pages">
                 <ul class="site-side__links">
-                    <li><a href="/"<?= $isCurrent('/') ? ' aria-current="page"' : '' ?>>home</a></li>
-                    <li><a href="/creatures"<?= $isCurrent('/creatures') ? ' aria-current="page"' : '' ?>>my creatures</a></li>
-                    <li><a href="/inventory"<?= $isCurrent('/inventory') ? ' aria-current="page"' : '' ?>>inventory</a></li>
-                    <li><a href="/friends"<?= $isCurrent('/friends') ? ' aria-current="page"' : '' ?>>friends</a></li>
+                    <li><a href="/"<?= $isCurrent('/') ? ' aria-current="page"' : '' ?>><?= $this->t('site-side.home', 'home') ?></a></li>
+                    <li><a href="/creatures"<?= $isCurrent('/creatures') ? ' aria-current="page"' : '' ?>><?= $this->t('site-side.my-creatures', 'my creatures') ?></a></li>
+                    <li><a href="/inventory"<?= $isCurrent('/inventory') ? ' aria-current="page"' : '' ?>><?= $this->t('site-side.inventory', 'inventory') ?></a></li>
+                    <li><a href="/friends"<?= $isCurrent('/friends') ? ' aria-current="page"' : '' ?>><?= $this->t('site-side.friends', 'friends') ?></a></li>
                     <?php if (!empty($showPanelLink)): ?>
                         <?php /* Staff only (M2.1). Convenience, not security —
                                  the AdminGate re-checks roles on every admin
                                  request; this link just doesn't clutter a
                                  player's sidebar with a door that isn't theirs. */ ?>
-                        <li><a href="/admin"<?= $isCurrent('/admin') ? ' aria-current="page"' : '' ?>>the panel</a></li>
+                        <li><a href="/admin"<?= $isCurrent('/admin') ? ' aria-current="page"' : '' ?>><?= $this->t('site-side.the-panel', 'the panel') ?></a></li>
                     <?php endif; ?>
                 </ul>
             </nav>
+
+            <?php if (!empty($canEditTexts)): ?>
+                <?php /* Artist and owner: switch editing mode on or off for
+                         yourself, from any page, and land back on that page.
+                         The switch passes the panel's door like every admin
+                         route — so does every save made in editing mode. */ ?>
+                <form class="site-side__text-mode" method="post" action="/admin/texts/mode">
+                    <?= $this->csrf_field() ?>
+                    <input type="hidden" name="back" value="<?= $this->e($currentPath ?? '/') ?>">
+                    <button class="btn btn--secondary" type="submit" aria-pressed="<?= !empty($textEditMode) ? 'true' : 'false' ?>">
+                        <span aria-hidden="true">&#9998;</span> <?= !empty($textEditMode) ? 'stop editing words' : 'edit words' ?>
+                    </button>
+                </form>
+            <?php endif; ?>
 
             <?php if (!empty($favouriteSummary)): ?>
                 <?php /* The keepsake: your favourite creature, how it is feeling,
@@ -125,7 +139,7 @@ if (empty($currentUser)) {
                      lives on your own page, which you reach on purpose. */ ?>
             <form method="post" action="/logout" class="site-side__logout">
                 <?= $this->csrf_field() ?>
-                <button type="submit">log out</button>
+                <button type="submit"><?= $this->t('site-side.log-out', 'log out') ?></button>
             </form>
         </div>
     </details>

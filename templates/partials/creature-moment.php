@@ -26,6 +26,6 @@ $image = $moment['summary']['species']?->spriteUrlFor($moment['summary']['stage'
          alt="" width="64" height="64">
     <span class="creature-moment__bubble">
         <?= $this->e($moment['line']) ?>
-        <span class="visually-hidden">&mdash; visit <?= $this->e($creature->name) ?></span>
+        <span class="visually-hidden"><?= $this->t('creature-moment.visit', '— visit {name}', ['name' => $creature->name]) ?></span>
     </span>
 </a>

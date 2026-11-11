@@ -32,7 +32,7 @@ $this->layout('layout', ['title' => $profile->username . ' — Felkyo Creatures'
 
         <?php if ($profile->createdAt !== null): ?>
             <p class="profile-header__joined">
-                Wandering Felkyo since
+                <?= $this->t('profile.wandering-felkyo-since', 'Wandering Felkyo since') ?>
                 <time datetime="<?= $this->e(substr($profile->createdAt, 0, 10)) ?>">
                     <?= $this->e(date('j F Y', strtotime($profile->createdAt))) ?>
                 </time>
@@ -43,22 +43,22 @@ $this->layout('layout', ['title' => $profile->username . ' — Felkyo Creatures'
 
 <?php if ($isOwner): ?>
     <p class="profile-owner-note">
-        This is how your page looks to everyone else.
-        <a href="/profile/edit">Change your page</a>
-        or <a href="/themes">choose how Felkyo looks for you</a>.
+        <?= $this->t('profile.this-is-how-your-page', 'This is how your page looks to everyone else.') ?>
+        <a href="/profile/edit"><?= $this->t('profile.change-your-page', 'Change your page') ?></a>
+        <?= $this->t('profile.or', 'or') ?> <a href="/themes"><?= $this->t('profile.choose-how-felkyo-looks-for', 'choose how Felkyo looks for you') ?></a>.
     </p>
 <?php endif; ?>
 
 <?php $this->start('part-about') ?>
 <section class="profile-about">
-    <h3 class="panel-label">About</h3>
+    <h3 class="panel-label"><?= $this->t('profile.about', 'About') ?></h3>
 
     <?php if ($profile->isAboutHidden()): ?>
         <?php /* Reported and hidden until a human has looked. A neutral
                  placeholder rather than nothing at all, so the page does not
                  silently lose a section — and worded so it accuses nobody, since
                  most reports turn out to be about nothing. */ ?>
-        <p class="under-review">This text is hidden while we take a look at it.</p>
+        <p class="under-review"><?= $this->t('profile.this-text-is-hidden-while', 'This text is hidden while we take a look at it.') ?></p>
     <?php elseif ($profile->hasAbout()): ?>
         <?php /* Plates escapes this. nl2br is applied to the ESCAPED text, so the
                  only tags that can reach the page are the <br> we add ourselves —
@@ -66,12 +66,12 @@ $this->layout('layout', ['title' => $profile->username . ' — Felkyo Creatures'
         <p class="profile-about__text"><?= nl2br($this->e($profile->about)) ?></p>
     <?php elseif ($isOwner): ?>
         <p class="empty-state">
-            You haven&rsquo;t written anything here yet.
-            <a href="/profile/edit">Say hello?</a>
+            <?= $this->t('profile.you-haven-t-written-anything', 'You haven’t written anything here yet.') ?>
+            <a href="/profile/edit"><?= $this->t('profile.say-hello', 'Say hello?') ?></a>
         </p>
     <?php else: ?>
         <p class="empty-state">
-            <?= $this->e($profile->username) ?> hasn&rsquo;t written anything here yet.
+            <?= $this->t('profile.hasn-t-written-anything-here', '{username} hasn’t written anything here yet.', ['username' => $profile->username]) ?>
         </p>
     <?php endif; ?>
     <?php if ($canReport): ?>
@@ -82,7 +82,7 @@ $this->layout('layout', ['title' => $profile->username . ' — Felkyo Creatures'
 
 <?php $this->start('part-creatures') ?>
 <section class="profile-creatures">
-    <h3 class="panel-label">Creatures</h3>
+    <h3 class="panel-label"><?= $this->t('profile.creatures', 'Creatures') ?></h3>
 
     <?php
     /*
@@ -122,13 +122,12 @@ $this->layout('layout', ['title' => $profile->username . ' — Felkyo Creatures'
                 <?php endif; ?>
                 <span class="spotlight__name"><?= $this->e($star->name) ?></span>
                 <span class="spotlight__meta">
-                    <?= $this->e($spotlight['species']?->name ?? 'Unknown') ?>
-                    &middot; level <?= $this->e((string) $spotlight['level']) ?>
+                    <?= $this->t('profile.level', '{spotlight_name} · level {level}', ['spotlight_name' => $spotlight['species']?->name ?? 'Unknown', 'level' => (string) $spotlight['level']]) ?>
                     <?php /* Happiness, not times-petted: the count needs its own query
                              per creature, and a profile showing a dozen of them would
                              quietly become a dozen extra queries. Happiness is already
                              on the creature. */ ?>
-                    &middot; happiness <?= $this->e((string) $star->happiness) ?>
+                    <?= $this->t('profile.happiness', '· happiness {happiness}', ['happiness' => (string) $star->happiness]) ?>
                 </span>
             </span>
         </a>
@@ -139,10 +138,10 @@ $this->layout('layout', ['title' => $profile->username . ' — Felkyo Creatures'
     <?php elseif (empty($summaries)): ?>
         <p class="empty-state">
             <?php if ($isOwner): ?>
-                None of your creatures are on show here yet.
-                <a href="/profile/edit">Choose some</a>, or make one public from its own page.
+                <?= $this->t('profile.none-of-your-creatures-are', 'None of your creatures are on show here yet.') ?>
+                <a href="/profile/edit"><?= $this->t('profile.choose-some', 'Choose some') ?></a><?= $this->t('profile.or-make-one-public-from', ', or make one public from its own page.') ?>
             <?php else: ?>
-                <?= $this->e($profile->username) ?> isn&rsquo;t showing any creatures at the moment.
+                <?= $this->t('profile.isn-t-showing-any-creatures', '{username} isn’t showing any creatures at the moment.', ['username' => $profile->username]) ?>
             <?php endif; ?>
         </p>
     <?php else: ?>
@@ -157,8 +156,7 @@ $this->layout('layout', ['title' => $profile->username . ' — Felkyo Creatures'
         <p class="profile-hidden-note">
             <?= $this->e((string) $hiddenCount) ?>
             <?= $hiddenCount === 1 ? 'of your creatures is' : 'of your creatures are' ?>
-            private, so <?= $hiddenCount === 1 ? 'it does' : 'they do' ?> not appear here.
-            You can change that on <?= $hiddenCount === 1 ? 'its' : 'their' ?> own page.
+            <?= $this->t('profile.private-so', 'private, so') ?> <?= $hiddenCount === 1 ? 'it does' : 'they do' ?> <?= $this->t('profile.not-appear-here-you-can', 'not appear here. You can change that on') ?> <?= $hiddenCount === 1 ? 'its' : 'their' ?> <?= $this->t('profile.own-page', 'own page.') ?>
         </p>
     <?php endif; ?>
 </section>
@@ -192,6 +190,6 @@ foreach ($sectionOrders['profile'] ?? array_keys(\Felkyo\Look\SiteLook::SECTIONS
     <hr class="rule">
     <form method="post" action="/logout" class="profile-logout">
         <?= $this->csrf_field() ?>
-        <button class="btn btn--secondary" type="submit">Log out</button>
+        <button class="btn btn--secondary" type="submit"><?= $this->t('profile.log-out', 'Log out') ?></button>
     </form>
 <?php endif; ?>

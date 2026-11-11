@@ -21,14 +21,14 @@ $snippet = '<a href="' . $this->e($pageUrl) . '"><img src="' . $this->e($imageUr
 $id = (string) $creature->id;
 ?>
 <details class="creature-share">
-    <summary>Share <?= $this->e($creature->name) ?> on other sites</summary>
-    <p class="field__hint">Copy one of these and paste it where you'd like <?= $this->e($creature->name) ?> to appear. Visitors can click through to say hello.</p>
+    <summary><?= $this->t('creature-share.share-on-other-sites', 'Share {name} on other sites', ['name' => $creature->name]) ?></summary>
+    <p class="field__hint"><?= $this->t('creature-share.copy-one-of-these-and', 'Copy one of these and paste it where you\'d like {name} to appear. Visitors can click through to say hello.', ['name' => $creature->name]) ?></p>
     <div class="field">
-        <label class="field__label" for="share-html-<?= $this->e($id) ?>">Picture with a link (HTML, for forums and websites)</label>
+        <label class="field__label" for="share-html-<?= $this->e($id) ?>"><?= $this->t('creature-share.picture-with-a-link-html', 'Picture with a link (HTML, for forums and websites)') ?></label>
         <textarea class="field__input creature-share__code" id="share-html-<?= $this->e($id) ?>" rows="3" readonly><?= $this->e($snippet) ?></textarea>
     </div>
     <div class="field">
-        <label class="field__label" for="share-link-<?= $this->e($id) ?>">Just the link</label>
+        <label class="field__label" for="share-link-<?= $this->e($id) ?>"><?= $this->t('creature-share.just-the-link', 'Just the link') ?></label>
         <input class="field__input creature-share__code" id="share-link-<?= $this->e($id) ?>" type="text" readonly value="<?= $this->e($pageUrl) ?>">
     </div>
 </details>

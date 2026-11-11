@@ -41,7 +41,7 @@ $this->layout('layout', ['title' => $game['name'] . ' with ' . $creature->name .
                  saying "1 try left" would read as a warning about nothing. */ ?>
         <p class="play__tries">
             <?= $this->e((string) $triesLeft) ?>
-            <?= $triesLeft === 1 ? 'guess' : 'guesses' ?> left
+            <?= $triesLeft === 1 ? 'guess' : 'guesses' ?> <?= $this->t('play.left', 'left') ?>
         </p>
     <?php endif; ?>
 
@@ -64,13 +64,12 @@ $this->layout('layout', ['title' => $game['name'] . ' with ' . $creature->name .
     <p class="play__note">
         <?php /* Said plainly and up front, because a game whose stakes are unclear
                  makes people cautious about playing it. Golden rules 4 and 11. */ ?>
-        Guess wrong and <?= $this->e($creature->name) ?> still has a lovely time —
-        you just cheer them up a little less.
+        <?= $this->t('play.guess-wrong-and-still-has', 'Guess wrong and {name} still has a lovely time — you just cheer them up a little less.', ['name' => $creature->name]) ?>
     </p>
 
     <p class="play__away">
         <a href="/creature/<?= $this->e((string) $creature->id) ?>">
-            back to <?= $this->e($creature->name) ?>
+            <?= $this->t('play.back-to', 'back to {name}', ['name' => $creature->name]) ?>
         </a>
     </p>
 </section>

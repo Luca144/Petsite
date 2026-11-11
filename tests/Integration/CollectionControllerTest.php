@@ -36,6 +36,8 @@ final class CollectionControllerTest extends DatabaseTestCase
         $config = require dirname(__DIR__, 2) . '/config/config.php';
 
         $templates = new Engine(dirname(__DIR__, 2) . '/templates');
+
+        \Felkyo\Texts\TextTemplateFunctions::register($templates, new \Felkyo\Texts\TextCatalogue());
         $templates->registerFunction('csrf_field', static fn (): string => '');
         $session = new Session(cookieSecure: false);
 

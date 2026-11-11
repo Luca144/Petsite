@@ -18,10 +18,10 @@
 $this->layout('layout', ['title' => 'Find a player — Felkyo Creatures']);
 ?>
 
-<h2 class="panel-label">Find a player</h2>
+<h2 class="panel-label"><?= $this->t('search.find-a-player', 'Find a player') ?></h2>
 
 <form class="search-form" method="get" action="/players">
-    <label class="profile-form__label" for="q">Who are you looking for?</label>
+    <label class="profile-form__label" for="q"><?= $this->t('search.who-are-you-looking-for', 'Who are you looking for?') ?></label>
     <div class="search-form__row">
         <input class="search-form__input"
                type="search"
@@ -31,10 +31,10 @@ $this->layout('layout', ['title' => 'Find a player — Felkyo Creatures']);
                maxlength="30"
                autocomplete="off"
                aria-describedby="search-help">
-        <button class="btn btn--primary" type="submit">Search</button>
+        <button class="btn btn--primary" type="submit"><?= $this->t('search.search', 'Search') ?></button>
     </div>
     <p class="profile-form__help" id="search-help">
-        Type the start of their name &mdash; at least <?= $this->e((string) $minimumLength) ?> letters.
+        <?= $this->t('search.type-the-start-of-their', 'Type the start of their name — at least {minimum_length} letters.', ['minimum_length' => (string) $minimumLength]) ?>
     </p>
 </form>
 
@@ -48,8 +48,7 @@ $this->layout('layout', ['title' => 'Find a player — Felkyo Creatures']);
                  instead, and quietly explains that not everyone can be found —
                  which is true and saves somebody thinking the site is broken. */ ?>
         <p class="empty-state">
-            Nobody here starts with &ldquo;<?= $this->e($query) ?>&rdquo;.
-            Check the spelling &mdash; and note that some players choose not to be findable.
+            <?= $this->t('search.nobody-here-starts-with-check', 'Nobody here starts with “{query}”. Check the spelling — and note that some players choose not to be findable.', ['query' => $query]) ?>
         </p>
     <?php else: ?>
         <ul class="search-results">

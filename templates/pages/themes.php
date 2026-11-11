@@ -28,13 +28,13 @@ foreach ($themes as $theme) {
 }
 ?>
 
-<h2 class="panel-label">Your theme</h2>
-<p>Pick the colours Felkyo wears for you. Only you see your choice. Every theme here is checked to stay easy to read.</p>
+<h2 class="panel-label"><?= $this->t('themes.your-theme', 'Your theme') ?></h2>
+<p><?= $this->t('themes.pick-the-colours-felkyo-wears', 'Pick the colours Felkyo wears for you. Only you see your choice. Every theme here is checked to stay easy to read.') ?></p>
 
 <form method="post" action="/themes">
     <?= $this->csrf_field() ?>
     <fieldset class="theme-picker">
-        <legend class="visually-hidden">Themes</legend>
+        <legend class="visually-hidden"><?= $this->t('themes.themes', 'Themes') ?></legend>
         <?php foreach ($options as $option): ?>
             <label class="theme-card">
                 <input class="theme-card__radio" type="radio" name="theme_id" value="<?= $this->e((string) $option['id']) ?>"
@@ -54,5 +54,5 @@ foreach ($themes as $theme) {
             </label>
         <?php endforeach; ?>
     </fieldset>
-    <button class="btn btn--primary" type="submit">Wear this theme</button>
+    <button class="btn btn--primary" type="submit"><?= $this->t('themes.wear-this-theme', 'Wear this theme') ?></button>
 </form>

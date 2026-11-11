@@ -940,6 +940,61 @@ check('an old version can be put back in one press', str_contains(request('/crea
 request('/admin/look/css/publish', ['_csrf_token' => tokenFrom('/admin/look/css'), 'css' => '', 'note' => 'smoke: tidy up']);
 
 // ---------------------------------------------------------------------------
+// The site's words (artist role — the owner passes): change a sentence in
+// the panel, see it on the page; editing mode; change a message the code
+// sends; refuse made-up keys and invented gaps. All put back at the end.
+// ---------------------------------------------------------------------------
+
+echo "\nThe site's words:\n";
+
+$textsPage = request('/admin/texts?where=layout');
+check('the words screen lists a page\'s sentences', str_contains($textsPage['body'], 'Skip to content'));
+
+$newSkip = 'Hop to the good bit ' . $name;
+$savedText = request('/admin/texts/save', [
+    '_csrf_token' => tokenIn($textsPage['body']), 'key' => 'layout.skip-to-content',
+    'words' => $newSkip, 'back' => '/creatures',
+]);
+check('changing a sentence says so', str_contains($savedText['body'], 'everyone sees the new words'));
+check('and every page shows the new words', str_contains(request('/creatures')['body'], $newSkip));
+
+$madeUp = request('/admin/texts/save', [
+    '_csrf_token' => tokenFrom('/admin/texts'), 'key' => 'nothing.like-this', 'words' => 'x', 'back' => '/admin/texts',
+]);
+check('a made-up sentence key is refused', str_contains($madeUp['body'], 'isn&#039;t one we know') || str_contains($madeUp['body'], "isn't one we know"));
+$inventedGap = request('/admin/texts/save', [
+    '_csrf_token' => tokenFrom('/admin/texts'), 'key' => 'layout.skip-to-content', 'words' => 'Hello {password}', 'back' => '/admin/texts',
+]);
+check('an invented {gap} is refused', str_contains($inventedGap['body'], 'The gap {password}'));
+
+// Editing mode: dotted sentences carrying their key, and the popup form.
+request('/admin/texts/mode', ['_csrf_token' => tokenFrom('/creatures'), 'back' => '/creatures']);
+$editing = request('/creatures')['body'];
+check(
+    'editing mode marks sentences and adds the popup',
+    str_contains($editing, 'data-text-key="layout.skip-to-content"') && str_contains($editing, 'id="text-editor"')
+);
+request('/admin/texts/mode', ['_csrf_token' => tokenFrom('/creatures'), 'back' => '/creatures']);
+check('and switching it off takes them away again', !str_contains(request('/creatures')['body'], 'class="text-edit"'));
+
+request('/admin/texts/save', [
+    '_csrf_token' => tokenFrom('/admin/texts'), 'key' => 'layout.skip-to-content', 'reset' => '1', 'back' => '/admin/texts',
+]);
+check('"back to the original" restores the words', str_contains(request('/creatures')['body'], '>Skip to content<'));
+
+// A message the code sends: the bug-report thank-you.
+$thanksKey = Felkyo\Texts\TextScanner::messageKey('Thank you! Your bug report reached us — we\'ll take a look.');
+request('/admin/texts/save', [
+    '_csrf_token' => tokenFrom('/admin/texts'), 'key' => $thanksKey,
+    'words' => 'Got it — thank you, ' . $name . '!', 'back' => '/admin/texts',
+]);
+$thanked = request('/bug-report', [
+    '_csrf_token' => tokenFrom('/bug-report'), 'from' => '/creatures', 'description' => 'Smoke: checking a changed message.',
+]);
+check('a changed message is what the player sees', str_contains($thanked['body'], 'Got it — thank you, ' . $name));
+request('/admin/texts/save', ['_csrf_token' => tokenFrom('/admin/texts'), 'key' => $thanksKey, 'reset' => '1', 'back' => '/admin/texts']);
+
+// ---------------------------------------------------------------------------
 // The art store (M2.2), through the real upload form
 //
 // A real multipart upload of a real animated GIF (built by the test support

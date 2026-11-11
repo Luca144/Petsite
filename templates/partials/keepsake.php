@@ -38,7 +38,7 @@ $image = $species?->spriteUrlFor($summary['stage']) ?? '';
 [$artWidth, $artHeight] = PixelArt::displaySize($image, 104);
 ?>
 <section class="keepsake" aria-labelledby="keepsake-heading">
-    <h2 class="keepsake__heading" id="keepsake-heading">your favourite</h2>
+    <h2 class="keepsake__heading" id="keepsake-heading"><?= $this->t('keepsake.your-favourite', 'your favourite') ?></h2>
 
     <?php /* THE PORTRAIT IS THE DOOR TO THE CREATURE'S PAGE — the card used to
              also carry a "visit X" text link underneath, and the Product Owner
@@ -91,7 +91,7 @@ $image = $species?->spriteUrlFor($summary['stage']) ?? '';
             <?= $this->csrf_field() ?>
             <input type="hidden" name="from" value="home">
             <button class="btn btn--secondary keepsake__btn" type="submit">
-                <span aria-hidden="true">&hearts;</span> pet
+                <span aria-hidden="true">&hearts;</span> <?= $this->t('keepsake.pet', 'pet') ?>
             </button>
         </form>
 
@@ -102,10 +102,10 @@ $image = $species?->spriteUrlFor($summary['stage']) ?? '';
             <?= $this->csrf_field() ?>
             <input type="hidden" name="from" value="home">
             <button class="btn btn--secondary keepsake__btn" type="submit">
-                <span aria-hidden="true">&#9679;</span> feed
+                <span aria-hidden="true">&#9679;</span> <?= $this->t('keepsake.feed', 'feed') ?>
                 <?php if (!empty($treats)): ?>
                     <span class="visually-hidden">
-                        &mdash; <?= $this->e((string) count($treats)) ?> kinds of treat to hand
+                        <?= $this->t('keepsake.kinds-of-treat-to-hand', '— {treats} kinds of treat to hand', ['treats' => (string) count($treats)]) ?>
                     </span>
                 <?php endif; ?>
             </button>
@@ -116,7 +116,7 @@ $image = $species?->spriteUrlFor($summary['stage']) ?? '';
                  answer, which is why the result can be trusted (see PlayableGames). */ ?>
         <a class="btn btn--secondary keepsake__btn"
            href="/creature/<?= $this->e((string) $creature->id) ?>/play">
-            <span aria-hidden="true">&#9670;</span> play
+            <span aria-hidden="true">&#9670;</span> <?= $this->t('keepsake.play', 'play') ?>
         </a>
     </div>
 

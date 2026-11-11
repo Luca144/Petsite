@@ -18,5 +18,5 @@
  */
 ?>
 <a class="report-link" href="/report/<?= $this->e($subject) ?>/<?= $this->e((string) $id) ?>">
-    <span aria-hidden="true">⚑</span> Report
+    <span aria-hidden="true">⚑</span> <?= $this->t('report-link.report', 'Report') ?>
 </a>

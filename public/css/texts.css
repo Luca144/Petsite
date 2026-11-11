@@ -1,0 +1,133 @@
+/**
+ * texts.css — editing the site's words: the dotted sentences in editing
+ * mode, the popup editor, and the panel's list of sentences.
+ *
+ * Editing mode is only ever seen by the artist and the owner.
+ */
+
+/* An editable sentence: a dotted underline AND a pencil cursor — a shape
+   as well as a colour, never colour alone. Inherits everything else, so the
+   page still looks like itself while you edit it. */
+.text-edit {
+    text-decoration: underline dotted var(--purple);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+    cursor: text;
+    border-radius: var(--radius-sm);
+}
+
+.text-edit:hover {
+    background: var(--gold-lit);
+    color: var(--plum);
+}
+
+.text-edit:focus-visible {
+    outline: 3px solid var(--purple);
+    outline-offset: 2px;
+}
+
+/* ---- The popup ---- */
+
+.text-editor {
+    width: min(34rem, calc(100vw - 2rem));
+    padding: var(--space-6);
+    background: var(--parchment);
+    color: var(--plum);
+    border: 2px solid var(--gold);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-panel);
+}
+
+.text-editor::backdrop {
+    background: rgba(14, 8, 26, 0.6);
+}
+
+.text-editor__title {
+    margin-top: 0;
+    font-family: var(--font-display);
+}
+
+.text-editor__words {
+    width: 100%;
+}
+
+.text-editor__hint,
+.text-editor__original,
+.texts-row__original {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    overflow-wrap: anywhere;
+}
+
+/* The sidebar switch. */
+.site-side__text-mode {
+    display: flex;
+    justify-content: center;
+    margin: var(--space-3) 0;
+}
+
+.site-side__text-mode .btn[aria-pressed="true"] {
+    background: var(--gold-lit);
+    border: 2px solid var(--plum);
+}
+
+/* ---- The panel list ---- */
+
+.texts-search__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.texts-search__row .field__input {
+    flex: 1 1 12rem;
+}
+
+.texts-places {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: var(--space-4) 0;
+}
+
+/* Small pills: there are many pages, so they're compact — but still 44px
+   tall to tap. The current one is filled and bold (not colour alone). */
+.texts-places__pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 var(--space-3);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--plum);
+    background: var(--panel);
+    border: 1.5px var(--frame-style) var(--border);
+    border-radius: var(--radius-pill);
+    text-decoration: none;
+}
+
+.texts-places__pill[aria-current="page"] {
+    background: var(--plum);
+    color: var(--parchment);
+    font-weight: 700;
+}
+
+.texts-places__pill:focus-visible {
+    outline: 3px solid var(--purple);
+    outline-offset: 2px;
+}
+
+.texts-row {
+    margin-bottom: var(--space-3);
+}
+
+.texts-row__words {
+    width: 100%;
+}
+
+/* The popup's own words are editable in the panel list, but inside the
+   popup they shouldn't look clickable (clicks there are ignored). */
+.text-editor .text-edit {
+    text-decoration: none;
+    cursor: inherit;
+}
