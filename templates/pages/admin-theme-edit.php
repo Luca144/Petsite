@@ -97,8 +97,10 @@ $rulesJson = json_encode(array_map(
             </div>
         </div>
 
-        <button class="btn btn--primary" type="submit">Save</button>
+        <button class="btn btn--primary" type="submit">Save the colours</button>
     </form>
+
+    <?= $this->insert('partials/admin-theme-style', ['theme' => $theme, 'siteArt' => $siteArt ?? []]) ?>
 
     <div class="card">
         <form method="post" action="/admin/themes/<?= $this->e($id) ?>/delete"

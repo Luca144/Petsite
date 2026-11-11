@@ -14,7 +14,7 @@
     max-width: 640px;
     aspect-ratio: 16 / 10;
     margin-bottom: 0.75rem;
-    border: 2px solid var(--gold);
+    border: 2px var(--frame-style) var(--gold);
     border-radius: var(--radius-lg);
     overflow: hidden;
     /* The same lamplight placeholder the player scene wears (explore.css). */
@@ -49,7 +49,7 @@
     font-size: 1.2rem;
     color: var(--gold-lit);
     background: rgba(42, 28, 58, 0.55);
-    border: 2px solid var(--gold);
+    border: 2px var(--frame-style) var(--gold);
     border-radius: 50%;
     cursor: pointer;
     box-shadow: var(--glow-gold);
@@ -92,7 +92,7 @@
     flex-wrap: wrap;
     gap: 0.5rem;
     align-items: baseline;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px var(--frame-style) var(--border);
     padding-bottom: 0.3rem;
     font-size: 0.9rem;
 }

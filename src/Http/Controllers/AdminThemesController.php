@@ -23,7 +23,8 @@ use League\Plates\Engine;
  *   GET  /admin/themes                     all themes + start a new one
  *   POST /admin/themes/create
  *   GET  /admin/themes/{id}                colour pickers, live contrast check
- *   POST /admin/themes/{id}/save|publish|unpublish|delete
+ *   POST /admin/themes/{id}/save|style|publish|unpublish|delete
+ *        (style = fonts, corners, frames, glow, drifting symbols, pictures)
  *
  * @package Felkyo\Http\Controllers
  *
@@ -43,6 +44,8 @@ final class AdminThemesController
         private ThemeEditorService $editor,
         private RateLimiter $rateLimiter,
         private array $saveRateLimit,
+        // The "Site art" pictures a theme can use as background or banner.
+        private ?\Felkyo\Art\ArtRepository $art = null,
     ) {
     }
 
@@ -62,6 +65,7 @@ final class AdminThemesController
             'theme' => $theme,
             'palette' => ThemeTokens::paletteWith($theme->tokens),
             'problems' => ThemeTokens::problems($theme->tokens),
+            'siteArt' => $this->art?->ofKind(\Felkyo\Art\ArtKind::Site) ?? [],
         ]));
     }
 
@@ -81,6 +85,21 @@ final class AdminThemesController
 
         return $this->handle($request, $id, fn (User $actor) => $this->editor->save(
             $actor, $id, $request->input('name'), $colours, $request->input('easy_reading') === '1', $request->clientIp()
+        ));
+    }
+
+    public function saveStyle(Request $request, array $parameters): Response
+    {
+        $id = (int) ($parameters['id'] ?? 0);
+        $choices = [];
+        foreach (array_keys(\Felkyo\Themes\ThemeStyle::lists()) as $name) {
+            $choices[$name] = $request->input($name);
+        }
+        // "" (the site's own) or a picture id.
+        $picture = static fn (string $raw): ?int => ctype_digit($raw) && (int) $raw > 0 ? (int) $raw : null;
+
+        return $this->handle($request, $id, fn (User $actor) => $this->editor->saveStyle(
+            $actor, $id, $choices, $picture($request->input('background_art_id')), $picture($request->input('banner_art_id')), $request->clientIp()
         ));
     }
 

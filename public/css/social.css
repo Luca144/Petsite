@@ -80,7 +80,7 @@
     line-height: 1.35;
     color: var(--ink);
     background: var(--panel);
-    border: 1.5px solid var(--border);
+    border: 1.5px var(--frame-style) var(--border);
     border-radius: var(--radius-md);
     cursor: pointer;
     transition: border-color 160ms ease, box-shadow 160ms ease;
@@ -120,7 +120,7 @@
     min-width: 0;
     min-height: 44px;
     padding: var(--space-3);
-    border: 1.5px solid var(--border);
+    border: 1.5px var(--frame-style) var(--border);
     border-radius: var(--radius-md);
     background: var(--parchment);
     color: var(--ink);
@@ -147,7 +147,7 @@
     gap: var(--space-3);
     min-height: 56px;
     padding: var(--space-2) var(--space-3);
-    border: 1.5px solid var(--border);
+    border: 1.5px var(--frame-style) var(--border);
     border-radius: var(--radius-md);
     background: var(--panel);
     color: var(--ink);
@@ -187,7 +187,7 @@
     gap: var(--space-3);
     min-height: 44px;
     padding: var(--space-3);
-    border: 1.5px solid var(--border);
+    border: 1.5px var(--frame-style) var(--border);
     border-radius: var(--radius-md);
     background: var(--panel);
     cursor: pointer;

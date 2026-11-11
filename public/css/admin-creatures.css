@@ -50,7 +50,7 @@
     width: 84px;
     height: 84px;
     background: var(--panel);
-    border: 1px solid var(--border);
+    border: 1px var(--frame-style) var(--border);
     border-radius: var(--radius-sm);
     overflow: hidden;
 }
@@ -133,7 +133,7 @@
     min-width: 110px;
     min-height: 110px;
     background: var(--panel);
-    border: 1px solid var(--border);
+    border: 1px var(--frame-style) var(--border);
     border-radius: var(--radius-sm);
     padding: 0.4rem;
 }
@@ -193,7 +193,7 @@
     flex-wrap: wrap;
     gap: 0.6rem;
     align-items: baseline;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px var(--frame-style) var(--border);
     padding-bottom: 0.4rem;
     font-size: 0.9rem;
 }
@@ -227,7 +227,7 @@
     cursor: pointer;
     font: inherit;
     color: var(--ink);
-    border: 2px solid var(--border);
+    border: 2px var(--frame-style) var(--border);
 }
 
 .admin-picker__choice:hover,

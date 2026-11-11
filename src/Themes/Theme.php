@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Felkyo\Themes;
 
 /**
- * A selectable colour theme (M4.1) — a name, colour overrides, and whether
- * it switches on easy-reading type (M4.3).
+ * A selectable theme (M4.1) — a name, colour overrides, whether it switches
+ * on easy-reading type (M4.3), and (2026-11-11) its style: fonts, corners,
+ * frames, glow, drifting symbols, and its own background and banner art.
  *
  * @package Felkyo\Themes
  */
@@ -23,7 +24,30 @@ final class Theme
         public readonly array $tokens,
         public readonly bool $easyReading,
         public readonly string $status,
+        public readonly ThemeStyle $style = new ThemeStyle(),
+        // Stored file names in the art store (served at /art/<name>), or null
+        // for the site's own background tile and painted banner.
+        public readonly ?string $backgroundArtName = null,
+        public readonly ?string $bannerArtName = null,
+        public readonly ?int $backgroundArtId = null,
+        public readonly ?int $bannerArtId = null,
     ) {
+    }
+
+    /** The banner picture's address, or null for the site's painted logo. */
+    public function bannerUrl(): ?string
+    {
+        return self::artUrl($this->bannerArtName);
+    }
+
+    /**
+     * /art/<name> for a stored art file. The art store generates these names
+     * itself; the pattern check is a second lock, because the result is
+     * printed into a stylesheet.
+     */
+    private static function artUrl(?string $storedName): ?string
+    {
+        return $storedName !== null && preg_match('/^[A-Za-z0-9._-]+$/', $storedName) === 1 ? '/art/' . $storedName : null;
     }
 
     public function isPublished(): bool
@@ -39,21 +63,27 @@ final class Theme
      */
     public function css(): string
     {
-        if ($this->tokens === []) {
-            return '';
-        }
         $declarations = [];
         foreach (ThemeTokens::clean($this->tokens) as $token => $value) {
             $declarations[] = '--' . $token . ': ' . $value . ';';
         }
+        // The style's values come only from ThemeStyle's own lists.
+        $declarations = array_merge($declarations, $this->style->declarations());
 
-        return ':root { ' . implode(' ', $declarations) . ' }';
+        $css = $declarations === [] ? '' : ':root { ' . implode(' ', $declarations) . ' }';
+        $background = self::artUrl($this->backgroundArtName);
+        if ($background !== null) {
+            $css .= " body { background-image: url('" . $background . "'); }";
+        }
+
+        return $css;
     }
 
     /** @param array<string, mixed> $row */
     public static function fromRow(array $row): self
     {
         $tokens = json_decode((string) $row['tokens'], true);
+        $style = json_decode((string) ($row['style'] ?? ''), true);
 
         return new self(
             (int) $row['id'],
@@ -62,6 +92,11 @@ final class Theme
             ThemeTokens::clean(is_array($tokens) ? $tokens : []),
             (bool) $row['easy_reading'],
             (string) $row['status'],
+            ThemeStyle::fromChoices(is_array($style) ? $style : []),
+            isset($row['background_name']) ? (string) $row['background_name'] : null,
+            isset($row['banner_name']) ? (string) $row['banner_name'] : null,
+            isset($row['background_art_id']) ? (int) $row['background_art_id'] : null,
+            isset($row['banner_art_id']) ? (int) $row['banner_art_id'] : null,
         );
     }
 }

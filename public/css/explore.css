@@ -24,7 +24,7 @@
     max-width: 640px;
     aspect-ratio: 16 / 10;
     margin: 0 auto var(--space-4);
-    border: 2px solid var(--gold);
+    border: 2px var(--frame-style) var(--gold);
     border-radius: var(--radius-lg);
     overflow: hidden;
     background:
@@ -48,7 +48,7 @@
     height: 48px;
     object-fit: cover;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
+    border: 1px var(--frame-style) var(--border);
 }
 
 /* When the visit is spent, we still show the framed scene, but with the note
@@ -81,7 +81,7 @@
     font-size: 1.4rem;
     color: var(--gold-lit);
     background: rgba(42, 28, 58, 0.55);
-    border: 2px solid var(--gold);
+    border: 2px var(--frame-style) var(--gold);
     border-radius: 50%;
     cursor: pointer;
     box-shadow: var(--glow-gold);

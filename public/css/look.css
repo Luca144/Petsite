@@ -1,0 +1,197 @@
+/**
+ * look.css — the site look: the announcement line and preview bar that can
+ * appear on every page, and the panel's Site look, fine-tuning CSS and theme
+ * style screens.
+ *
+ * Mobile first: every row here wraps on a phone, and every control is a
+ * real button or radio with a 44px+ touch target.
+ */
+
+/* ---- On every page ---- */
+
+/* The panel's announcement: a gold-framed note at the top of the content.
+   Text stays plum on parchment (gold is only the frame — gold text on
+   parchment would fail contrast). */
+.site-announcement {
+    margin: 0 0 var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    background: var(--panel);
+    border: 2px var(--frame-style) var(--gold);
+    border-radius: var(--radius-md);
+    color: var(--plum);
+    font-weight: 700;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+/* Only the person previewing CSS sees this: dark, so it can't be mistaken
+   for part of the design being previewed. */
+.look-preview-bar {
+    margin: 0 0 var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    background: var(--plum-deep);
+    color: var(--parchment);
+    border-radius: var(--radius-md);
+    text-align: center;
+}
+
+.look-preview-bar a {
+    color: var(--gold-lit);
+    font-weight: 700;
+}
+
+/* ---- Site look: section order ---- */
+
+.look-order__page {
+    margin: var(--space-5) 0 var(--space-2);
+}
+
+.look-order {
+    list-style: none;
+    margin: 0 0 var(--space-2);
+    padding: 0;
+}
+
+.look-order__item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) 0;
+    border-bottom: 1px dashed var(--border);
+}
+
+/* The name takes the room; on a phone the buttons wrap under it. */
+.look-order__name {
+    flex: 1 1 12rem;
+}
+
+.look-order__move {
+    min-width: 44px;
+    min-height: 44px;
+    padding: var(--space-1) var(--space-3);
+}
+
+.look-order__move:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+/* ---- Fine-tuning CSS ---- */
+
+.look-css__box {
+    width: 100%;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    min-height: 16rem;
+}
+
+.look-css__previewing {
+    border-color: var(--purple);
+}
+
+.look-css__history {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.look-css__version {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding: var(--space-3) 0;
+    border-bottom: 1px dashed var(--border);
+    overflow-wrap: anywhere;
+}
+
+/* "live now": a word AND a dark chip, never colour alone. */
+.look-css__live {
+    display: inline-block;
+    padding: 0 var(--space-2);
+    background: var(--plum);
+    color: var(--gold-lit);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+}
+
+/* ---- Theme editor: style choices ---- */
+
+.theme-style__choice {
+    border: 0;
+    margin: 0 0 var(--space-5);
+    padding: 0;
+}
+
+.theme-style__pills,
+.theme-style__pictures {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+/* A radio pill: the whole label is the target; the checked one is filled
+   AND outlined, so the choice never rides on colour alone. */
+.theme-style__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    padding: var(--space-2) var(--space-4);
+    background: var(--parchment);
+    border: 1.5px var(--frame-style) var(--border);
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+}
+
+.theme-style__pill:has(input:checked) {
+    background: var(--gold-lit);
+    border: 2px solid var(--plum);
+    font-weight: 700;
+}
+
+.theme-style__pill:has(input:focus-visible),
+.theme-style__picture:has(input:focus-visible) {
+    outline: 3px solid var(--purple);
+    outline-offset: 2px;
+}
+
+.theme-style__picture {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-2);
+    background: var(--parchment);
+    border: 1.5px var(--frame-style) var(--border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+}
+
+.theme-style__picture:has(input:checked) {
+    border: 3px solid var(--plum);
+    background: var(--gold-lit);
+}
+
+.theme-style__picture img {
+    display: block;
+    width: 120px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    image-rendering: pixelated;
+}
+
+.theme-style__picture-none {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 120px;
+    height: 64px;
+    font-size: 0.85rem;
+    text-align: center;
+}

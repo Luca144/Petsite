@@ -22,7 +22,7 @@
     text-align: center;
     gap: var(--space-2);
     padding: var(--space-6) var(--space-4);
-    border: 1.5px solid var(--border);
+    border: 1.5px var(--frame-style) var(--border);
     border-radius: var(--radius-lg);
     /* The tint pooling at the top and fading down, so the artwork sits in the
        strongest colour and the words sit on near-parchment where they read best. */
@@ -92,7 +92,7 @@
 .item-discard {
     width: 100%;
     max-width: 32rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px var(--frame-style) var(--border);
     padding-top: var(--space-4);
 }
 

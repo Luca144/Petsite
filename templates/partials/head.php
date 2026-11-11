@@ -73,6 +73,7 @@ use Felkyo\Http\AssetUrl;
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/themes.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/company.css') ?>">
     <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/feedback.css') ?>">
+    <link rel="stylesheet" href="<?= AssetUrl::versioned('/css/look.css') ?>">
 
     <?php if (!empty($activeTheme)): ?>
         <?php /* The player's chosen theme (M4.1): overrides for the colour
@@ -83,4 +84,17 @@ use Felkyo\Http\AssetUrl;
         <?php if ($activeTheme->easyReading): ?>
             <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700&display=swap">
         <?php endif; ?>
+        <?php if ($activeTheme->style->fontFamilies() !== []): ?>
+            <?php /* The theme's chosen fonts. The family strings come from
+                     ThemeStyle's own list, never from what was typed. */ ?>
+            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=<?= $this->e(implode('&family=', $activeTheme->style->fontFamilies())) ?>&display=swap">
+        <?php endif; ?>
+    <?php endif; ?>
+
+    <?php if (!empty($customCss)): ?>
+        <?php /* The panel's fine-tuning CSS, last so it wins. Printed raw on
+                 purpose: CustomCssRules refused anything with "<" (the only
+                 way out of a <style> tag), outside addresses and escapes —
+                 on saving, and again on every request. */ ?>
+        <style><?= $customCss ?></style>
     <?php endif; ?>

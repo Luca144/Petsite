@@ -67,7 +67,7 @@
     font-weight: 700;
     color: var(--plum);
     background: var(--panel);
-    border: 2px solid var(--border);
+    border: 2px var(--frame-style) var(--border);
     border-radius: var(--radius-md);
     box-shadow: 0 6px 14px -10px rgba(61, 43, 79, 0.5);
     transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
@@ -159,7 +159,7 @@
     font-weight: 600;
     color: var(--plum);
     background: var(--panel);
-    border: 1.5px solid var(--gold);
+    border: 1.5px var(--frame-style) var(--gold);
     border-radius: var(--radius-pill);
 }
 

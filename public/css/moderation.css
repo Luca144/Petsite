@@ -10,7 +10,7 @@
 
 .notice-card {
     background: var(--panel);
-    border: 2px solid var(--gold);
+    border: 2px var(--frame-style) var(--gold);
     border-radius: var(--radius-lg);
     padding: 1rem;
     margin-bottom: 1rem;
@@ -59,7 +59,7 @@
 .admin-report__priority--1,
 .admin-report__priority--2 {
     background: var(--purple);
-    border: 1px solid var(--gold);
+    border: 1px var(--frame-style) var(--gold);
 }
 
 .admin-report__reason {
@@ -68,7 +68,7 @@
 
 /* The reported words themselves, set apart so the eye finds them. */
 .admin-report__words {
-    border-left: 3px solid var(--border);
+    border-left: 3px var(--frame-style) var(--border);
     padding-left: 0.75rem;
     margin: 0.5rem 0;
 }
@@ -117,7 +117,7 @@
     min-width: 44px;
     min-height: 44px;
     padding: 0 0.6rem;
-    border: 2px solid var(--border);
+    border: 2px var(--frame-style) var(--border);
     border-radius: var(--radius-lg);
     cursor: pointer;
     font-family: var(--font-mono);
@@ -154,7 +154,7 @@
 }
 
 .admin-account__list li {
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px var(--frame-style) var(--border);
     padding-bottom: 0.4rem;
 }
 

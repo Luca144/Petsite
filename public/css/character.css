@@ -121,7 +121,7 @@
     font-size: 0.75rem;
     color: var(--plum);
     background: var(--frost);
-    border: 1px solid var(--border);
+    border: 1px var(--frame-style) var(--border);
     border-radius: var(--radius-pill);
 }
 
@@ -147,8 +147,8 @@
 .trait {
     padding: var(--space-3);
     background: var(--panel);
-    border: 1.5px solid var(--border);
-    border-left: 5px solid var(--gold);
+    border: 1.5px var(--frame-style) var(--border);
+    border-left: 5px var(--frame-style) var(--gold);
     border-radius: var(--radius-sm);
 }
 
@@ -233,7 +233,7 @@
     gap: var(--space-3);
     padding: var(--space-2) var(--space-3);
     background: var(--parchment);
-    border: 1.5px solid var(--gold);
+    border: 1.5px var(--frame-style) var(--gold);
     border-radius: var(--radius-md);
 }
 
@@ -253,7 +253,7 @@
     font-size: 1.4rem;
     color: var(--gold-lit);
     background: radial-gradient(circle at 35% 30%, var(--plum), var(--plum-deep));
-    border: 2px solid var(--gold);
+    border: 2px var(--frame-style) var(--gold);
     border-radius: 50%;
     box-shadow: var(--glow-gold);
 }
@@ -291,7 +291,7 @@
     width: 72px;
     height: 72px;
     border-radius: 50%;
-    border: 3px solid var(--gold);
+    border: 3px var(--frame-style) var(--gold);
     background: var(--panel);
     object-fit: cover;
     box-shadow: var(--glow-gold);
@@ -313,7 +313,7 @@
     min-width: 0;
     padding: var(--space-3) var(--space-4);
     background: var(--parchment);
-    border: 2px solid var(--gold);
+    border: 2px var(--frame-style) var(--gold);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-raised);
 }
@@ -327,8 +327,8 @@
     width: 18px;
     height: 18px;
     background: var(--parchment);
-    border-left: 2px solid var(--gold);
-    border-bottom: 2px solid var(--gold);
+    border-left: 2px var(--frame-style) var(--gold);
+    border-bottom: 2px var(--frame-style) var(--gold);
     transform: rotate(45deg);
 }
 

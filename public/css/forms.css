@@ -43,7 +43,7 @@
     font-size: 1rem;
     color: var(--plum);
     background: var(--parchment);
-    border: 1.5px solid var(--border);
+    border: 1.5px var(--frame-style) var(--border);
     border-radius: var(--radius-sm);
     padding: var(--space-3);
     min-height: 44px;
@@ -86,7 +86,7 @@
    left edge and the message text carry the meaning together, not colour alone. */
 .flash {
     background: var(--panel);
-    border: 1.5px solid var(--gold);
+    border: 1.5px var(--frame-style) var(--gold);
     border-left-width: 5px;
     border-radius: var(--radius-sm);
     padding: var(--space-3) var(--space-4);

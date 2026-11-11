@@ -13,6 +13,10 @@
  * private. That is deliberate: the build plan asks that players be shown clearly
  * what others can see, and a page that shows the owner something different would
  * be the one thing guaranteed to mislead them.
+ *
+ * The about / creatures / company parts can be reordered in the panel (Site
+ * look): each is captured as a named section, then printed in that order
+ * ($sectionOrders, shared with every template).
  */
 $this->layout('layout', ['title' => $profile->username . ' — Felkyo Creatures']);
 ?>
@@ -45,6 +49,7 @@ $this->layout('layout', ['title' => $profile->username . ' — Felkyo Creatures'
     </p>
 <?php endif; ?>
 
+<?php $this->start('part-about') ?>
 <section class="profile-about">
     <h3 class="panel-label">About</h3>
 
@@ -73,7 +78,9 @@ $this->layout('layout', ['title' => $profile->username . ' — Felkyo Creatures'
         <?= $this->insert('partials/report-link', ['subject' => 'profile_about', 'id' => $profile->id]) ?>
     <?php endif; ?>
 </section>
+<?php $this->stop() ?>
 
+<?php $this->start('part-creatures') ?>
 <section class="profile-creatures">
     <h3 class="panel-label">Creatures</h3>
 
@@ -155,10 +162,23 @@ $this->layout('layout', ['title' => $profile->username . ' — Felkyo Creatures'
         </p>
     <?php endif; ?>
 </section>
+<?php $this->stop() ?>
 
+<?php $this->start('part-company') ?>
 <?= $this->insert('partials/profile-company', [
     'profile' => $profile, 'company' => $company ?? null, 'isOwner' => $isOwner,
 ]) ?>
+<?php $this->stop() ?>
+
+<?php
+// The three middle parts in the order chosen in the panel (Site look);
+// the header above and the log-out button below always stay where they are.
+foreach ($sectionOrders['profile'] ?? array_keys(\Felkyo\Look\SiteLook::SECTIONS['profile']) as $part) {
+    // Already-escaped HTML from the parts above, so it is printed as it is.
+    echo $this->section('part-' . $part) ?? '', "
+";
+}
+?>
 
 <?php if ($isOwner): ?>
     <?php /* The way out lives here, at the very bottom of your own page.

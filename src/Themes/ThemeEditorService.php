@@ -26,7 +26,35 @@ final class ThemeEditorService
     public function __construct(
         private ThemeRepository $themes,
         private AuditLogRepository $auditLog,
+        // For checking a chosen background/banner really is site art.
+        private ?\Felkyo\Art\ArtRepository $art = null,
     ) {
+    }
+
+    /**
+     * Save a theme's style: fonts, corners, frames, glow, drifting symbols
+     * (each checked against ThemeStyle's lists — anything else is dropped)
+     * and its background and banner (each must be a picture uploaded as
+     * "Site art", or nothing for the site's own).
+     *
+     * @param array<string, mixed> $choices
+     */
+    public function saveStyle(User $actor, int $id, array $choices, ?int $backgroundArtId, ?int $bannerArtId, string $ip): ContentEditResult
+    {
+        if ($this->themes->findById($id) === null) {
+            return ContentEditResult::refused('That theme is gone.');
+        }
+        foreach (['background' => $backgroundArtId, 'banner' => $bannerArtId] as $what => $artId) {
+            if ($artId !== null && $this->art?->findById($artId)?->kind !== \Felkyo\Art\ArtKind::Site) {
+                return ContentEditResult::refused(sprintf('That %s picture isn\'t in the art store as "Site art".', $what));
+            }
+        }
+
+        $style = ThemeStyle::fromChoices($choices);
+        $this->themes->saveStyle($id, $style, $backgroundArtId, $bannerArtId);
+        $this->audit($actor, $id, ['style' => $style->choices, 'background' => $backgroundArtId, 'banner' => $bannerArtId], $ip);
+
+        return ContentEditResult::ok('Style saved. (Players wearing this theme see it straight away.)', $id);
     }
 
     public function create(User $actor, string $name, string $ip): ContentEditResult

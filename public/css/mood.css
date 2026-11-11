@@ -54,7 +54,7 @@
     height: 10px;
     border-radius: var(--radius-pill);
     background: var(--panel);
-    border: 1.5px solid var(--border);
+    border: 1.5px var(--frame-style) var(--border);
     overflow: hidden;
 }
 

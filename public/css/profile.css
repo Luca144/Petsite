@@ -18,7 +18,7 @@
     align-items: center;
     gap: var(--space-4);
     padding-bottom: var(--space-4);
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px var(--frame-style) var(--border);
 }
 
 .profile-header__avatar {
@@ -26,7 +26,7 @@
     height: 96px;
     flex: 0 0 auto;
     border-radius: var(--radius-md);
-    border: 2px solid var(--border);
+    border: 2px var(--frame-style) var(--border);
     background: var(--panel);
     object-fit: contain;
 }
@@ -95,7 +95,7 @@
 .profile-form__textarea {
     width: 100%;
     padding: var(--space-3);
-    border: 1.5px solid var(--border);
+    border: 1.5px var(--frame-style) var(--border);
     border-radius: var(--radius-md);
     background: var(--parchment);
     color: var(--ink);
@@ -146,7 +146,7 @@
     padding: var(--space-3);
     text-align: center;
     background: var(--panel);
-    border: 1.5px solid var(--border);
+    border: 1.5px var(--frame-style) var(--border);
     border-radius: var(--radius-md);
     cursor: pointer;
     transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
@@ -254,7 +254,7 @@
     text-align: center;
     text-decoration: none;
     color: var(--ink);
-    border: 1.5px solid var(--border);
+    border: 1.5px var(--frame-style) var(--border);
     border-radius: var(--radius-lg);
     background: var(--panel);
     transition: transform 200ms ease, box-shadow 200ms ease;

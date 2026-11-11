@@ -30,6 +30,8 @@ enum ArtKind: string
     case Avatar = 'avatar';
     // A keepsake badge's little picture.
     case Badge = 'badge';
+    // A page background tile or a banner a theme can wear (Site look, 2026-11-11).
+    case Site = 'site';
 
     /** What a person sees it called. */
     public function label(): string
@@ -43,6 +45,7 @@ enum ArtKind: string
             self::Library => 'Library art',
             self::Avatar => 'Player avatar',
             self::Badge => 'Badge',
+            self::Site => 'Site art',
         };
     }
 
@@ -61,6 +64,7 @@ enum ArtKind: string
             self::Library => 'A larger illustration for the library page.',
             self::Avatar => 'A face players can choose for their own page — appears in their choices at once.',
             self::Badge => 'The small picture of a keepsake badge (about 48×48).',
+            self::Site => 'A page background tile or a banner for a theme (a banner about 800×150).',
         };
     }
 

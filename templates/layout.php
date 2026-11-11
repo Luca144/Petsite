@@ -50,9 +50,15 @@ use Felkyo\Http\AssetUrl;
     <!-- Decorative drifting stars (four-pointed ✦ and ✧ — Skerro asked for stars,
          not the old floral glyphs, which read as leaves); hidden from screen readers and from anyone
          who prefers reduced motion. They now fall in front of a real sky. -->
-    <div class="site-motes" aria-hidden="true">
-        <span>&#10022;</span><span>&#10023;</span><span>&#10022;</span><span>&#10023;</span>
-    </div>
+    <?php /* A theme may choose other drifting symbols, or none (ThemeStyle::MOTES).
+             They are HTML entities from that list, never typed text, so they
+             are printed as they are. */
+    $motes = !empty($activeTheme) ? $activeTheme->style->motes() : ['&#10022;', '&#10023;']; ?>
+    <?php if ($motes !== []): ?>
+        <div class="site-motes" aria-hidden="true">
+            <span><?= $motes[0] ?></span><span><?= $motes[1] ?></span><span><?= $motes[0] ?></span><span><?= $motes[1] ?></span>
+        </div>
+    <?php endif; ?>
 
     <?php if (!empty($showDemoNotice)): ?>
         <!-- On the deployed site this says plainly that Felkyo is a demo, not a
@@ -123,7 +129,9 @@ use Felkyo\Http\AssetUrl;
                              the image's alt, so a screen reader hears "Felkyo
                              Creatures" once, as a link. */ ?>
                     <a class="site-header__home" href="/">
-                        <img class="site-header__banner" src="/assets/art/logo-large.png"
+                        <?php /* A theme may bring its own banner (uploaded as
+                                 site art); otherwise the painted logo. */ ?>
+                        <img class="site-header__banner" src="<?= $this->e(!empty($activeTheme) && $activeTheme->bannerUrl() !== null ? $activeTheme->bannerUrl() : '/assets/art/logo-large.png') ?>"
                              alt="Felkyo Creatures" width="800" height="150">
                     </a>
                 </h1>
@@ -145,6 +153,22 @@ use Felkyo\Http\AssetUrl;
 
             <!-- The page's own content is dropped in here. -->
             <main id="main">
+                <?php if (!empty($isPreviewingCss)): ?>
+                    <?php /* Only the person previewing fine-tuning CSS sees this —
+                             a reminder on every page, so a draft is never
+                             forgotten (and never mistaken for what everyone sees). */ ?>
+                    <p class="look-preview-bar" role="status">
+                        You&rsquo;re previewing fine-tuning CSS &mdash; only you see it.
+                        <a href="/admin/look/css">Publish or stop</a>
+                    </p>
+                <?php endif; ?>
+                <?php if (!empty($announcement)): ?>
+                    <?php /* The panel's announcement line (Site look). Staff-written,
+                             and escaped like everything else. */ ?>
+                    <p class="site-announcement" role="note">
+                        <span aria-hidden="true">&#10022;</span> <?= $this->e($announcement) ?>
+                    </p>
+                <?php endif; ?>
                 <?php foreach ($unreadNotices ?? [] as $notice): ?>
                     <?php /* Official notices (M2.7) — the one-way channel. They
                              sit ABOVE the flash and on every page until the

@@ -161,6 +161,7 @@ use Felkyo\Pound\PoundService;
 use Felkyo\Http\Controllers\PoundController;
 use Felkyo\Http\Controllers\WelcomeController;
 use Felkyo\Http\Controllers\BugReportController;
+use Felkyo\Http\Controllers\AdminLookController;
 use Felkyo\Http\Controllers\AdminBadgesController;
 use Felkyo\Http\Controllers\AdminGiftsController;
 use Felkyo\Admin\GiftService;
@@ -263,7 +264,12 @@ if ($pendingMigrations > 0) {
 // guaranteed to exist by the time it is read.)
 $settingsCatalog = new SettingsCatalog();
 $siteSettingsRepository = new SiteSettingsRepository($pdo);
-$config = $settingsCatalog->apply($config, $siteSettingsRepository->overrides());
+$siteOverrides = $siteSettingsRepository->overrides();
+$config = $settingsCatalog->apply($config, $siteOverrides);
+// The site-wide look (default theme, section order, announcement, fine-tuning
+// CSS) lives in the same rows under "look." keys — read by the line above
+// already, so it costs nothing extra. See Felkyo\Look\SiteLook.
+$siteLook = \Felkyo\Look\SiteLook::fromSettings($siteOverrides);
 
 // ---- Uploaded pictures are served HERE, before anything else is built ----
 //
@@ -602,6 +608,20 @@ $justPetted = $session->takeCelebration() === 'pet';
 // (see sidebar-fold.js, and the Product Owner's request for exactly this).
 $sidebarOpen = ($_COOKIE['felkyo_sidebar'] ?? 'open') !== 'closed';
 
+// THE THEME THIS PAGE WEARS: the player's own choice if they made one,
+// otherwise the default the artist picked in the panel (also for guests),
+// otherwise null — the site's own look in theme.css.
+$activeTheme = $currentUser !== null ? $themeRepository->forUser($currentUser->id) : null;
+if ($activeTheme === null && $siteLook->defaultThemeId !== null) {
+    $activeTheme = $themeRepository->findPublished($siteLook->defaultThemeId);
+}
+
+// The fine-tuning CSS: what everyone sees — unless THIS person is trying a
+// draft (the panel's Preview), which only their own session holds. A draft is
+// re-checked by the same rules as published CSS before it is printed.
+$previewCss = $currentUser !== null ? $session->get(\Felkyo\Http\Controllers\AdminLookController::PREVIEW_KEY) : null;
+$isPreviewingCss = is_string($previewCss) && \Felkyo\Look\CustomCssRules::problemWith($previewCss) === null;
+
 // Share these with every template (used by the shared layout's shell).
 $templates->addData([
     // The official notices (M2.7): cards above the flash until each is
@@ -612,8 +632,15 @@ $templates->addData([
     'justPetted' => $justPetted,
     'sidebarOpen' => $sidebarOpen,
     'currentUser' => $currentUser,
-    // M4: the theme this player wears (null = the site's own look).
-    'activeTheme' => $currentUser !== null ? $themeRepository->forUser($currentUser->id) : null,
+    // M4: the theme this page wears (null = the site's own look).
+    'activeTheme' => $activeTheme,
+    // The panel's site look: printed raw in head.php ONLY because
+    // CustomCssRules has checked it (on save and again just now).
+    'customCss' => $isPreviewingCss ? $previewCss : $siteLook->customCss,
+    'isPreviewingCss' => $isPreviewingCss,
+    'announcement' => $siteLook->announcement,
+    // The order of the sections on creature and player pages.
+    'sectionOrders' => $siteLook->orders,
     'creatureMoment' => $creatureMoment,
     'favouriteSummary' => $favouriteSummary,
     'currentAvatarPath' => $currentAvatarPath,
@@ -934,8 +961,17 @@ $adminBadgesController = new AdminBadgesController(
 // M4 in the panel: the theme editor.
 $adminThemesController = new AdminThemesController(
     $templates, $session, $csrf, $userRepository, $themeRepository,
-    new ThemeEditorService($themeRepository, $auditLogRepository),
-    $rateLimiter, $config['security']['rate_limit_content_save']
+    new ThemeEditorService($themeRepository, $auditLogRepository, $artRepository),
+    $rateLimiter, $config['security']['rate_limit_content_save'], $artRepository
+);
+
+// The panel's site look: default theme, section order, announcement, and
+// the fine-tuning CSS with its history.
+$customCssRepository = new \Felkyo\Look\CustomCssRepository($pdo);
+$adminLookController = new AdminLookController(
+    $templates, $session, $csrf, $userRepository, $siteLook,
+    new \Felkyo\Look\SiteLookService($siteSettingsRepository, $themeRepository, $customCssRepository, $auditLogRepository),
+    $themeRepository, $customCssRepository, $rateLimiter, $config['security']['rate_limit_content_save']
 );
 
 // M3 in the panel: traits and the level-title / age ladders.
@@ -1249,11 +1285,24 @@ $router->post('/admin/badges/{id}/picture', $adminGate->protect(Role::Artist, [$
 $router->get('/admin/welcome', $adminGate->protect(Role::Artist, [$welcomeController, 'edit']));
 $router->post('/admin/welcome', $adminGate->protect(Role::Artist, [$welcomeController, 'save']));
 
+// The site look and the fine-tuning CSS. Artist role.
+$router->get('/admin/look', $adminGate->protect(Role::Artist, [$adminLookController, 'show']));
+$router->post('/admin/look/default-theme', $adminGate->protect(Role::Artist, [$adminLookController, 'defaultTheme']));
+$router->post('/admin/look/sections', $adminGate->protect(Role::Artist, [$adminLookController, 'moveSection']));
+$router->post('/admin/look/sections/reset', $adminGate->protect(Role::Artist, [$adminLookController, 'resetSections']));
+$router->post('/admin/look/announcement', $adminGate->protect(Role::Artist, [$adminLookController, 'announcement']));
+$router->get('/admin/look/css', $adminGate->protect(Role::Artist, [$adminLookController, 'css']));
+$router->post('/admin/look/css/preview', $adminGate->protect(Role::Artist, [$adminLookController, 'preview']));
+$router->post('/admin/look/css/stop-preview', $adminGate->protect(Role::Artist, [$adminLookController, 'stopPreview']));
+$router->post('/admin/look/css/publish', $adminGate->protect(Role::Artist, [$adminLookController, 'publishCss']));
+$router->post('/admin/look/css/restore/{id}', $adminGate->protect(Role::Artist, [$adminLookController, 'restoreCss']));
+
 // M4 — themes. Artist role.
 $router->get('/admin/themes', $adminGate->protect(Role::Artist, [$adminThemesController, 'index']));
 $router->post('/admin/themes/create', $adminGate->protect(Role::Artist, [$adminThemesController, 'create']));
 $router->get('/admin/themes/{id}', $adminGate->protect(Role::Artist, [$adminThemesController, 'show']));
 $router->post('/admin/themes/{id}/save', $adminGate->protect(Role::Artist, [$adminThemesController, 'save']));
+$router->post('/admin/themes/{id}/style', $adminGate->protect(Role::Artist, [$adminThemesController, 'saveStyle']));
 $router->post('/admin/themes/{id}/publish', $adminGate->protect(Role::Artist, [$adminThemesController, 'publish']));
 $router->post('/admin/themes/{id}/unpublish', $adminGate->protect(Role::Artist, [$adminThemesController, 'unpublish']));
 $router->post('/admin/themes/{id}/delete', $adminGate->protect(Role::Artist, [$adminThemesController, 'delete']));

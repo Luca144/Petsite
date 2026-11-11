@@ -296,6 +296,24 @@ $save('admin-bugs', $fetch('/admin/bugs?status=fixed'));
 $save('admin-themes', $fetch('/admin/themes'));
 preg_match('~href="/admin/themes/(\d+)"~', $fetch('/admin/themes'), $themeM);
 $save('admin-theme-edit', $fetch('/admin/themes/' . ($themeM[1] ?? '0')));
+$save('admin-look', $fetch('/admin/look'));
+$save('admin-look-css', $fetch('/admin/look/css'));
+// One page wearing a styled theme (pixel headings, round corners, stitched
+// frames, hearts, an announcement) — frames and fonts must be judged by eye.
+// Everything is put back straight after.
+$styledId = $themeM[1] ?? '0';
+$fetch('/admin/themes/' . $styledId . '/style', [
+    '_csrf_token' => $token($fetch('/admin/themes/' . $styledId)),
+    'heading_font' => 'pixelify', 'body_font' => 'atkinson', 'corners' => 'round',
+    'frames' => 'stitched', 'glow' => 'bright', 'motes' => 'hearts', 'background_art_id' => '', 'banner_art_id' => '',
+]);
+$fetch('/admin/themes/' . $styledId . '/publish', ['_csrf_token' => $token($fetch('/admin/themes/' . $styledId))]);
+$fetch('/admin/look/default-theme', ['_csrf_token' => $token($fetch('/admin/look')), 'theme_id' => $styledId]);
+$fetch('/admin/look/announcement', ['_csrf_token' => $token($fetch('/admin/look')), 'announcement' => 'The autumn festival starts on Saturday — come and see!']);
+$save('styled-theme', $fetch($creature));
+$fetch('/admin/look/announcement', ['_csrf_token' => $token($fetch('/admin/look')), 'announcement' => '']);
+$fetch('/admin/look/default-theme', ['_csrf_token' => $token($fetch('/admin/look')), 'theme_id' => '']);
+$fetch('/admin/themes/' . $styledId . '/style', ['_csrf_token' => $token($fetch('/admin/themes/' . $styledId)), 'background_art_id' => '', 'banner_art_id' => '']);
 $save('admin-creature-picker', $fetch('/admin/creatures/' . $shotSpeciesId . '/picture/juvenile'));
 $save('admin-creature-preview', $fetch('/admin/creatures/' . $shotSpeciesId . '/preview'));
 

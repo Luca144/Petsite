@@ -52,7 +52,7 @@
     padding: var(--space-4);
     text-align: center;
     background: var(--parchment);
-    border: 1.5px solid var(--border);
+    border: 1.5px var(--frame-style) var(--border);
     border-radius: var(--radius-md);
 }
 

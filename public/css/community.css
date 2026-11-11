@@ -38,7 +38,7 @@
     text-decoration: none;
     color: var(--plum);
     background: var(--panel);
-    border: 1.5px solid var(--border);
+    border: 1.5px var(--frame-style) var(--border);
     border-radius: var(--radius-pill);
     transition: transform 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
 }

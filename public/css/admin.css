@@ -35,7 +35,7 @@
        parchment — a secret you can't read whole is a secret typed wrong. */
     word-break: break-all;
     background: var(--panel);
-    border: 1px solid var(--border);
+    border: 1px var(--frame-style) var(--border);
     border-radius: var(--radius-sm);
     padding: 0.75rem;
     margin: 0.5rem 0;
@@ -53,7 +53,7 @@
 
 .admin-recovery__warning {
     background: var(--panel);
-    border: 1px solid var(--gold);
+    border: 1px var(--frame-style) var(--gold);
     border-radius: var(--radius-sm);
     padding: 0.75rem;
 }
@@ -73,7 +73,7 @@
     letter-spacing: 0.1em;
     text-align: center;
     background: var(--panel);
-    border: 1px solid var(--border);
+    border: 1px var(--frame-style) var(--border);
     border-radius: var(--radius-sm);
     padding: 0.6rem 0.25rem;
     user-select: all;
@@ -170,7 +170,7 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 0.5rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px var(--frame-style) var(--border);
     padding-bottom: 0.75rem;
 }
 
@@ -232,7 +232,7 @@
     column-gap: 0.75rem;
     align-items: center;
     background: var(--panel);
-    border: 2px solid var(--border);
+    border: 2px var(--frame-style) var(--border);
     border-radius: var(--radius-md);
     padding: 0.75rem;
     cursor: pointer;
@@ -346,7 +346,7 @@
     flex-wrap: wrap;
     gap: 0.35rem 0.6rem;
     align-items: baseline;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px var(--frame-style) var(--border);
     padding-bottom: 0.5rem;
 }
 
@@ -416,7 +416,7 @@
 }
 
 .admin-setting__job {
-    border-top: 1px solid var(--border);
+    border-top: 1px var(--frame-style) var(--border);
     padding-top: 0.75rem;
     margin-top: 0.75rem;
 }

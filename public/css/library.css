@@ -32,7 +32,7 @@
     min-height: 44px;
     padding: var(--space-4) var(--space-3);
     background: linear-gradient(160deg, var(--plum), var(--plum-deep));
-    border: 2px solid var(--gold);
+    border: 2px var(--frame-style) var(--gold);
     border-radius: var(--radius-sm) var(--radius-md) var(--radius-md) var(--radius-sm);
     /* The thick left edge reads as the book's spine. */
     border-left-width: 8px;
@@ -110,7 +110,7 @@
     column-gap: var(--space-3);
     padding: var(--space-3);
     background: var(--panel);
-    border: 1.5px solid var(--border);
+    border: 1.5px var(--frame-style) var(--border);
     border-radius: var(--radius-md);
 }
 
@@ -263,7 +263,7 @@
     margin-top: calc(var(--space-2) * -1);
     padding: var(--space-8) var(--space-6) var(--space-6);
     background: var(--parchment);
-    border: 1.5px solid var(--border);
+    border: 1.5px var(--frame-style) var(--border);
     border-top: none;
     border-radius: 0 0 var(--radius-md) var(--radius-md);
     font-family: var(--font-display);
@@ -346,7 +346,7 @@
     min-height: 44px;
     padding: var(--space-3);
     background: var(--panel);
-    border: 1.5px solid var(--border);
+    border: 1.5px var(--frame-style) var(--border);
     border-radius: var(--radius-md);
     text-decoration: none;
     color: var(--plum);
@@ -415,7 +415,7 @@
     max-width: 100%;
     height: auto;
     margin: 0 auto var(--space-4);
-    border: 1.5px solid var(--border);
+    border: 1.5px var(--frame-style) var(--border);
     border-radius: var(--radius-sm);
 }
 

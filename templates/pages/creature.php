@@ -25,10 +25,17 @@
  *   $canSignGuestbook (bool)
  *   $nameMaxLength (int)
  *   $viewerIsLoggedIn (bool)
+ *   $sectionOrders (array) — the panel's chosen order of the parts (Site look)
+ *
+ * THE PARTS CAN BE REORDERED in the panel (Site look). Each part is captured
+ * as a named Plates section below, then printed in the chosen order. A part
+ * that prints nothing (the share box without a site address, the keeping
+ * panel for a visitor) is simply skipped, rule and all.
  */
 $this->layout('layout', ['title' => $this->e($creature->name) . ' — Felkyo Creatures']);
 ?>
 
+<?php $this->start('part-sheet') ?>
 <?= $this->insert('partials/creature-sheet', [
     'creature' => $creature,
     'species' => $species,
@@ -41,19 +48,23 @@ $this->layout('layout', ['title' => $this->e($creature->name) . ' — Felkyo Cre
     'isOwner' => !empty($isOwner),
     'treats' => $treats ?? [],
 ]) ?>
+<?php $this->stop() ?>
 
+<?php $this->start('part-share') ?>
 <?php if (!empty($siteUrl) && $species !== null): ?>
     <?= $this->insert('partials/creature-share', [
         'creature' => $creature, 'imagePath' => $species->spriteUrlFor($stage), 'siteUrl' => $siteUrl,
     ]) ?>
 <?php endif; ?>
+<?php $this->stop() ?>
 
+<?php $this->start('part-character') ?>
 <?= $this->insert('partials/creature-character', [
     'creature' => $creature, 'stage' => $stage, 'character' => $character ?? null,
 ]) ?>
+<?php $this->stop() ?>
 
-<hr class="rule">
-
+<?php $this->start('part-about') ?>
 <h2 class="panel-label">About <?= $this->e($creature->name) ?></h2>
 <div class="card">
     <?php if ($creature->isBioHidden()): ?>
@@ -81,17 +92,36 @@ $this->layout('layout', ['title' => $this->e($creature->name) . ' — Felkyo Cre
         ]) ?>
     <?php endif; ?>
 </div>
+<?php $this->stop() ?>
 
-<hr class="rule">
-
+<?php $this->start('part-guestbook') ?>
 <?= $this->insert('partials/guestbook', [
     'creature' => $creature,
     'guestbook' => $guestbook,
     'canSign' => $canSignGuestbook,
     'isOwner' => !empty($isOwner),
 ]) ?>
+<?php $this->stop() ?>
 
+<?php $this->start('part-keeping') ?>
 <?php if (!empty($isOwner)): ?>
-    <hr class="rule">
     <?= $this->insert('partials/creature-keeping', ['creature' => $creature, 'stage' => $stage]) ?>
 <?php endif; ?>
+<?php $this->stop() ?>
+
+<?php
+// Print the parts in the chosen order (SiteLook fills in any part a saved
+// order lacks). A thin rule separates the bigger parts, as it always has.
+$printedAny = false;
+foreach ($sectionOrders['creature'] ?? array_keys(\Felkyo\Look\SiteLook::SECTIONS['creature']) as $part) {
+    $html = trim($this->section('part-' . $part) ?? '');
+    if ($html === '') {
+        continue;
+    }
+    if ($printedAny && in_array($part, ['about', 'guestbook', 'keeping'], true)) {
+        echo '<hr class="rule">', "\n";
+    }
+    // Already-escaped HTML from the parts above, so it is printed as it is.
+    echo $html, "\n";
+    $printedAny = true;
+}

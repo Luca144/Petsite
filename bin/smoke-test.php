@@ -849,6 +849,97 @@ check('a report can be marked fixed', str_contains($markedFixed['body'], 'is now
 check('and then sits under "Fixed"', str_contains(request('/admin/bugs?status=fixed')['body'], 'Smoke'));
 
 // ---------------------------------------------------------------------------
+// The site look (artist role — the owner passes): the announcement, the
+// order of a page's parts, the default theme, a theme's style, and the
+// fine-tuning CSS with preview, refusal, publish and restore. Everything is
+// put back at the end, so the next run starts from the site's own look.
+// ---------------------------------------------------------------------------
+
+echo "\nThe site look:\n";
+
+$lookPage = request('/admin/look');
+check('the Site look screen opens', str_contains($lookPage['body'], 'The look everyone sees'));
+
+$announced = 'Smoke announcement ' . $name;
+request('/admin/look/announcement', ['_csrf_token' => tokenIn($lookPage['body']), 'announcement' => $announced]);
+check('an announcement shows on every page', str_contains(request('/creatures')['body'], $announced));
+request('/admin/look/announcement', ['_csrf_token' => tokenFrom('/admin/look'), 'announcement' => '']);
+check('and an empty one takes it down', !str_contains(request('/creatures')['body'], 'class="site-announcement"'));
+
+// Move "Mantelpiece, badges and friends" to the top of player pages.
+foreach ([1, 2] as $_) {
+    request('/admin/look/sections', [
+        '_csrf_token' => tokenFrom('/admin/look'), 'page' => 'profile', 'section' => 'company', 'direction' => 'up',
+    ]);
+}
+$reordered = request('/player/' . $name)['body'];
+check(
+    'moving a part up really moves it on the page',
+    strpos($reordered, 'class="profile-creatures"') > strpos($reordered, 'class="profile-about"')
+        && strpos($reordered, 'class="mantelpiece"') !== false
+        && strpos($reordered, 'class="mantelpiece"') < strpos($reordered, 'class="profile-about"'),
+    'company part not first'
+);
+request('/admin/look/sections/reset', ['_csrf_token' => tokenFrom('/admin/look'), 'page' => 'profile']);
+$restored = request('/player/' . $name)['body'];
+check(
+    'and "back to the site\'s own order" puts it back',
+    strpos($restored, 'class="profile-about"') < strpos($restored, 'class="profile-creatures"')
+);
+
+// A theme's style: pixel heading letters, stitched frames and snowflakes, on
+// a published theme made the default — so every page wears it.
+preg_match('~href="/admin/themes/(\d+)"~', request('/admin/themes')['body'], $themeMatch);
+$styleThemeId = $themeMatch[1] ?? '0';
+$styleSaved = request('/admin/themes/' . $styleThemeId . '/style', [
+    '_csrf_token' => tokenFrom('/admin/themes/' . $styleThemeId),
+    'heading_font' => 'pixelify', 'body_font' => 'nunito', 'corners' => 'round',
+    'frames' => 'stitched', 'glow' => 'soft', 'motes' => 'snow',
+    'background_art_id' => '', 'banner_art_id' => '',
+]);
+check('a theme\'s style saves', str_contains($styleSaved['body'], 'Style saved'));
+request('/admin/themes/' . $styleThemeId . '/publish', ['_csrf_token' => tokenFrom('/admin/themes/' . $styleThemeId)]);
+request('/admin/look/default-theme', ['_csrf_token' => tokenFrom('/admin/look'), 'theme_id' => $styleThemeId]);
+$wearing = request('/creatures')['body'];
+check(
+    'the default theme\'s style reaches the page (letters, frames, snow)',
+    str_contains($wearing, 'Pixelify') && str_contains($wearing, '--frame-style: dashed') && str_contains($wearing, '&#10052;')
+);
+request('/admin/look/default-theme', ['_csrf_token' => tokenFrom('/admin/look'), 'theme_id' => '']);
+request('/admin/themes/' . $styleThemeId . '/style', [
+    '_csrf_token' => tokenFrom('/admin/themes/' . $styleThemeId), 'background_art_id' => '', 'banner_art_id' => '',
+]);
+check('and taking the default away puts the site\'s own look back', !str_contains(request('/creatures')['body'], '--frame-style: dashed'));
+
+// The fine-tuning CSS: hostile CSS is refused; preview shows only to you;
+// publish shows to everyone; an old version can be put back.
+$cssPage = request('/admin/look/css');
+$refusedClose = request('/admin/look/css/publish', [
+    '_csrf_token' => tokenIn($cssPage['body']), 'css' => 'p{}</style><script>alert(1)</script>',
+]);
+check('CSS that tries to close the style tag is refused', str_contains($refusedClose['body'], 'Not saved'));
+$refusedUrl = request('/admin/look/css/publish', [
+    '_csrf_token' => tokenFrom('/admin/look/css'), 'css' => 'body{background:url(https://tracker.example/p.gif)}',
+]);
+check('CSS loading a picture from another site is refused', str_contains($refusedUrl['body'], 'must come from this site'));
+
+$smokeCss = '.smoke-css-' . $name . ' { color: var(--purple); }';
+$previewing = request('/admin/look/css/preview', ['_csrf_token' => tokenFrom('/admin/look/css'), 'css' => $smokeCss]);
+check('previewing shows the reminder bar', str_contains($previewing['body'], 'only you see it'));
+check('and the draft CSS on the page', str_contains(request('/creatures')['body'], $smokeCss));
+request('/admin/look/css/publish', ['_csrf_token' => tokenFrom('/admin/look/css'), 'css' => $smokeCss, 'note' => 'smoke']);
+$published = request('/creatures')['body'];
+check('publishing puts it on every page', str_contains($published, '<style>' . $smokeCss . '</style>'));
+check('and ends the preview', !str_contains($published, 'look-preview-bar'));
+request('/admin/look/css/publish', ['_csrf_token' => tokenFrom('/admin/look/css'), 'css' => '', 'note' => 'smoke: off']);
+check('publishing nothing switches it off', !str_contains(request('/creatures')['body'], $smokeCss));
+// The first "put back" button belongs to the newest old version: the smoke CSS.
+preg_match('~/admin/look/css/restore/(\d+)~', request('/admin/look/css')['body'], $versionMatch);
+request('/admin/look/css/restore/' . ($versionMatch[1] ?? '0'), ['_csrf_token' => tokenFrom('/admin/look/css')]);
+check('an old version can be put back in one press', str_contains(request('/creatures')['body'], $smokeCss));
+request('/admin/look/css/publish', ['_csrf_token' => tokenFrom('/admin/look/css'), 'css' => '', 'note' => 'smoke: tidy up']);
+
+// ---------------------------------------------------------------------------
 // The art store (M2.2), through the real upload form
 //
 // A real multipart upload of a real animated GIF (built by the test support

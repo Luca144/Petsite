@@ -155,8 +155,20 @@ final class AdminHomeController
             ];
             $sections[] = [
                 'title' => 'Themes',
-                'sentence' => 'Colour sets players can choose — readability checked while you pick.',
+                'sentence' => 'Colours, letters, corners, frames and pictures — readability checked while you pick.',
                 'href' => '/admin/themes',
+                'arrives' => null,
+            ];
+            $sections[] = [
+                'title' => 'Site look',
+                'sentence' => 'The look everyone sees, the order of things on a page, and an announcement.',
+                'href' => '/admin/look',
+                'arrives' => null,
+            ];
+            $sections[] = [
+                'title' => 'Fine-tuning CSS',
+                'sentence' => 'Small fixes to the look — preview them first, and undo any change in one press.',
+                'href' => '/admin/look/css',
                 'arrives' => null,
             ];
         }

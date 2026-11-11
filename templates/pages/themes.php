@@ -6,7 +6,8 @@
  *
  * Rendered by ThemeController::show. Every option is a radio card with
  * swatches of its colours AND its name in words — never colour alone. No
- * dropdown (CLAUDE.md §9). "Lamplight" is the site's own look (no theme).
+ * dropdown (CLAUDE.md §9). "Felkyo's look" means no theme of your own:
+ * you see whatever default the artist chose in the panel (Site look).
  *
  * Variables: $themes (Theme[], published), $chosenId (?int).
  */
@@ -16,7 +17,7 @@ $this->layout('layout', ['title' => 'Your theme — Felkyo Creatures']);
 
 // The swatches each card shows: surface, cards, text, accent, sparkle.
 $swatchTokens = ['parchment', 'panel', 'plum', 'purple', 'gold'];
-$options = [['id' => 0, 'name' => 'Lamplight', 'note' => 'the site\'s own look', 'palette' => ThemeTokens::paletteWith([])]];
+$options = [['id' => 0, 'name' => 'Felkyo\'s look', 'note' => 'whatever the site is wearing — it may change with the seasons', 'palette' => ThemeTokens::paletteWith([])]];
 foreach ($themes as $theme) {
     $options[] = [
         'id' => $theme->id,
