@@ -187,6 +187,14 @@ use Felkyo\Http\AssetUrl;
                     <span class="heart" aria-hidden="true">&hearts;</span> &middot;
                     a warm little corner of the web
                 </span>
+                <?php if (!empty($currentUser)): ?>
+                    <?php /* Bug reports, from every page: the link carries this
+                             page's address so the player only has to say what
+                             happened. Logged-in players only (see BugReportController). */ ?>
+                    <a class="site-footer__bug" href="/bug-report?from=<?= $this->e(rawurlencode($currentPath ?? '/')) ?>">
+                        <span aria-hidden="true">&#128027;&nbsp;</span>Something broken? Tell us
+                    </a>
+                <?php endif; ?>
             </footer>
         </div>
 

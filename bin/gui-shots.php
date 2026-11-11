@@ -77,6 +77,8 @@ const PAGES = [
     // Skerro's fix list (2026-11-04).
     'updates' => '/updates',
     'library-item' => '/library/item/1',
+    // Bug reports (2026-11-11).
+    'bug-report' => '/bug-report?from=%2Fcreatures',
 ];
 
 // ---- Refuse to run anywhere but a development machine ----
@@ -290,6 +292,7 @@ $save('admin-badges', $fetch('/admin/badges'));
 $save('admin-postcards', $fetch('/admin/postcards'));
 $save('admin-gifts', $fetch('/admin/gifts'));
 $save('admin-welcome', $fetch('/admin/welcome'));
+$save('admin-bugs', $fetch('/admin/bugs?status=fixed'));
 $save('admin-themes', $fetch('/admin/themes'));
 preg_match('~href="/admin/themes/(\d+)"~', $fetch('/admin/themes'), $themeM);
 $save('admin-theme-edit', $fetch('/admin/themes/' . ($themeM[1] ?? '0')));

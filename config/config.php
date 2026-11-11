@@ -271,6 +271,12 @@ return [
         ],
         // The owner's gift desk: how many gifts per hour (a brake on mistakes
         // more than on attackers — only the owner role can reach it).
+        // Bug reports from players — per account. Plenty for a real problem
+        // or three, a wall for someone pasting the same report in a loop.
+        'rate_limit_bug_report' => [
+            'max_attempts' => 10,
+            'window_seconds' => 3600,
+        ],
         'rate_limit_gift' => [
             'max_attempts' => 30,
             'window_seconds' => 3600,
@@ -420,6 +426,13 @@ return [
         'gifts' => [
             'max_gems' => 1000,
             'max_items' => 20,
+        ],
+
+        // Bug reports: how short and how long the description may be. The
+        // minimum nudges people past "broken!!" to something we can find.
+        'bug_reports' => [
+            'min_length' => 10,
+            'max_length' => 2000,
         ],
 
         // The pound (M3.1). How many days a creature rests after being

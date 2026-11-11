@@ -804,6 +804,51 @@ check('the audit log shows the panel entry', str_contains($auditPage, 'entered t
 check('the audit log shows the role changes', str_contains($auditPage, 'granted a role') && str_contains($auditPage, 'took a role away'));
 
 // ---------------------------------------------------------------------------
+// Bug reports: the footer link on every page, the form, the panel's list
+// ---------------------------------------------------------------------------
+
+echo "\nBug reports:\n";
+
+check(
+    'every page has a "Something broken?" link carrying its own address',
+    str_contains(request('/creatures')['body'], 'href="/bug-report?from=%2Fcreatures"')
+);
+$bugForm = request('/bug-report?from=%2Fcreatures');
+check('the bug form says which page it is about', str_contains($bugForm['body'], '<code>/creatures</code>'));
+
+$tooShort = request('/bug-report', [
+    '_csrf_token' => tokenIn($bugForm['body']), 'from' => '/creatures', 'description' => 'broken',
+]);
+check(
+    'a too-short report is refused, and the words are kept',
+    str_contains($tooShort['body'], 'at least 10 characters') && str_contains($tooShort['body'], '>broken</textarea>')
+);
+
+// An outside address as "the page" must never be stored as a link for staff.
+request('/bug-report', [
+    '_csrf_token' => tokenFrom('/bug-report'), 'from' => 'https://evil.example/',
+    'description' => 'Smoke outside link ' . $name,
+]);
+// Sent last, so it is the newest — the one the "mark fixed" check picks.
+$bugWords = 'Smoke test bug from ' . $name . ': the feed button did nothing.';
+$sentBug = request('/bug-report', [
+    '_csrf_token' => tokenFrom('/bug-report?from=%2Fcreatures'), 'from' => '/creatures',
+    'description' => $bugWords, 'screen_width' => '360',
+]);
+check('sending a report says thank you', str_contains($sentBug['body'], 'Your bug report reached us'));
+
+$bugList = request('/admin/bugs')['body'];
+check('the panel lists the report with its page and width', str_contains($bugList, htmlspecialchars($bugWords, ENT_QUOTES)) && str_contains($bugList, '360px wide'));
+check('an outside address is never kept as the page', !str_contains($bugList, 'evil.example'));
+
+preg_match('~/admin/bugs/(\d+)/status~', $bugList, $bugMatch);
+$markedFixed = request('/admin/bugs/' . ($bugMatch[1] ?? '0') . '/status', [
+    '_csrf_token' => tokenIn($bugList), 'status' => 'fixed', 'back' => 'open',
+]);
+check('a report can be marked fixed', str_contains($markedFixed['body'], 'is now marked fixed'));
+check('and then sits under "Fixed"', str_contains(request('/admin/bugs?status=fixed')['body'], 'Smoke'));
+
+// ---------------------------------------------------------------------------
 // The art store (M2.2), through the real upload form
 //
 // A real multipart upload of a real animated GIF (built by the test support
@@ -1293,6 +1338,13 @@ check('the application logged no errors', !str_contains($logged, 'ERROR'), subst
 // ---------------------------------------------------------------------------
 
 if (is_resource($server)) {
+    // On Windows, proc_open runs the server through cmd.exe and proc_terminate
+    // only stops cmd — the PHP server underneath kept running, holding this
+    // script's output open, so a finished run looked like a hang. taskkill /T
+    // stops the whole tree.
+    if (PHP_OS_FAMILY === 'Windows') {
+        exec('taskkill /F /T /PID ' . (int) proc_get_status($server)['pid'] . ' >NUL 2>&1');
+    }
     proc_terminate($server);
     proc_close($server);
 }

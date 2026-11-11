@@ -1,0 +1,74 @@
+/**
+ * feedback.css — the bug report form, the footer link to it, and the panel's
+ * bug list.
+ *
+ * Small on purpose: the form reuses the profile form's label/textarea styles
+ * and the panel reuses .card, .button-row and the community tabs. This file
+ * only adds what those don't cover.
+ */
+
+/* The "about the page" line: the address in the computery mono face, so it
+   reads as "this is a technical detail we noted for you". */
+.bug-report__page {
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    margin: 0 0 var(--space-4);
+    overflow-wrap: anywhere;
+}
+
+.bug-report .button-row {
+    margin-top: var(--space-4);
+}
+
+/* The footer link. Quiet — it sits in every page's footer — but a real link
+   with a real touch target, never hover-only. */
+.site-footer__bug {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--ink-soft);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+}
+
+.site-footer__bug:focus-visible {
+    outline: 3px solid var(--purple);
+    outline-offset: 2px;
+}
+
+/* ---- The panel list ---- */
+
+.bug-item {
+    margin-bottom: var(--space-4);
+}
+
+.bug-item__head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-3);
+    align-items: baseline;
+    overflow-wrap: anywhere;
+}
+
+.bug-item__id {
+    font-family: var(--font-mono);
+    font-weight: 700;
+}
+
+.bug-item__meta,
+.bug-item__device {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+}
+
+/* Player words can be one enormous unbroken string; let it wrap instead of
+   pushing the card wider than a phone. */
+.bug-item__words {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    margin: var(--space-3) 0;
+}
+
+.bug-item__device {
+    overflow-wrap: anywhere;
+}

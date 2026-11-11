@@ -160,6 +160,7 @@ use Felkyo\Pound\PoundRepository;
 use Felkyo\Pound\PoundService;
 use Felkyo\Http\Controllers\PoundController;
 use Felkyo\Http\Controllers\WelcomeController;
+use Felkyo\Http\Controllers\BugReportController;
 use Felkyo\Http\Controllers\AdminBadgesController;
 use Felkyo\Http\Controllers\AdminGiftsController;
 use Felkyo\Admin\GiftService;
@@ -905,6 +906,14 @@ $adminPostcardsController = new AdminPostcardsController(
     $rateLimiter, $config['security']['rate_limit_content_save']
 );
 
+// Bug reports: players telling us what's broken, and the panel's list.
+$bugReportRepository = new \Felkyo\Feedback\BugReportRepository($pdo);
+$bugReportController = new BugReportController(
+    $templates, $session, $csrf,
+    new \Felkyo\Feedback\BugReportService($bugReportRepository, $config['gameplay']['bug_reports']),
+    $bugReportRepository, $rateLimiter, $config['security']['rate_limit_bug_report'], $auditLogRepository
+);
+
 // The owner's gift desk (gems, items, a creature — capped and audit-logged).
 $adminGiftsController = new AdminGiftsController(
     $templates, $session, $csrf, $userRepository, $speciesRepository, new ItemRepository($pdo),
@@ -1083,6 +1092,10 @@ $router->get('/shore', [$postOfficeController, 'shore']);
 $router->post('/shore/send', [$postOfficeController, 'sendBottle']);
 $router->post('/shore/find', [$postOfficeController, 'findBottle']);
 
+// "Something broken?" — logged-in players (checked in the controller).
+$router->get('/bug-report', [$bugReportController, 'form']);
+$router->post('/bug-report', [$bugReportController, 'send']);
+
 // M7 — dismissing the welcome.
 $router->post('/welcome/dismiss', [$welcomeController, 'dismiss']);
 
@@ -1218,6 +1231,10 @@ $router->get('/admin/postcards/{id}/picture', $adminGate->protect(Role::Artist, 
 $router->post('/admin/postcards/{id}/picture', $adminGate->protect(Role::Artist, [$adminPostcardsController, 'choosePicture']));
 
 // Gifts. OWNER role only — this makes value out of nothing.
+// Bug reports. Coder role (the technical one; owner passes every check).
+$router->get('/admin/bugs', $adminGate->protect(Role::Coder, [$bugReportController, 'index']));
+$router->post('/admin/bugs/{id}/status', $adminGate->protect(Role::Coder, [$bugReportController, 'setStatus']));
+
 $router->get('/admin/gifts', $adminGate->protect(Role::Owner, [$adminGiftsController, 'show']));
 $router->post('/admin/gifts', $adminGate->protect(Role::Owner, [$adminGiftsController, 'give']));
 

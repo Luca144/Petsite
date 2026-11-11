@@ -103,6 +103,11 @@ enum AuditAction: string
     // Postcard designs, and gifts from the owner.
     case PostcardSaved = 'postcard.saved';
     case GiftGiven = 'gift.given';
+    // Bug reports ticked off; the site's words, look and fine-tuning CSS.
+    case BugReportHandled = 'bug_report.handled';
+    case TextSaved = 'text.saved';
+    case SiteLookSaved = 'site_look.saved';
+    case CustomCssSaved = 'custom_css.saved';
 
     /**
      * What a person reading the audit page sees, in plain words.
@@ -160,6 +165,10 @@ enum AuditAction: string
             self::ItemDeleted => 'deleted an item',
             self::PostcardSaved => 'changed a postcard design',
             self::GiftGiven => 'gave a player a gift',
+            self::BugReportHandled => 'ticked off a bug report',
+            self::TextSaved => 'changed some of the site\'s words',
+            self::SiteLookSaved => 'changed the site\'s look',
+            self::CustomCssSaved => 'changed the fine-tuning CSS',
         };
     }
 }

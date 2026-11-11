@@ -28,6 +28,9 @@ final class Request
      * @param array  $queryData  Values from the "?name=value" part of the address.
      * @param array  $files      Uploaded files, in PHP's $_FILES shape
      *                           (name => [name, type, tmp_name, error, size]).
+     * @param string $userAgent  The browser's description of itself. Only
+     *                           ever stored and shown (bug reports) — never
+     *                           used to decide anything, as it is easily faked.
      */
     public function __construct(
         private string $method,
@@ -36,6 +39,7 @@ final class Request
         private string $clientIp,
         private array $queryData = [],
         private array $files = [],
+        private string $userAgent = '',
     ) {
     }
 
@@ -52,7 +56,7 @@ final class Request
 
         $clientIp = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
 
-        return new self($method, $path, $_POST, $clientIp, $_GET, $_FILES);
+        return new self($method, $path, $_POST, $clientIp, $_GET, $_FILES, (string) ($_SERVER['HTTP_USER_AGENT'] ?? ''));
     }
 
     /**
@@ -132,6 +136,12 @@ final class Request
     public function clientIp(): string
     {
         return $this->clientIp;
+    }
+
+    /** The browser's own description of itself (may be empty or made up). */
+    public function userAgent(): string
+    {
+        return $this->userAgent;
     }
 
     /**
