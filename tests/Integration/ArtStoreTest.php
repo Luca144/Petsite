@@ -99,7 +99,13 @@ final class ArtStoreTest extends DatabaseTestCase
         $this->world->logIn($artist);
         $this->world->passDoorFor($artist);
 
-        $response = $this->upload('<?php system($_GET["c"]); ?>', 'totally-a-sprite.gif');
+        // The bytes are a PHP script wearing a .gif name. They deliberately do NOT
+        // look like a real web shell: Windows Defender quarantines a temp file
+        // containing one the moment it is written, the validator then cannot read
+        // it, and the test fails for the wrong reason ("didn't arrive whole").
+        // What is under test is that the SIGNATURE check refuses it, and any
+        // non-image bytes prove that.
+        $response = $this->upload('<?php echo "not a picture"; ?>', 'totally-a-sprite.gif');
 
         $this->assertSame(302, $response->statusCode());
         $this->assertStringContainsString('isn\'t a GIF, PNG or WebP', $_SESSION['flash'] ?? '');

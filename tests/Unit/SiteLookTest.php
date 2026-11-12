@@ -38,6 +38,14 @@ final class SiteLookTest extends TestCase
         self::assertNotNull(CustomCssRules::problemWith('body{background:image-set("https://tracker.example/p.gif" 1x)}'));
     }
 
+    public function testAnUnclosedUrlIsRefused(): void
+    {
+        // With no ")" a browser reads the address up to the end of the file —
+        // so this WOULD load the tracker, and the closed-url check never sees it.
+        self::assertNotNull(CustomCssRules::problemWith('body{background:url(https://tracker.example/p.gif'));
+        self::assertNotNull(CustomCssRules::problemWith("body{background:url(/art/ok.webp)}\np{background:URL( https://tracker.example/p.gif"));
+    }
+
     public function testImportAndDisguisesAreRefused(): void
     {
         self::assertNotNull(CustomCssRules::problemWith('@import "https://elsewhere.example/x.css";'));

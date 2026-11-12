@@ -18,11 +18,12 @@ use Phinx\Migration\AbstractMigration;
  *                            (both SET NULL: deleting the picture just puts
  *                            the site's own back)
  *
- * custom_css_versions        the fine-tuning CSS box. Append-only history:
- *                            every save is a new row and the NEWEST row is
- *                            what the site uses. Restoring an old version
- *                            copies it into a new row, so nothing is ever
- *                            overwritten and every change can be undone.
+ * custom_css_versions        the fine-tuning CSS box's undo history. Append-
+ *                            only: every save (and every restore) adds a row,
+ *                            nothing is ever overwritten. The CSS the site
+ *                            actually prints is the site_settings row
+ *                            "look.custom_css" (so reading it costs no extra
+ *                            query); this table is what "go back" reads from.
  *
  * The site-wide choices (which theme everyone sees by default, section
  * order, the announcement line) are rows in the existing site_settings

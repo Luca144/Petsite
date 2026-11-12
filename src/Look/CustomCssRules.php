@@ -57,6 +57,15 @@ final class CustomCssRules
             }
         }
 
+        // A url( that is never closed is refused outright. A browser treats
+        // everything up to the end of the file as the address, so a final
+        // "url(https://tracker.example/p.gif" with no ")" would still load
+        // the picture — while slipping past the per-address check below,
+        // which can only see url(...) calls that ARE closed.
+        if (preg_match_all('/url\s*\(/i', $css) !== preg_match_all('/url\s*\([^)]*\)/i', $css)) {
+            return 'Every url( needs its closing ")".';
+        }
+
         // Every url(...) must point at a picture or font on this site.
         preg_match_all('/url\s*\(\s*([^)]*)\)/i', $css, $matches);
         foreach ($matches[1] as $target) {

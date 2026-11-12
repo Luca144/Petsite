@@ -30,6 +30,10 @@ features that use them — that is deliberate.
 - **items** define things that exist; **inventory** records which user owns which
   items; **shops** + **shop_items** define what is for sale and where.
 - **rate_limit_hits** records attempts at protected actions so they can be throttled.
+- Later milestones added **who a creature is** (traits, badges, the pound), the
+  **library** (alternate forms, Gazette articles), **themes**, **company**
+  (friends, blocks, postcards, bottles), and the panel's own tables (settings,
+  texts, CSS history, bug reports) — each described in order below.
 
 ---
 
@@ -48,6 +52,8 @@ time directly on the user because there is exactly one of each per user.
 | `currency_balance` | int unsigned, NOT NULL, default 0 | The single in-game currency (gems). Earned by petting **other people's** creatures, spent on treats and new creatures. |
 | `last_adopted_at` | datetime, NULL | Unused since M2. Powered the once-per-day adoption limit, which was retired when creatures moved into the shop. Left in place rather than dropped: it is harmless, and a column removal is not worth a migration nobody needs. |
 | `last_login_at` | datetime, NULL | When they last logged in. |
+| `theme_id` | int unsigned, NULL, FK → `themes.id` (SET NULL) | The theme they chose (M4). NULL = the site's own look, or the panel's default theme. |
+| `welcome_dismissed_at` | datetime, NULL | When they said "don't show me this again" to Ruinily's welcome (M7). NULL = still shown. |
 | `created_at` | timestamp, NOT NULL | Set on creation. |
 
 ### `species` — the kinds of creature (content)
@@ -76,8 +82,9 @@ using thresholds in config (B.2). This keeps a single source of truth.
 | Column | Type | Notes |
 | --- | --- | --- |
 | `id` | int unsigned | Primary key. |
-| `owner_id` | int unsigned, NOT NULL, FK → `users.id` (CASCADE) | The owner. |
+| `owner_id` | int unsigned, **NULL** since M3, FK → `users.id` (CASCADE) | The owner. NULL = at the pound (see "The pound, and who a creature is" below). |
 | `species_id` | int unsigned, NOT NULL, FK → `species.id` (RESTRICT) | Which kind. |
+| `form_id` | int unsigned, NULL, FK → `species_forms.id` (SET NULL) | Which alternate form it wears (M5). NULL = the default look. |
 | `name` | varchar(40), NOT NULL | The owner's chosen name. |
 | `xp` | int unsigned, NOT NULL, default 0 | Growth's single source of truth. |
 | `happiness` | int unsigned, NOT NULL, default 80 | 0–100. How happy the creature was **at `happiness_at`** — not necessarily now. Rises when petted or fed; fades with time down to `gameplay.mood.happiness_floor` and no further. |
@@ -89,6 +96,7 @@ using thresholds in config (B.2). This keeps a single source of truth.
 | `bio` | text, NULL | Owner-written bio (C.1). |
 | `is_public` | boolean, NOT NULL, default true | Whether logged-out visitors can see it (B.6). |
 | `last_interacted_at` | datetime, NULL | Last petted, fed or played with. |
+| `pound_entered_at`, `pound_previous_owner_id`, `is_frozen`, `shown_stage` | see below | The pound and freezing (M3) — described under "The pound, and who a creature is". |
 | `created_at` | timestamp, NOT NULL | |
 
 Indexes: `is_public` and `created_at` (for public browse / newest-first lists),
@@ -535,6 +543,233 @@ what the settings form refuses.
 | `setting_key` | varchar(60), PRIMARY KEY | The catalog key, e.g. `xp_per_level`. |
 | `value` | text, NOT NULL | JSON — a number, a bool, or a word list ride the same column. |
 | `updated_at` | datetime, NOT NULL | When it was last changed. |
+
+### The pound, and who a creature is (M3)
+
+Migration `20261103140001_create_character.php`. The pound is built on one
+idea: **a creature at the pound belongs to nobody.** `creatures.owner_id` became
+nullable for it. Every "is this yours?" check in the codebase compares
+`owner_id` with the viewer, so a NULL owner makes all of them refuse everyone —
+without each check having to learn about the pound.
+
+New columns on `creatures` (summarised in the table above):
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `owner_id` | int unsigned, **NULL** since M3 | NULL = at the pound. |
+| `pound_entered_at` | datetime, NULL | When it arrived at the pound (NULL = not there). Indexed: the pound page lists by arrival. |
+| `pound_previous_owner_id` | int unsigned, NULL | Who brought it: the one person who may reclaim it during the grace period, and the one person who may never adopt it back afterwards. Indexed. |
+| `is_frozen` | boolean, NOT NULL, default false | Frozen at a life stage (M3.2b): XP still counts, the stage shown does not move. |
+| `shown_stage` | varchar(20), NULL | Overrides the stage worked out from `xp`. While catching up after an unfreeze it walks forward one stage per growth tick, then clears. |
+
+### `traits` — personality (earned) and shelter/gift (given) traits (M3)
+Starter rows are inserted by the migration and are editable in the panel
+(`/admin/character`). A trait may have exactly **one** mechanical effect
+(`xp_bonus_percent`), by design — traits are flavour first.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | int unsigned | Primary key. |
+| `slug` | varchar(40), unique, NOT NULL | Stable name used in code. |
+| `name` | varchar(40), NOT NULL | What players see. |
+| `description` | varchar(200), NOT NULL | One sentence about it. |
+| `tier` | varchar(10), NOT NULL | `earned` (by living), `shelter` (given on leaving the pound), `gift` (a chance reward on adoption). |
+| `earn_kind` | varchar(20), NULL | Earned traits: what earns it (`petted`, `level`, `age_days`). |
+| `earn_threshold` | int unsigned, NULL | Earned traits: how much of it. |
+| `chance_percent` | int unsigned, NOT NULL, default 0 | Gift traits: the chance of receiving it. |
+| `xp_bonus_percent` | int unsigned, NOT NULL, default 0 | The one effect a trait may have. |
+
+### `creature_traits` — which creature has which trait (M3)
+Composite primary key (`creature_id`, `trait_id`): a creature can never hold the
+same trait twice, and `INSERT IGNORE` is the whole "give it once" rule.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `creature_id` | int unsigned, PK part, FK → `creatures.id` (CASCADE) | |
+| `trait_id` | int unsigned, PK part, FK → `traits.id` (CASCADE) | |
+| `how` | varchar(120), NOT NULL | In words, how it came by this ("after its first 50 pets"). |
+| `gained_at` | timestamp, NOT NULL | |
+
+### `ladder_rungs` — level titles and the friendly-age ladder (M3)
+Two ladders in one table, told apart by `ladder` (`level_title`, `age`). The
+label for a creature is the highest rung whose `threshold` it has reached.
+Unique on (`ladder`, `threshold`).
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | int unsigned | Primary key. |
+| `ladder` | varchar(20), NOT NULL | Which ladder. |
+| `threshold` | int unsigned, NOT NULL | A level, or a number of days. |
+| `label` | varchar(60), NOT NULL | "Sprout", "about a week old". |
+
+### `themes` — selectable looks (M4, extended by the site-look migration)
+A named set of colour-token overrides plus, since the site-look migration, a
+`style` of allow-listed choices. Draft until published from the panel, and
+**the panel refuses to publish a theme that fails any contrast rule** in
+`ThemeTokens`. Three starter themes are inserted (Moonlit, Rosehip, Easy
+reading). `users.theme_id` is the player's choice.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | int unsigned | Primary key. |
+| `slug` | varchar(40), unique, NOT NULL | |
+| `name` | varchar(40), NOT NULL | |
+| `tokens` | text, NOT NULL | JSON: only the tokens that differ from the site's own, only ones `ThemeTokens` allows. |
+| `easy_reading` | boolean, NOT NULL, default false | Switches on the dyslexia-friendly type. |
+| `status` | varchar(10), NOT NULL, default `draft` | `draft` or `published`. |
+| `style` | text, NULL | JSON of allow-listed choices (fonts, corners, frames, glow, drifting symbols) — every allowed value is listed in `ThemeStyle`. NULL = the site's own look. |
+| `background_art_id` | int unsigned, NULL, FK → `art_files.id` (SET NULL) | A page background tile from the art store. |
+| `banner_art_id` | int unsigned, NULL, FK → `art_files.id` (SET NULL) | A banner instead of the painted logo. |
+| `created_at` | timestamp, NOT NULL | |
+
+### `species_forms` and `species_form_stages` — alternate looks for a species (M5)
+A form is an alternate look ("Frost Foxlen"); which species get one is the
+artist's call, made in the panel. `creatures.form_id` says which form a creature
+wears (NULL = the default form; SET NULL on delete, so removing a form turns its
+creatures back into the default look instead of deleting anybody's creature).
+
+`species_forms`: `id`, `species_id` (FK → `species.id`, CASCADE), `slug`
+varchar(60), `name` varchar(60), `blurb` text NULL, `status` varchar(10) default
+`draft`, `created_at`. Unique on (`species_id`, `slug`).
+
+`species_form_stages`: `id`, `form_id` (FK → `species_forms.id`, CASCADE),
+`stage` varchar(20), `sprite_art_id` (FK → `art_files.id`, SET NULL). Unique on
+(`form_id`, `stage`). A stage with no sprite here falls back to the species'
+default sprite, so a half-drawn form never shows a hole.
+
+### `articles` — the Felkyo Gazette and site updates (M5; `kind` added later)
+Newspaper pieces about the NPCs, authored in the panel, read in the library. An
+update (the little site blog) is written exactly like a Gazette article, so it
+IS one, told apart by `kind`.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | int unsigned | Primary key. |
+| `slug` | varchar(80), unique, NOT NULL | Appears in the address. |
+| `kind` | varchar(10), NOT NULL, default `gazette` | `gazette` (stories, in the library) or `update` (news about the site, at `/updates`). |
+| `title` | varchar(120), NOT NULL | |
+| `summary` | varchar(300), NULL | |
+| `body` | text, NULL | |
+| `art_id` | int unsigned, NULL, FK → `art_files.id` (SET NULL) | The picture beside it. |
+| `status` | varchar(10), NOT NULL, default `draft` | |
+| `published_at` | datetime, NULL | |
+| `created_at` | timestamp, NOT NULL | |
+
+Indexes: (`status`, `published_at`) and (`kind`, `status`, `published_at`) —
+each list is "published, of this kind, newest first".
+
+### Company: `friends`, `blocks`, `postcard_designs`, `postcards`, `bottles`, `daily_claims` (M6)
+Players never type words to each other here: every card and bottle carries a
+**fixed** message the project wrote.
+
+- **`friends`** — a bookmark: "I like visiting this person". One-way, no consent
+  needed, unlocks nothing — so, like bookmarking a page, it needs no approval.
+  Primary key (`user_id`, `friend_user_id`), both FK → `users.id` (CASCADE);
+  `created_at`.
+- **`blocks`** — "nothing from this person reaches me": no cards, and their
+  bottles never wash up on my shore. Primary key (`user_id`, `blocked_user_id`),
+  both FK → `users.id` (CASCADE); `created_at`. Indexed on `blocked_user_id`
+  because "has anyone blocked ME?" is asked when sending.
+- **`postcard_designs`** — the cards on sale at the post office: `id`, `name`
+  varchar(60), `message` varchar(200) (the fixed words), `art_id` (FK →
+  `art_files.id`, SET NULL), `gem_price` int unsigned default 2, `status`
+  varchar(10) default `draft`. Five starter cards are inserted.
+- **`postcards`** — a card sent: `id`, `sender_user_id`, `recipient_user_id`
+  (both FK → `users.id`, CASCADE), `design_id` (FK → `postcard_designs.id`,
+  CASCADE), `sent_at`. Indexed on (`recipient_user_id`, `sent_at`): the
+  mantelpiece lists a recipient's cards newest first.
+- **`bottles`** — a message in a bottle: `id`, `sender_user_id` (FK → `users.id`,
+  CASCADE), `message_key` varchar(40) (a key into the fixed catalogue in config),
+  `sent_at`, `finder_user_id` (FK → `users.id`, SET NULL), `found_at`. Indexed
+  on (`finder_user_id`, `sent_at`): the shore looks for bottles still adrift.
+- **`daily_claims`** — house pattern 2, "once a day": primary key (`user_id`,
+  `action_key` varchar(30), `action_date` date), FK → `users.id` (CASCADE). The
+  database itself refuses a second bottle sent or found on the same day.
+
+### `badges`, `creature_badges`, `player_badges` — keepsake badges (M8, pulled forward)
+A badge is a name, a few words, a picture (art kind "badge"), and who it is for.
+`awarded_to` = `creature` means it is **earned automatically** by a creature that
+has been in Felkyo for `kept_days` days — only ever earned, never lost, because
+absence is not punished. `awarded_to` = `player` means a special badge
+("Founder") the owner gives from the gift desk; never earned by playing.
+
+`badges`: `id`, `slug` varchar(40) unique, `name` varchar(40), `description`
+varchar(200), `art_id` (FK → `art_files.id`, SET NULL), `awarded_to`
+varchar(10), `kept_days` int unsigned NULL. Four starter badges are inserted.
+
+`creature_badges`: primary key (`creature_id`, `badge_id`), both CASCADE;
+`earned_at`. `player_badges`: primary key (`user_id`, `badge_id`), both CASCADE;
+`reason` varchar(200) NULL, `given_at`. The composite keys mean a badge can never
+be given twice to the same creature or player.
+
+### `welcome_steps` — Ruinily's first-run welcome (M7)
+What she says, in order, each with an optional link to the place she's talking
+about; edited in the panel (`/admin/welcome`). `users.welcome_dismissed_at` is
+set the moment a player says "don't show me this again" (or finishes), and the
+bubble never returns.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | int unsigned | Primary key. |
+| `position` | int unsigned, NOT NULL, indexed | The order she says them in. |
+| `words` | varchar(300), NOT NULL | |
+| `link_href` | varchar(120), NULL | Where the step points. |
+| `link_label` | varchar(60), NULL | What the link says. |
+
+### `bug_reports` — "Something broken?" (birthday sprint)
+A logged-in player tells us something on the site is broken, from the page
+where it happened. **Kept apart from `reports`** on purpose: that table is for
+people and their words (moderation); a bug report points at a *page* and is
+read by whoever fixes the code, not by a moderator. Text only — no screenshot
+uploads, because uploads are the riskiest thing a site can accept.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | int unsigned | Primary key. |
+| `reporter_user_id` | int unsigned, NOT NULL, FK → `users.id` (CASCADE) | Deleting an account takes the person's own words with it. |
+| `page_path` | varchar(300), NOT NULL | The address they were on, filled in automatically and checked to be a path on this site. |
+| `browser` | varchar(300), NOT NULL, default '' | The browser's own description of itself (user agent). |
+| `screen_width` | int unsigned, NULL | How wide their window was — for layout bugs. |
+| `description` | text, NOT NULL | What happened, in their words. |
+| `status` | varchar(10), NOT NULL, default `open` | `open`, `fixed` or `closed`. |
+| `handled_by_user_id` | int unsigned, NULL, FK → `users.id` (SET NULL) | Who ticked it off. |
+| `handled_at` | datetime, NULL | When. |
+| `created_at` | datetime, NOT NULL | |
+
+Index (`status`, `created_at`) serves the panel's only query: one status,
+newest first.
+
+### `custom_css_versions` — the fine-tuning CSS box's undo history (birthday sprint)
+Append-only: every save (and every restore) adds a row; nothing is ever
+overwritten. The CSS the site actually prints is the `site_settings` row
+`look.custom_css` (so reading it costs no extra query); this table is what "go
+back to an older version" reads from. The site-wide look choices (the default
+theme, section order, the announcement line) are likewise rows in
+`site_settings` under keys starting with `look.` — no new table needed.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | int unsigned | Primary key. |
+| `css` | text, NOT NULL | The CSS as saved (checked by `CustomCssRules` on save and again on print). |
+| `note` | varchar(120), NOT NULL, default '' | What this version was for. |
+| `saved_by_user_id` | int unsigned, NULL, FK → `users.id` (SET NULL) | |
+| `saved_at` | datetime, NOT NULL | |
+
+### `site_texts` — the site's words, as changed in the panel (birthday sprint)
+**Only changes are stored.** Every sentence's original lives in the template
+that shows it (`$this->t('key', 'The original words')`). A row here replaces
+it; deleting the row is "back to the original". So an empty table means the
+site reads exactly as written, and nothing can go missing. The whole table is
+read in one query per page — it holds only the changed sentences, so it stays
+small. Note the primary key is `text_key`, not an `id`: one row per sentence.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `text_key` | varchar(120), PRIMARY KEY | Which sentence, e.g. `shore.walk-the-tideline`, or `message.<hash>` for a message the code sends. |
+| `body` | text, NOT NULL | The words to show instead. |
+| `original` | text, NULL | Messages only: the pattern they replace (like `Moved "%s" up.`), so a message on its way to the page can be recognised. NULL for template texts. |
+| `updated_by_user_id` | int unsigned, NULL, FK → `users.id` (SET NULL) | Who changed it last. |
+| `updated_at` | datetime, NOT NULL | |
 
 ## What is intentionally NOT here (yet)
 
